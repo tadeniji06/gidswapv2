@@ -10,7 +10,7 @@ export function ChatWidget() {
   const close = () => setIsOpen(!isOpen)
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-10 right-8 z-50 md:bottom-8">
       {/* Chat Button */}
       <Button
         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full w-14 h-14 shadow-lg"

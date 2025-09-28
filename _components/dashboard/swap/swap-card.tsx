@@ -2,7 +2,7 @@
 import { Button } from "@/src/components/ui/button"
 import { useEffect, useRef, useState } from "react"
 
-import { ArrowUpDown, ChevronDown, Info } from "lucide-react"
+import { ArrowDown, ChevronDown, Info } from "lucide-react"
 import { useSwapStore } from "@/lib/swap-store"
 
 interface Currency {
@@ -356,7 +356,7 @@ useEffect(() => {
 
         <div className="flex justify-center my-4">
           <Button variant="ghost" size="sm" className="bg-accent hover:bg-accent/80 rounded-full p-2">
-            <ArrowUpDown className="w-5 h-5 text-muted-foreground" />
+            <ArrowDown className="w-5 h-5 text-muted-foreground" />
           </Button>
         </div>
 

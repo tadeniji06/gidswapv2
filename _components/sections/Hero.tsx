@@ -72,7 +72,7 @@ export default function Hero() {
 
         {/* Swap Form */}
         <AnimatedSection delay={0.2}>
-          <div className="mt-12 w-full max-w-md rounded-2xl bg-neutral-900/60 backdrop-blur-md border border-white/10 shadow-xl px-6 py-8">
+          <div className="mt-12 w-full max-w-md rounded-2xl bg-neutral- backdrop-blur-md border border-white/10 shadow-xl px-6 py-8">
             <HeroSwapForm
               sendAmount={sendAmount}
               setSendAmount={setSendAmount}

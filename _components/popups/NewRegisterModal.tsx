@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/Authstore";
 import { setCookie } from "@/lib/cookies";
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check } from "lucide-react";
+import {FcGoogle} from "react-icons/fc"
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -14,6 +15,9 @@ import StepThree from "../steps/stepThree";
 
 export function RegistrationModal() {
   const router = useRouter();
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/google`;
+  };
   const {
     isRegisterModalOpen,
     setRegisterModalOpen,
@@ -147,7 +151,14 @@ export function RegistrationModal() {
                 </span>
               </div>
             </div>
-
+                    <Button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      className="w-full h-12 flex text-gray-800 dark:text-gray-50 items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl"
+                    >
+                      <FcGoogle className="w-5 h-5" />
+                      Continue with Google
+                    </Button>
             <Button
               type="button"
               variant="outline"

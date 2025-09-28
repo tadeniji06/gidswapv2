@@ -8,7 +8,7 @@ import {
 } from "@/src/components/ui/select";
 import { currencies } from "@/lib/constants";
 import type { Currency } from "@/lib/types";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import { useEffect } from "react";
 import { Button } from "@/src/components/ui/button";
@@ -90,7 +90,7 @@ const SwapForm: React.FC<{
 
   return (
     <form className="grid gap-6 text-sm text-gray-700 transition-all dark:text-white">
-      <div className="relative rounded-[20px] bg-gray-100/50 dark:bg-white/5 backdrop-blur-sm p-3 border border-gray-200/50 dark:border-white/10">
+      <div className="relative rounded-[20px] bg-gray-100 dark:bg-white/5 backdrop-blur-sm p-3 border border-gray-200/50 dark:border-white/10">
         <div className="flex space-y-2 flex-col">
           {/* Header */}
           <div className="flex flex-col gap-1 px-2 py-1">
@@ -149,9 +149,9 @@ const SwapForm: React.FC<{
             </div>
 
             {/* Swap Arrow */}
-            <div className="flex justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -mt-2 z-40">
-              <div className="w-10 h-10 rounded-full mygradient futuristic-button flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 cursor-pointer group">
-                <ArrowUpDown className="w-5 h-5 text-white group-hover:rotate-180 transition-transform duration-300" />
+            <div className="flex justify-center absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 -mt-2 z-40">
+              <div className="w-8 h-8 rounded-full mygradient futuristic-button flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover: cursor-pointer group">
+                <ArrowDown className="w-5 h-5 text-white" />
               </div>
             </div>
 

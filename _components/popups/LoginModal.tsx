@@ -183,7 +183,7 @@ export function LoginModal() {
         <Button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full h-12 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl"
+          className="w-full h-12 flex text-gray-800 dark:text-gray-50 items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl"
         >
           <FcGoogle className="w-5 h-5" />
           Continue with Google

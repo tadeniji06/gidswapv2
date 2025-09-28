@@ -418,13 +418,15 @@ export function CryptoFiatSwapCard({
           </div>
 
           {/* LP Fee */}
-          <div className="relative flex items-center gap-1 group">
+          <div className="relative flex justify-between items-center gap-1 group">
+            <div className="flex items-center space-x-2">
             <span className="text-gray-700 dark:text-gray-200">LP fee</span>
-
-            {/* Info icon */}
             <Info className="w-4 h-4 text-gray-400 cursor-pointer" />
+            </div>
+            <div className="">
+              <span className="text-gray-900 dark:text-gray-50">{lpFee}</span>
+            </div>
 
-            {/* Hover popup */}
             <div
               className="absolute left-6 top-1/2 -translate-y-1/2 z-10 
                hidden group-hover:block
