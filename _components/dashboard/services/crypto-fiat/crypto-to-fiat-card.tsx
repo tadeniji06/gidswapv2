@@ -424,7 +424,7 @@ export function CryptoFiatSwapCard({
             <Info className="w-4 h-4 text-gray-400 cursor-pointer" />
             </div>
             <div className="">
-              <span className="text-gray-900 dark:text-gray-50">{lpFee}</span>
+              <span className="text-gray-900 dark:text-gray-50">{Number(lpFee).toFixed(2)}</span>
             </div>
 
             <div

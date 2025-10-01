@@ -1,7 +1,9 @@
 import React from "react";
 import { AnimatedSection } from "@/src/components/ui/animate-section";
+import { useAuthStore } from "@/store/Authstore";
 
 export default function RatesSection() {
+  const { setRegisterModalOpen} = useAuthStore()
   return (
     <AnimatedSection>
       <div className="mb-20 flex w-full flex-col items-center justify-center gap-6 px-5 md:mb-48">
@@ -19,6 +21,7 @@ export default function RatesSection() {
         bg-gradient-to-r from-[#0d6fde] to-[#3b82f6] text-white
         dark:from-[#0d6fde]/80 dark:to-[#3b82f6]/80 dark:text-gray-100
         hover:shadow-[0_0_15px_rgba(13,111,222,0.5)] dark:hover:shadow-[0_0_15px_rgba(13,111,222,0.3)]"
+        onClick={() => setRegisterModalOpen(true)}
           >
             Get started
             <img

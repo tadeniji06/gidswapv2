@@ -118,7 +118,7 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Time Remaining</span>
+            <span className="text-gray-400">This transaction expires in</span>
             <span className="text-white">{timeLeftMinutes} minutes</span>
           </div>
 
@@ -127,7 +127,9 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
             <span className="text-orange-500 font-medium">{swapData.data?.status || "Waiting for deposit"}</span>
           </div>
         </div>
-
+        {/* <div className="">
+          <button className="bg-gray-800 text-gray-100 dark:bg-blue-900 p-3 rounded-xl">I have sent the coin</button>
+        </div> */}
         {/* Warning */}
         <div className="p-3 bg-yellow-900/20 border border-yellow-800 rounded-lg">
           <p className="text-yellow-200 text-xs">

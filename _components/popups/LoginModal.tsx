@@ -42,14 +42,18 @@ export function LoginModal() {
       setCookie("token", token, { expires: 3 });
       setCookie("regstatus", "true", { expires: 365 * 10 });
       setCookie("user", JSON.stringify(user), { expires: 3 });
-
       setToken(token);
       setAuthStatus(true);
       setLoginModalOpen(false);
       router.push("/dashboard");
-    } catch (err) {
-      setError("Login failed. Please check your credentials.");
-      console.error(err);
+    } catch (err: any) {
+      if (err.response) {
+        setError(err.response.data?.message || "Something went wrong.");
+      } else if (err.request) {
+        setError("No response from server. Please try again.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

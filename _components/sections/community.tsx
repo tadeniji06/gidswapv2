@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { FaFacebookF, FaTelegramPlane, FaTiktok, FaWhatsapp } from "react-icons/fa";
+import { FaTelegramPlane, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import { AiOutlineDiscord } from "react-icons/ai";
 import { BsTwitterX } from "react-icons/bs";
 import Link from "next/link";
@@ -15,7 +15,7 @@ export default function Community() {
       hoverColor: "hover:from-blue-500 hover:to-blue-700",
     },
     {
-      href: "https://wa.me/+234",
+      href: "https://wa.me/+2349038958941",
       icon: FaWhatsapp,
       label: "Whatsapp",
       color: "from-blue-500 to-blue-700",

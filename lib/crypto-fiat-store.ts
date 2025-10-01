@@ -56,6 +56,7 @@ export interface PaymentOrder {
   senderFee: string
   transactionFee: string
   validUntil: string
+  status: string
 }
 
 interface CryptoFiatState {
@@ -108,7 +109,7 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
   orderReference: null,
   paymentOrder: null,
 
-  // ✅ Fetch tokens with filtering + sorting
+  // Fetch tokens with filtering + sorting
   fetchTokens: async () => {
     set({ isLoadingTokens: true })
     try {
@@ -139,7 +140,7 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
         )
       )
 
-      // ✅ Sort according to allowedTokens order
+      // Sort according to allowedTokens order
       const sortedTokens = allowedTokens
         .map((allowed) =>
           filteredTokens.find(
@@ -148,7 +149,7 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
               token.network.toLowerCase() === allowed.network.toLowerCase()
           )
         )
-        .filter(Boolean) // remove any undefined if API missed one
+        .filter(Boolean)
 
       // Add logos
       const tokensWithLogos = sortedTokens.map((token: any) => ({
@@ -322,17 +323,31 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
         headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" },
       })
 
-      if (response.data.status === "success") {
-        const paymentOrder: PaymentOrder = response.data.data
-        set({ orderData, orderReference: reference, paymentOrder })
-        Cookies.set("order-data", JSON.stringify(orderData), { expires: 1 / 24 })
+
+      const { success, message, transaction, paycrestResponse } = response.data
+
+      if (success && paycrestResponse?.status === "success") {
+        const paymentOrder: PaymentOrder = {
+          ...paycrestResponse.data,
+          status: transaction.status, 
+        }
+
+        set({
+          orderData: transaction,
+          orderReference: reference,
+          paymentOrder,
+        })
+
+        Cookies.set("order-data", JSON.stringify(transaction), { expires: 1 / 24 })
         Cookies.set("order-reference", reference, { expires: 1 / 24 })
         Cookies.set("payment-order", JSON.stringify(paymentOrder), { expires: 1 / 24 })
+
         return true
       } else {
-        console.error("Order initialization failed:", response.data.message)
+        console.error("Order initialization failed:", message)
         return false
       }
+
     } catch (error) {
       console.error("Failed to initialize order:", error)
       return false
