@@ -46,7 +46,7 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
   }
    const handleCloseDialog = () => {
     setOpen(false);
-    router.push("/dashbaord");
+    router.push("/dashboard");
    }
   const depositAddress = swapData.data?.from?.address || "Address not available"
   const depositAmount = swapData.data?.from?.amount || "0"
@@ -157,9 +157,9 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
-            <div className="flex justify-center">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center">
-                <Check color="green" size={20}/>
+            <div className="flex justify-center p-3">
+              <div className="w-5 h-5 p-2 bg-blue-50 rounded-full flex items-center justify-center">
+                <Check color="green" size={20} className="text-blue-600 font-bold"/>
               </div>
             </div>
             <DialogTitle>Transaction Processed</DialogTitle>
