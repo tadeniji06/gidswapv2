@@ -1,9 +1,180 @@
-import React from 'react'
+"use client"
 
-export default function page() {
+import { useState, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { Button } from "@/src/components/ui/button"
+import { Input } from "@/src/components/ui/input"
+import { Badge } from "@/src/components/ui/badge"
+import { cn } from "@/lib/utils"
+import Cookies from "js-cookie"
+// Types
+interface Transaction {
+  _id: string
+  orderId: string
+  status: "success" | "pending" | "failed"
+  amount: number
+  createdAt: string
+}
+
+interface ApiResponse {
+  success: boolean
+  transactions: Transaction[]
+}
+const API_URL = process.env.NEXT_PUBLIC_PROD_API
+// Fetcher (no params, only bearer token)
+const fetchTransactions = async (token: any): Promise<ApiResponse> => {
+  const res = await fetch(`${API_URL}/api/transactions`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) throw new Error("Failed to fetch transactions")
+  return res.json()
+}
+
+export default function TransactionHistoryPage() {
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const limit = 5
+
+  // ⚡ Replace this with however you manage auth
+  const authtoken = Cookies.get("token");
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: () => fetchTransactions(authtoken),
+  })
+
+  // Filter + paginate on frontend
+  const transactions = data?.transactions ?? []
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) =>
+      tx.orderId.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [transactions, search])
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (page - 1) * limit
+    const end = start + limit
+    return filteredTransactions.slice(start, end)
+  }, [filteredTransactions, page, limit])
+
+  const totalPages = Math.ceil(filteredTransactions.length / limit)
+
   return (
-    <div className='flex items-center justify-center h-svh'>
-      <p className='text-gray-700 text-3xl dark:text-gray-50'>History is coming soon</p>
+    <div className="max-w-6xl mx-auto p-4">
+      <Card className="dark:bg-transparent dark:border-none shadow-none">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Search Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <Input
+              placeholder="Search by Order ID..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              className="w-full"
+            />
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                  <th className="px-4 py-2">Order ID</th>
+                  <th className="px-4 py-2">Amount (token)</th>
+                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4">
+                      Loading...
+                    </td>
+                  </tr>
+                )}
+                {isError && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-red-500">
+                      Failed to load data
+                    </td>
+                  </tr>
+                )}
+                {!isLoading &&
+                  paginatedTransactions.map((tx) => (
+                    <tr key={tx._id} className="border-b">
+                      <td className="px-4 py-2">{tx.orderId}</td>
+                      <td className="px-4 py-2">{tx.amount.toFixed(2)}</td>
+                      <td className="px-4 py-2">
+                        <Badge
+                          className={cn(
+                            tx.status === "success" &&
+                              "bg-green-100 text-green-700",
+                            tx.status === "pending" &&
+                              "bg-yellow-100 dark:bg-transparent dark:text-yellow-500 text-yellow-700",
+                            tx.status === "failed" &&
+                              "bg-red-100 text-red-700"
+                          )}
+                        >
+                          {tx.status.charAt(0).toUpperCase() +
+                            tx.status.slice(1)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2">
+                        {new Date(tx.createdAt).toISOString().split("T")[0]}
+                      </td>
+                    </tr>
+                  ))}
+                {!isLoading && paginatedTransactions.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-gray-500">
+                      No transactions found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            {/* <span>
+              Page {page} of {totalPages || 1}
+            </span> */}
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={page === totalPages || totalPages === 0}
+            >
+              Next
+            </Button>
+          </div>
+
+          {/* Results count */}
+          <div className="text-sm text-gray-500 mt-2">
+            Showing {(page - 1) * limit + 1}–
+            {Math.min(page * limit, filteredTransactions.length)} of{" "}
+            {filteredTransactions.length} results
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

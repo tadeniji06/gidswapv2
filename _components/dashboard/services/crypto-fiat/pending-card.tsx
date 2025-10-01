@@ -64,12 +64,12 @@ export function PendingPaymentCard({ paymentData, onTimeout }: PendingPaymentCar
     { label: string; icon: JSX.Element; color: string }
   > = {
     pending: {
-      label: "Order created, waiting for provider assignment",
+      label: "Order created, waiting for deposit",
       icon: <Loader2 className="w-5 h-5 text-yellow-400" />,
       color: "text-yellow-400"
     },
     processing: {
-      label: "Provider assigned, fulfillment in progress",
+      label: "Provider assigned, processing payment",
       icon: <RefreshCw className="w-5 h-5 text-blue-400" />,
       color: "text-blue-400"
     },
