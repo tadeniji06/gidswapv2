@@ -12,7 +12,7 @@ import Cookies from "js-cookie"
 interface Transaction {
   _id: string
   orderId: string
-  status: "success" | "pending" | "failed"
+  status: "settled" | "pending" | "failed"
   amount: number
   createdAt: string
 }
@@ -118,8 +118,8 @@ export default function TransactionHistoryPage() {
                       <td className="px-4 py-2">
                         <Badge
                           className={cn(
-                            tx.status === "success" &&
-                              "bg-green-100 text-green-700",
+                            tx.status === "settled" &&
+                              "text-green-700",
                             tx.status === "pending" &&
                               "bg-yellow-100 dark:bg-transparent dark:text-yellow-500 text-yellow-700",
                             tx.status === "failed" &&
