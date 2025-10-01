@@ -6,7 +6,7 @@ import { Button } from "@/src/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog"
 import { useSwapStore } from "@/lib/swap-store"
-
+import { useRouter } from "next/navigation"
 interface PendingDepositCardProps {
   swapData?: any
 }
@@ -16,7 +16,7 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
   const [copiedAddress, setCopiedAddress] = useState(false)
   const [copiedAmount, setCopiedAmount] = useState(false)
   const [open, setOpen] = useState(false)
-
+  const router = useRouter()
   // Use prop data or fallback to store data
   const swapData = propSwapData || storeSwapData
 
@@ -44,7 +44,10 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
       console.error("Failed to copy:", err)
     }
   }
-
+   const handleCloseDialog = () => {
+    setOpen(false);
+    router.push("/dashbaord");
+   }
   const depositAddress = swapData.data?.from?.address || "Address not available"
   const depositAmount = swapData.data?.from?.amount || "0"
   const fromCurrency = swapData.data?.from?.coin || "BTC"
@@ -161,7 +164,7 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
             <p>If any issue occurs, please reach out to our customer care hotlines.</p>
           </div>
           <DialogFooter>
-            <Button onClick={() => setOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={handleCloseDialog} className="bg-blue-600 hover:bg-blue-700 text-white">
               Close
             </Button>
           </DialogFooter>
