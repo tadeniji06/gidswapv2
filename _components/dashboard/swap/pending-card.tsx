@@ -44,10 +44,10 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
       console.error("Failed to copy:", err)
     }
   }
-   const handleCloseDialog = () => {
+  const handleCloseDialog = () => {
     setOpen(false);
     router.push("/dashboard");
-   }
+  }
   const depositAddress = swapData.data?.from?.address || "Address not available"
   const depositAmount = swapData.data?.from?.amount || "0"
   const fromCurrency = swapData.data?.from?.coin || "BTC"
@@ -158,10 +158,11 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
         <DialogContent className="sm:max-w-md bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
             <div className="flex justify-center p-3">
-              <div className="w-5 h-5 p-2 bg-blue-50 rounded-full flex items-center justify-center">
-                <Check color="green" size={20} className="text-blue-600 font-bold"/>
+              <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center shadow-sm">
+                <Check size={20} className="text-green-600" />
               </div>
             </div>
+
             <DialogTitle>Transaction Processed</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-gray-300 space-y-2">
