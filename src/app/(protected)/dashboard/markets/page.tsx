@@ -60,7 +60,7 @@ export default function MarketsPage() {
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {["Tokens", "Watchlist"].map((tab) => (
+          {["Tokens"].map((tab) => (
             <Button
               key={tab}
               onClick={() => setActiveTab(tab)}
