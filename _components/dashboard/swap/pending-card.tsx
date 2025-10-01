@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, CheckCircle, Clock, ArrowLeft } from "lucide-react"
+import { Copy, CheckCircle, Clock, ArrowLeft, Check } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog"
@@ -157,6 +157,11 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
+            <div className="flex justify-center">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center">
+                <Check color="green" size={20}/>
+              </div>
+            </div>
             <DialogTitle>Transaction Processed</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-gray-300 space-y-2">
