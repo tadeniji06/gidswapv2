@@ -46,7 +46,7 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
   }
   const handleCloseDialog = () => {
     setOpen(false);
-    router.push("/dashboard");
+    backToSwap();
   }
   const depositAddress = swapData.data?.from?.address || "Address not available"
   const depositAmount = swapData.data?.from?.amount || "0"
