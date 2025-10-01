@@ -55,13 +55,13 @@ export function ChatWidget() {
 
             {/* Social Links */}
             <div className="flex gap-4 mt-6">
-              <Link href="#" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
+              <Link href="t.me/gidswap" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
                 <FaTelegram className="w-5 h-5" />
               </Link>
-              <Link href="#" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
+              <Link href="wa.me/+2349038958941" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
                 <FaWhatsapp className="w-5 h-5" />
               </Link>
-              <Link href="#" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
+              <Link href="www.x.com/gidswap_" className="p-2 rounded-full bg-gray-200 hover:bg-gray-200 dark:bg-blue-950/20">
                 <FaTwitter className="w-5 h-5" />
               </Link>
             </div>
