@@ -60,7 +60,7 @@ export default function Footer() {
 
   const socialLinks = [
     {
-      href: "https://www.tiktok.com/gidswap_",
+      href: "https://www.tiktok.com/gidswap",
       icon: FaTiktok,
       label: "TikTok",
     },
@@ -75,7 +75,7 @@ export default function Footer() {
       label: "Instagram",
     },
     {
-      href: "https://api.whatsapp.com/send?phone=2349038958941",
+      href: "wa.me/+234",
       icon: FaWhatsapp,
       label: "WhatsApp",
     },
@@ -176,7 +176,7 @@ export default function Footer() {
             </p>
 
             {/* Newsletter Signup */}
-            <Newsletter />
+            {/* <Newsletter /> */}
           </motion.div>
 
           <div className="flex"></div>
