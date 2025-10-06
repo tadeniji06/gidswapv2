@@ -33,7 +33,7 @@ export default function VideoSection() {
                     poster="/placeholder.svg?height=400&width=800"
                     playsInline
                   >
-                    <source src="/videos/gidswap.mp4" type="video/mp4" />
+                    <source src="/videos/gidswap-video.mp4" type="video/mp4" />
                   </video>
                   <div
                     className={`absolute inset-0 z-10 bg-black/60 transition-colors duration-300 ${
