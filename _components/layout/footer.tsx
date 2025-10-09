@@ -240,7 +240,7 @@ export default function Footer() {
             <span>© {date} All rights reserved</span>
             <div className="hidden md:block w-1 h-1 bg-blue-400/40 rounded-full" />
             <Link
-              href="https://gidswap.co"
+              href="https://www.gidswap.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-300 hover:text-blue-100 transition-colors duration-300 hover:underline"
