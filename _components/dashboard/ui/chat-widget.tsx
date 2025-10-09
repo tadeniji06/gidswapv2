@@ -1,32 +1,20 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/src/components/ui/button";
-import { MessageCircle, Phone, Mail } from "lucide-react";
+import { MessageCircle, Phone, Mail, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTwitter, FaWhatsapp, FaTimes, FaTelegram } from "react-icons/fa";
+import { FaTwitter, FaInstagram, FaDiscord, FaWhatsapp, FaTimes, FaTelegram } from "react-icons/fa";
 import Link from "next/link";
-
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
+  const close = () => setIsOpen(!isOpen)
 
   return (
-    <motion.div
-      className="fixed bottom-16 right-8 z-50 md:bottom-8 cursor-grab active:cursor-grabbing"
-      drag
-      dragMomentum={false}
-      dragElastic={0.15}
-      dragConstraints={{
-        top: -window.innerHeight,
-        left: -window.innerWidth,
-        right: window.innerWidth,
-        bottom: window.innerHeight,
-      }}
-    >
+    <div className="fixed bottom-16 right-8 z-50 md:bottom-8">
       {/* Chat Button */}
       <Button
         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full w-14 h-14 shadow-lg"
-        onClick={toggle}
+        onClick={() => setIsOpen(!isOpen)}
       >
         <MessageCircle className="w-6 h-6" />
       </Button>
@@ -43,23 +31,26 @@ export function ChatWidget() {
           >
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold mb-1">Contact us</h2>
-              <button className="bg-transparent" onClick={toggle}>
-                <FaTimes />
-              </button>
+              <button className="bg-transparent" onClick={close}><FaTimes /></button>
             </div>
             <p className="text-sm text-gray-900 mb-4 dark:text-gray-50">
               Got any questions? ask us.
             </p>
 
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm ">
               <a href="mailto:support@gidswap.com" className="flex items-center gap-3">
-                <Mail className="w-4 h-4" />
-                <span>support@gidswap.com</span>
+                <Mail className="w-4 h-4 text-gray-900 dark:text-gray-50" />
+                <a href="mailto:support@gidswap.com" className="text-gray-800 dark:text-gray-100 hover:underline">
+                  support@gidswap.com
+                </a>
               </a>
               <a href="tel:+2349038958941" className="flex items-center gap-3">
-                <Phone className="w-4 h-4" />
-                <span>+234 903 895 8941</span>
+                <Phone className="w-4 h-4 text-gray-900 dark:text-gray-50" />
+                <a href="tel:+2349038958941" className="text-gray-800 dark:text-gray-100 hover:underline">
+                  +234 903 895 8941
+                </a>
               </a>
+
             </div>
 
             {/* Social Links */}
@@ -77,6 +68,6 @@ export function ChatWidget() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

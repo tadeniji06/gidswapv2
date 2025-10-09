@@ -80,21 +80,21 @@ export default function MarketsPage() {
         {/* Filters + Search */}
         <div className="flex flex-col sm:flex-row gap-4 items-start justify-between">
           <div className="flex flex-wrap gap-2">
-            {["All", "Top gainers", "Top losers"].map((filter) => (
-              <Button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                aria-pressed={activeFilter === filter}
-                className={`text-sm px-4 py-2 rounded-full transition-colors
-                  ${
-                    activeFilter === filter
-                      ? "bg-black text-white hover:bg-gray-200 dark:bg-gray-700"
-                      : "bg-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-              >
-                {filter}
-              </Button>
-            ))}
+            {/* {["All", "Top gainers", "Top losers"].map((filter) => (
+              // <Button
+              //   key={filter}
+              //   onClick={() => setActiveFilter(filter)}
+              //   aria-pressed={activeFilter === filter}
+              //   className={`text-sm px-4 py-2 rounded-full transition-colors
+              //     ${
+              //       activeFilter === filter
+              //         ? "bg-black text-white hover:bg-gray-200 dark:bg-gray-700"
+              //         : "bg-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+              //     }`}
+              // >
+              //   {filter}
+              // </Button>
+            ))} */}
           </div>
 
           <div className="flex items-center gap-4 w-full sm:w-auto">

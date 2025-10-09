@@ -67,7 +67,7 @@ export default function TransactionHistoryPage() {
 
   const handleCopy = (orderId: string) => {
     navigator.clipboard.writeText(orderId)
-    toast.success("Full Order ID copied!")
+    toast.success("Order ID copied!")
   }
 
   return (

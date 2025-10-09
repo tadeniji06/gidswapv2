@@ -75,7 +75,7 @@ export default function Footer() {
       label: "Instagram",
     },
     {
-      href: "wa.me/+234",
+      href: "wa.me/+2349038958941",
       icon: FaWhatsapp,
       label: "WhatsApp",
     },
