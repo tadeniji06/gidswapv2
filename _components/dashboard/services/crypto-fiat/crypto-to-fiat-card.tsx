@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/src/components/ui/button";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpDown, ChevronDown, Search, Info } from "lucide-react";
+import { ArrowDown, ChevronDown, Search, Info } from "lucide-react";
 import {
   useCryptoFiatStore,
   type Token,
@@ -222,7 +222,7 @@ function CurrencyDropdown({
                     setSearchTerm("");
                   }}
                 >
-                  <div className="w-6 h-6 flex items-center justify-center text-xs font-bold bg-blue-500 rounded-sm text-white">
+                  <div className="w-6 h-6 flex items-center justify-center text-xs font-bold bg-green-500 rounded-sm text-white">
                     {c.symbol}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -367,7 +367,7 @@ export function CryptoFiatSwapCard({
     transition-transform duration-300 hover:scale-110"
           aria-label="Swap currencies"
         >
-          <ArrowUpDown className="w-5 h-5 text-black dark:text-white text-bold" />
+          <ArrowDown className="w-5 h-5 text-black dark:text-white text-bold" />
         </Button>
 
         {/* Receive Section */}
