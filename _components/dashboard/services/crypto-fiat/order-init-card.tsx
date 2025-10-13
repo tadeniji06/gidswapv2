@@ -103,7 +103,7 @@ export function OrderInitializationCard({ onBack, onNext, onOrderComplete }: Ord
               {tokenAmount} {selectedToken?.symbol}
             </span>
           </div>
-  
+
           {/* LP Fee row */}
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">LP Fee:</span>
@@ -136,9 +136,13 @@ export function OrderInitializationCard({ onBack, onNext, onOrderComplete }: Ord
 
         {/* Memo Input */}
         <div className="space-y-2">
-          <Label htmlFor="memo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <Label
+            htmlFor="memo"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Remarks *
           </Label>
+
           <Input
             id="memo"
             type="text"
@@ -147,7 +151,26 @@ export function OrderInitializationCard({ onBack, onNext, onOrderComplete }: Ord
             placeholder="Enter payment description"
             className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
-          {errors.memo && <p className="text-sm text-red-500 dark:text-red-400">{errors.memo}</p>}
+
+          {/* Suggestion tags */}
+          <div className="flex flex-wrap gap-2">
+            {["Personal", "Purchase", "Bills", "Groceries", "Transfer"].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setMemo(suggestion)}
+                className="px-3 py-1 text-sm rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+
+          {errors.memo && (
+            <p className="text-sm text-red-500 dark:text-red-400">
+              {errors.memo}
+            </p>
+          )}
         </div>
 
         {/* Return Address Input */}

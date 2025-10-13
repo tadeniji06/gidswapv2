@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Button } from "@/src/components/ui/button";
 import { MessageCircle, Phone, Mail, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTwitter, FaInstagram, FaDiscord, FaWhatsapp, FaTimes, FaTelegram } from "react-icons/fa";
+import { FaTwitter, FaWhatsapp, FaTimes, FaTelegram } from "react-icons/fa";
 import Link from "next/link";
+
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const close = () => setIsOpen(!isOpen)
