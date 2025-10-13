@@ -158,8 +158,8 @@ export function PendingDepositCard({ swapData: propSwapData }: PendingDepositCar
         <DialogContent className="sm:max-w-md bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
             <div className="flex justify-center p-3">
-              <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center shadow-sm">
-                <Check size={20} className="text-green-600 font-bold" />
+              <div className="p-3 w-15 h-15 bg-green-200 rounded-full flex items-center justify-center shadow-sm">
+                <Check size={20}  className="text-green-600 font-bold" />
               </div>
             </div>
 
