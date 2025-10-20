@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Copy,
 	CheckCircle,
@@ -33,11 +33,17 @@ export function PendingDepositCard({
 	swapData: propSwapData,
 }: PendingDepositCardProps) {
 	const { swapData: storeSwapData, backToSwap } = useSwapStore();
-	const [copiedAddress, setCopiedAddress] = useState(false);
-	const [copiedAmount, setCopiedAmount] = useState(false);
+	const [copied, setCopied] = useState<string>("");
 	const [open, setOpen] = useState(false);
+	const [isDesktop, setIsDesktop] = useState(false);
 
 	const swapData = propSwapData || storeSwapData;
+
+	useEffect(() => {
+		const mobileRegex =
+			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+		setIsDesktop(!mobileRegex.test(navigator.userAgent));
+	}, []);
 
 	if (!swapData || swapData.code !== 0) {
 		return (
@@ -51,22 +57,10 @@ export function PendingDepositCard({
 		);
 	}
 
-	const copyToClipboard = async (
-		text: string,
-		type: "address" | "amount"
-	) => {
-		try {
-			await navigator.clipboard.writeText(text);
-			if (type === "address") {
-				setCopiedAddress(true);
-				setTimeout(() => setCopiedAddress(false), 2000);
-			} else {
-				setCopiedAmount(true);
-				setTimeout(() => setCopiedAmount(false), 2000);
-			}
-		} catch (err) {
-			console.error("Failed to copy:", err);
-		}
+	const copyToClipboard = (text: string, type: string) => {
+		navigator.clipboard.writeText(text);
+		setCopied(type);
+		setTimeout(() => setCopied(""), 2000);
 	};
 
 	const handleCloseDialog = () => {
@@ -85,7 +79,7 @@ export function PendingDepositCard({
 
 	return (
 		<>
-			<Card className='w-full max-w-lg mx-auto bg-gray-900 border border-gray-800 shadow-xl rounded-2xl'>
+			<Card className='w-full max-w-lg mx-auto bg-gray-900 border border-gray-800 shadow-lg rounded-2xl'>
 				<CardHeader className='pb-4'>
 					<div className='flex items-center justify-between'>
 						<Button
@@ -120,10 +114,10 @@ export function PendingDepositCard({
 							<div className='bg-gray-800 p-3 rounded-lg border border-gray-700 shadow-sm'>
 								<QRCodeCanvas
 									value={depositAddress}
-									size={128}
+									size={isDesktop ? 140 : 120}
 									bgColor='#1f2937'
 									fgColor='#ffffff'
-									includeMargin={true}
+									includeMargin
 								/>
 							</div>
 						</div>
@@ -144,18 +138,23 @@ export function PendingDepositCard({
 										onClick={() =>
 											copyToClipboard(depositAddress, "address")
 										}
-										className='text-gray-400 hover:text-white p-1 transition'
+										className='text-gray-400 hover:text-white p-1'
 									>
-										{copiedAddress ? (
+										{copied === "address" ? (
 											<CheckCircle className='h-4 w-4 text-green-500' />
 										) : (
 											<Copy className='h-4 w-4' />
 										)}
 									</Button>
 								</div>
+								{copied === "address" && (
+									<p className='text-green-400 text-xs mt-1'>
+										Address copied!
+									</p>
+								)}
 							</div>
 
-							{/* Amount to Send */}
+							{/* Amount */}
 							<div className='space-y-2'>
 								<label className='text-sm font-medium text-gray-300'>
 									Amount to Send
@@ -170,26 +169,30 @@ export function PendingDepositCard({
 										onClick={() =>
 											copyToClipboard(depositAmount, "amount")
 										}
-										className='text-gray-400 hover:text-white p-1 transition'
+										className='text-gray-400 hover:text-white p-1'
 									>
-										{copiedAmount ? (
+										{copied === "amount" ? (
 											<CheckCircle className='h-4 w-4 text-green-500' />
 										) : (
 											<Copy className='h-4 w-4' />
 										)}
 									</Button>
 								</div>
+								{copied === "amount" && (
+									<p className='text-green-400 text-xs mt-1'>
+										Amount copied!
+									</p>
+								)}
 							</div>
 						</div>
 					</div>
 
-					{/* Swap Details */}
+					{/* Swap Info */}
 					<div className='space-y-3 p-4 bg-gray-800 rounded-lg border border-gray-700'>
 						<div className='flex justify-between text-sm'>
 							<span className='text-gray-400'>Swap ID</span>
 							<span className='text-white font-medium'>{swapId}</span>
 						</div>
-
 						<div className='flex justify-between text-sm'>
 							<span className='text-gray-400'>You will receive</span>
 							<span className='text-white font-medium'>
@@ -197,36 +200,25 @@ export function PendingDepositCard({
 								{toCurrency}
 							</span>
 						</div>
-
 						<div className='flex justify-between text-sm'>
 							<span className='text-gray-400'>Expires in</span>
 							<span className='text-white'>
-								{timeLeftMinutes} minutes
-							</span>
-						</div>
-
-						<div className='flex justify-between text-sm pt-2 border-t border-gray-700'>
-							<span className='text-gray-400'>Status</span>
-							<span className='text-orange-500 font-medium'>
-								{swapData.data?.status || "Waiting for deposit"}
+								{timeLeftMinutes} mins
 							</span>
 						</div>
 					</div>
 
-					{/* Confirm Button */}
 					<Button
-						className='bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl w-full transition'
+						className='bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl w-full'
 						onClick={() => setOpen(true)}
 					>
 						I have sent the coin
 					</Button>
 
-					{/* Warning */}
 					<div className='p-3 bg-yellow-900/20 border border-yellow-800 rounded-lg'>
-						<p className='text-yellow-200 text-xs leading-relaxed'>
-							⚠️ Send only <strong>{fromCurrency}</strong> to this
-							address. Sending any other asset may result in permanent
-							loss.
+						<p className='text-yellow-200 text-xs'>
+							⚠️ Send only {fromCurrency} to this address. Sending any
+							other currency will result in permanent loss.
 						</p>
 					</div>
 				</CardContent>
@@ -241,22 +233,19 @@ export function PendingDepositCard({
 								<Check size={22} className='text-green-600' />
 							</div>
 						</div>
-
 						<DialogTitle className='text-center text-lg font-semibold text-white'>
 							Transaction Processed
 						</DialogTitle>
 					</DialogHeader>
-
 					<div className='text-sm text-gray-300 text-center space-y-2'>
 						<p>
 							Your transaction has been marked as sent successfully.
 						</p>
 						<p>
-							If there are any issues, please reach out to our
-							customer support.
+							If there are any issues, please reach out to our support
+							team.
 						</p>
 					</div>
-
 					<DialogFooter>
 						<Button
 							onClick={handleCloseDialog}
