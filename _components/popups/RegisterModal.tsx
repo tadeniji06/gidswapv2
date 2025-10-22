@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/Authstore";
 import { setCookie } from "@/lib/cookies";
@@ -27,19 +27,27 @@ export function RegistrationModal() {
     password: "",
   });
 
+    useEffect(() => {
+    console.log("Current step:", step);
+  }, [step]);
+  
   const handleFormChange = (newData: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...newData }));
   };
+  useEffect(() => {
+    if (isRegisterModalOpen) setStep(1);
+  }, [isRegisterModalOpen]);
 
-  const handleNextStep = () => setStep((prev) => prev + 1);
-  const handlePreviousStep = () => setStep((prev) => prev - 1);
+  const handleNextStep = () => setStep((prev) => Math.min(prev + 1, 3));
+  const handlePreviousStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
 
   const handleFinalRegistrationSuccess = (token: string) => {
     // Store token (24-hour expiry)
     setCookie("token", token, { expires: 1, path: "/" });
 
-    // Store regstatus (long expiry, e.g., 10 years)
-    setCookie("regstatus", "true", { expires: 365 * 10, path: "/" });
+    // Store regstatus (long expiry, e.g., 2 years)
+    setCookie("regstatus", "true", { expires: 365 * 2, path: "/" });
     setToken(token);
     setAuthStatus(true);
     setRegStatus(true);
