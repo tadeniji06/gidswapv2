@@ -1,12 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/Authstore";
 import { setCookie } from "@/lib/cookies";
-import { Eye, EyeOff, Mail, Lock, User, Loader2, Check } from "lucide-react";
 import {FcGoogle} from "react-icons/fc"
 import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "@/src/components/ui/input";
+// import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { ResponsiveModal } from "./responsive-modal";
 import StepOne from "../steps/registrationStepOne";
@@ -42,12 +41,15 @@ export function RegistrationModal() {
 
   const handleNextStep = () => {
     setLoading(true);
-    // Simulate API call
     setTimeout(() => {
-      setStep((prev) => prev + 1);
+      setStep((prev) => Math.min(prev + 1, 3)); 
       setLoading(false);
     }, 1000);
   };
+
+  useEffect(() => {
+    console.log("🪜 Current step:", step);
+  }, [step]);
 
   const handlePreviousStep = () => setStep((prev) => prev - 1);
 
