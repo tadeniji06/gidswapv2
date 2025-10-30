@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export default function StepThree({ data, onNext, onBack, loading }: any) {
   const [submitting, setSubmitting] = useState(false);
   const [regstatus, setRegstatus] = useState(false);
-  const url = "https://gidswap-server.onrender.com/api/auth/signup";
+  const url = "https://gids-7pni.onrender.com/api/auth/signup";
 
   const handleSubmit = async () => {
     try {

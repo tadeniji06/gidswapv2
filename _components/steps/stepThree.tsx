@@ -7,7 +7,7 @@ import { setCookie } from '@/lib/cookies';
 export default function StepThree({ data, onChange, onBack, onNext }: any) {
   const [submitting, setSubmitting] = useState(false);
   const [regstatus, setRegstatus] = useState(false);
-  const url = "https://gidswap-server.onrender.com/api/auth/signup"
+  const url = "https://gids-7pni.onrender.com/api/auth/signup"
   const handleSubmit = async () => {
   try {
     setSubmitting(true);

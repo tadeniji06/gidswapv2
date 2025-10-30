@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "https://gidswap-server.onrender.com/api/auth", 
+  baseURL: "https://gids-7pni.onrender.com/api/auth", 
   headers: {
     "Content-Type": "application/json",
   },
