@@ -6,7 +6,7 @@ import Hero from "@/_components/sections/Hero";
 import WaysToUse from "@/_components/sections/WaysToUse";
 import RatesSection from "@/_components/sections/Rates";
 import FaqsSection from "@/_components/sections/Faqs";
-import VideoSection from "@/_components/sections/OnboardVideo";
+// import VideoSection from "@/_components/sections/OnboardVideo";
 import Community from "@/_components/sections/community";
 
 export default function LandingPage() {
@@ -20,7 +20,7 @@ export default function LandingPage() {
             <Hero />
 
             {/* Video Section */}
-            <VideoSection />
+            {/* <VideoSection /> */}
 
             {/* Ways to Use Noblocks */}
             <WaysToUse />
