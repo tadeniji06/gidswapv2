@@ -8,7 +8,6 @@ import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useAuthStore } from "@/store/Authstore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
 interface NavLink {
 	name: string;
@@ -39,25 +38,6 @@ export function DesktopNav({
 		toast.info("Logged out");
 	};
 
-	// Framer Motion variants
-	const navContainer = {
-		hidden: {},
-		visible: {
-			transition: {
-				staggerChildren: 0.1,
-			},
-		},
-	};
-
-	const navItem = {
-		hidden: { opacity: 0, y: -10 },
-		visible: {
-			opacity: 1,
-			y: 0,
-			transition: { duration: 0.25, ease: "easeOut" },
-		},
-	};
-
 	return (
 		<nav className='hidden md:flex sticky top-0 z-50 bg-white dark:bg-[#1a1d29] items-center justify-between px-8 py-4 border-b border-gray-300 dark:border-neutral-800 shadow-sm'>
 			{/* Left: Logo + Nav Links */}
@@ -84,16 +64,11 @@ export function DesktopNav({
 				</div>
 
 				{/* Navigation */}
-				<motion.div
-					className='flex items-center gap-6'
-					variants={navContainer}
-					initial='hidden'
-					animate='visible'
-				>
+				<div className='flex items-center gap-6'>
 					{navLinks.map((link) => {
 						const isActive = activeLink === link.name;
 						return (
-							<motion.div key={link.name} variants={navItem}>
+							<div key={link.name}>
 								<Link href={link.href}>
 									<Button
 										variant='ghost'
@@ -113,10 +88,10 @@ export function DesktopNav({
 										<span>{link.name}</span>
 									</Button>
 								</Link>
-							</motion.div>
+							</div>
 						);
 					})}
-				</motion.div>
+				</div>
 			</div>
 
 			{/* Right: Theme toggle + Logout */}
