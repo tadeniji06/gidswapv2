@@ -79,7 +79,7 @@ export function PendingPaymentCard({
 		setIsDesktop(!mobileRegex.test(userAgent));
 	}, []);
 
-	// Poll every 2 seconds for better UX - THIS IS THE KEY CHANGE!
+	// 🔥 KEY FIX: Poll YOUR backend endpoint every 3 seconds
 	const { data: statusData, isError } = useQuery<PendingPaymentData>({
 		queryKey: ["payment-status", paymentData.id],
 		queryFn: async () => {
@@ -93,15 +93,21 @@ export function PendingPaymentCard({
 					},
 				}
 			);
-			if (!res.ok) throw new Error("Failed to fetch payment status");
+
+			if (!res.ok) {
+				console.error("Failed to fetch status:", res.status);
+				throw new Error("Failed to fetch payment status");
+			}
+
 			const data = await res.json();
-			console.log(`Current status: ${data.status}`);
+			console.log(`✅ Current status from DB: ${data.status}`);
 			return data;
 		},
-		refetchInterval: 5000,
-		refetchIntervalInBackground: true, // Keep polling even when tab is not focused
+		refetchInterval: 3000, // Poll every 3 seconds
+		refetchIntervalInBackground: true,
 		initialData: paymentData,
-		retry: 3, // Retry failed requests
+		retry: 3,
+		retryDelay: 1000,
 	});
 
 	const currentStatus = statusData?.status ?? paymentData.status;
@@ -109,7 +115,7 @@ export function PendingPaymentCard({
 	// Detect when transaction is settled and show success modal
 	useEffect(() => {
 		if (currentStatus === "settled" && !hasShownSuccess) {
-			console.log("Transaction settled! Showing success modal");
+			console.log("🎉 Transaction settled! Showing success modal");
 
 			// Calculate completion time
 			const duration = Date.now() - transactionStartTime;
@@ -197,7 +203,7 @@ export function PendingPaymentCard({
 				clearInterval(timer);
 				onTimeout();
 			}
-		}, 60000); // Check expiration every minute
+		}, 60000);
 
 		return () => clearInterval(timer);
 	}, [paymentData.validUntil, onTimeout]);
@@ -215,7 +221,7 @@ export function PendingPaymentCard({
 			.join(" ");
 
 	const shareOnX = () => {
-		const text = `I Just completed a payment of ${
+		const text = `I just completed a payment of ${
 			paymentData.amount
 		} ${paymentData.token} on ${formatNetwork(
 			paymentData.network
@@ -259,17 +265,15 @@ export function PendingPaymentCard({
 						{statusInfo.label}
 					</p>
 
-					{/* Polling indicator */}
 					<div className='flex items-center justify-center gap-2 mt-2'>
 						<div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
 						<span className='text-xs text-gray-500'>
-							Auto-updating every 5s
+							Auto-updating every 3s
 						</span>
 					</div>
 				</CardHeader>
 
 				<CardContent className='space-y-4'>
-					{/* Amount & Token */}
 					<div className='bg-[#22232e] rounded-lg p-4'>
 						<div className='flex justify-between'>
 							<span className='text-gray-400'>Amount</span>
@@ -285,7 +289,6 @@ export function PendingPaymentCard({
 						</div>
 					</div>
 
-					{/* Wallet Address */}
 					<div className='bg-[#22232e] rounded-lg p-4'>
 						<div className='flex items-center gap-2 mb-2'>
 							<Wallet className='w-5 h-5 text-blue-400' />
@@ -314,7 +317,6 @@ export function PendingPaymentCard({
 								)}
 							</Button>
 
-							{/* Show QR trigger */}
 							<Button
 								variant='ghost'
 								size='sm'
@@ -335,7 +337,6 @@ export function PendingPaymentCard({
 							</motion.p>
 						)}
 
-						{/* Inline QR for desktop */}
 						{isDesktop && (
 							<motion.div
 								initial={{ opacity: 0, y: 10 }}
@@ -360,7 +361,6 @@ export function PendingPaymentCard({
 						)}
 					</div>
 
-					{/* Reference */}
 					<div className='bg-[#22232e] rounded-lg p-4'>
 						<div className='flex items-center gap-2 mb-2'>
 							<Hash className='w-5 h-5 text-blue-400' />
@@ -396,7 +396,6 @@ export function PendingPaymentCard({
 						)}
 					</div>
 
-					{/* Warning */}
 					<div className='bg-orange-500/10 border border-orange-500/20 rounded-lg p-4'>
 						<p className='text-orange-400 text-sm'>
 							⚠️ Send only {paymentData.token} on{" "}
@@ -408,7 +407,6 @@ export function PendingPaymentCard({
 				</CardContent>
 			</Card>
 
-			{/* Mobile QR Modal */}
 			<Dialog open={qrOpen} onOpenChange={setQrOpen}>
 				<DialogContent className='bg-[#1a1b24] border border-gray-700 text-white rounded-xl'>
 					<DialogHeader>
@@ -444,7 +442,6 @@ export function PendingPaymentCard({
 				</DialogContent>
 			</Dialog>
 
-			{/* Success Modal - The star of the show! */}
 			<Dialog
 				open={showSuccessModal}
 				onOpenChange={setShowSuccessModal}
@@ -456,7 +453,6 @@ export function PendingPaymentCard({
 						transition={{ duration: 0.3 }}
 					>
 						<DialogHeader className='text-center space-y-4'>
-							{/* Animated success icon */}
 							<motion.div
 								initial={{ scale: 0 }}
 								animate={{ scale: 1 }}
@@ -505,7 +501,6 @@ export function PendingPaymentCard({
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.4 }}
 						>
-							{/* Transaction Details Card */}
 							<div className='bg-[#11121a] rounded-xl p-4 space-y-3 border border-gray-700/50'>
 								<div className='flex justify-between items-center'>
 									<span className='text-gray-400 text-sm'>
@@ -565,7 +560,6 @@ export function PendingPaymentCard({
 								</div>
 							</div>
 
-							{/* Action Buttons */}
 							<div className='flex gap-3'>
 								<motion.div
 									className='flex-1'
