@@ -5,7 +5,9 @@ import { MessageCircle, Phone, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	FaTwitter,
-	FaWhatsapp,
+	FaWhatsapp, 
+ FaInstagram,
+	FaTiktok,
 	FaTimes,
 	FaTelegram,
 } from "react-icons/fa";
