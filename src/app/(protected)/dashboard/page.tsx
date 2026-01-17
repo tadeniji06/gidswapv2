@@ -4,7 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Snowfall from "react-snowfall";
+// import Snowfall from "react-snowfall";
 import {
 	ArrowLeft,
 	ArrowUpDown,
@@ -85,7 +85,7 @@ export default function Dashboard() {
 	// Render service selection page
 	const renderServiceSelection = () => (
 		<div className='w-full max-w-6xl mx-auto px-4'>
-			<Snowfall color="#ffff" />
+			{/* <Snowfall color="#ffff" /> */}
 			{/* HEADER */}
 			<div className='text-center mb-12'>
 				<h1 className='text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3'>
