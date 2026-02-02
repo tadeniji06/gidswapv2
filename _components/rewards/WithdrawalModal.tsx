@@ -78,32 +78,33 @@ export default function WithdrawalModal({
 							initial={{ opacity: 0, scale: 0.95, y: 20 }}
 							animate={{ opacity: 1, scale: 1, y: 0 }}
 							exit={{ opacity: 0, scale: 0.95, y: 20 }}
-							className='relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 shadow-2xl'
+							className='relative w-full max-w-md overflow-hidden rounded-2xl border border-white/5 bg-zinc-950 p-6 shadow-2xl ring-1 ring-white/5'
 						>
-							{/* Decorative background */}
-							<div className='absolute -left-20 -top-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl' />
-							<div className='absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl' />
-
 							<div className='relative z-10'>
-								<div className='flex items-center justify-between mb-6'>
-									<h3 className='text-xl font-bold text-white'>
-										Withdraw Rewards
-									</h3>
+								<div className='flex items-center justify-between mb-6 border-b border-white/5 pb-4'>
+									<div>
+										<h3 className='text-lg font-medium text-white font-poppins'>
+											Withdraw Rewards
+										</h3>
+										<p className='text-xs text-zinc-500 mt-1'>
+											Transfer points directly to your bank
+										</p>
+									</div>
 									<button
 										onClick={onClose}
-										className='rounded-full bg-white/5 p-2 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors'
+										className='rounded-full bg-white/5 p-2 text-zinc-400 hover:bg-white/10 hover:text-white transition-colors'
 									>
-										<X size={18} />
+										<X size={16} />
 									</button>
 								</div>
 
 								<form onSubmit={handleSubmit} className='space-y-4'>
 									<div className='space-y-2'>
-										<label className='text-sm font-medium text-muted-foreground'>
-											Amount to Withdraw (Points)
+										<label className='text-xs uppercase tracking-wider font-semibold text-zinc-500'>
+											Amount (Points)
 										</label>
-										<div className='relative'>
-											<Banknote className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+										<div className='relative group'>
+											<Banknote className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors' />
 											<input
 												type='number'
 												min='5000'
@@ -114,12 +115,12 @@ export default function WithdrawalModal({
 														points: parseInt(e.target.value) || 0,
 													})
 												}
-												className='w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-white placeholder-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+												className='w-full rounded-xl border border-white/5 bg-zinc-900/50 py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:border-white/10 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all'
 												placeholder='Min 5000'
 											/>
 										</div>
-										<div className='flex justify-between text-xs text-muted-foreground'>
-											<span>Min: 5000 PTS</span>
+										<div className='flex justify-between text-[10px] uppercase tracking-wide text-zinc-500'>
+											<span>Min: 5000</span>
 											<span
 												className={
 													formData.points > maxAmount
@@ -127,17 +128,17 @@ export default function WithdrawalModal({
 														: ""
 												}
 											>
-												Max: {maxAmount.toLocaleString()} PTS
+												Max: {maxAmount.toLocaleString()}
 											</span>
 										</div>
 									</div>
 
 									<div className='space-y-2'>
-										<label className='text-sm font-medium text-muted-foreground'>
+										<label className='text-xs uppercase tracking-wider font-semibold text-zinc-500'>
 											Bank Name
 										</label>
-										<div className='relative'>
-											<Building className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+										<div className='relative group'>
+											<Building className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors' />
 											<input
 												type='text'
 												required
@@ -151,18 +152,18 @@ export default function WithdrawalModal({
 														},
 													})
 												}
-												className='w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-white placeholder-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+												className='w-full rounded-xl border border-white/5 bg-zinc-900/50 py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:border-white/10 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all'
 												placeholder='e.g. Zenith Bank'
 											/>
 										</div>
 									</div>
 
 									<div className='space-y-2'>
-										<label className='text-sm font-medium text-muted-foreground'>
+										<label className='text-xs uppercase tracking-wider font-semibold text-zinc-500'>
 											Account Number
 										</label>
-										<div className='relative'>
-											<Banknote className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+										<div className='relative group'>
+											<Banknote className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors' />
 											<input
 												type='text'
 												required
@@ -176,18 +177,18 @@ export default function WithdrawalModal({
 														},
 													})
 												}
-												className='w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-white placeholder-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+												className='w-full rounded-xl border border-white/5 bg-zinc-900/50 py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:border-white/10 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all'
 												placeholder='0123456789'
 											/>
 										</div>
 									</div>
 
 									<div className='space-y-2'>
-										<label className='text-sm font-medium text-muted-foreground'>
+										<label className='text-xs uppercase tracking-wider font-semibold text-zinc-500'>
 											Account Name
 										</label>
-										<div className='relative'>
-											<User className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+										<div className='relative group'>
+											<User className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors' />
 											<input
 												type='text'
 												required
@@ -201,7 +202,7 @@ export default function WithdrawalModal({
 														},
 													})
 												}
-												className='w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-white placeholder-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+												className='w-full rounded-xl border border-white/5 bg-zinc-900/50 py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:border-white/10 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all'
 												placeholder='John Doe'
 											/>
 										</div>
@@ -210,7 +211,7 @@ export default function WithdrawalModal({
 									<button
 										type='submit'
 										disabled={withdrawMutation.isPending}
-										className='relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-blue-500/25 active:scale-[0.98] disabled:opacity-70'
+										className='relative mt-4 w-full overflow-hidden rounded-xl bg-white py-3 font-semibold text-black shadow-lg transition-all hover:bg-zinc-200 active:scale-[0.98] disabled:opacity-70'
 									>
 										{withdrawMutation.isPending ? (
 											<span className='flex items-center justify-center gap-2'>
