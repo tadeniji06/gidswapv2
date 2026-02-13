@@ -51,7 +51,7 @@ const services = [
 		id: "cex-transfer" as ServiceType,
 		title: "Exchange Transfer",
 		description:
-			"Move funds between exchanges with a smooth, secure flow.",
+			"Move funds between exchanges with a smooth, secure* flow.",
 		icon: Shuffle,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
