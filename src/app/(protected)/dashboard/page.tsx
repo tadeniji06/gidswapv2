@@ -11,8 +11,17 @@ import {
 	Wallet,
 	Banknote,
 	Shuffle,
+	AlertTriangle,
 } from "lucide-react";
 import { useSwapStore } from "@/lib/swap-store";
+import { kycService } from "@/lib/services/kyc";
+import { useRouter } from "next/navigation";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from "@/src/components/ui/alert";
+import { Button } from "@/src/components/ui/button";
 
 import { CryptoSwapFlow } from "@/_components/dashboard/services/crypto-swap-flow";
 import CryptoFiatFlow from "@/_components/dashboard/services/crypto-fiat-flow";
@@ -59,11 +68,23 @@ const services = [
 
 export default function Dashboard() {
 	const { fetchCurrencies } = useSwapStore();
+	const router = useRouter();
 	const [selectedService, setSelectedService] =
 		useState<ServiceType>(null);
+	const [kycStatus, setKycStatus] = useState<string | null>(null);
 
 	useEffect(() => {
 		fetchCurrencies();
+
+		// Check KYC status on load
+		kycService
+			.getStatus()
+			.then((status) => {
+				setKycStatus(status.status);
+			})
+			.catch(() => {
+				setKycStatus("unverified"); // Default if error
+			});
 	}, [fetchCurrencies]);
 
 	// Render service flow UI
@@ -95,6 +116,32 @@ export default function Dashboard() {
 					Your entire crypto workflow — simplified.
 				</p>
 			</div>
+
+			{/* KYC ALERT */}
+			{kycStatus === "unverified" && (
+				<Alert className='mb-8 border-orange-500/20 bg-orange-500/10'>
+					<AlertTriangle className='h-5 w-5 text-orange-500' />
+					<div className='flex flex-col sm:flex-row sm:items-center justify-between w-full'>
+						<div>
+							<AlertTitle className='text-orange-500 font-semibold'>
+								Verification Required
+							</AlertTitle>
+							<AlertDescription className='text-orange-400/80 mt-1'>
+								Complete your identity verification (KYC) to unlock
+								full trading features.
+							</AlertDescription>
+						</div>
+						<Button
+							variant='outline'
+							size='sm'
+							className='mt-3 sm:mt-0 border-orange-500/30 text-orange-500 hover:bg-orange-500/20 hover:text-orange-400'
+							onClick={() => router.push("/dashboard/account")}
+						>
+							Verify Now
+						</Button>
+					</div>
+				</Alert>
+			)}
 
 			{/* SERVICES GRID */}
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>

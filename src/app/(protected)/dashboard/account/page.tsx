@@ -12,6 +12,7 @@ import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { useUserStore } from "@/lib/user-store";
+import { KycManager } from "@/_components/settings/kyc/kyc-manager";
 import {
 	User,
 	Mail,
@@ -108,7 +109,7 @@ export default function AccountPage() {
 					if (!formData.currentPassword) return;
 					await updatePassword(
 						formData.currentPassword,
-						formData.newPassword
+						formData.newPassword,
 					);
 					setFormData((prev) => ({
 						...prev,
@@ -140,7 +141,7 @@ export default function AccountPage() {
 					Account
 				</h1>
 				<p className='text-muted-foreground'>
-					Manage your profile information and account settings
+					Manage your profile, security, and verification settings.
 				</p>
 			</div>
 
@@ -151,6 +152,14 @@ export default function AccountPage() {
 					<AlertDescription>{error}</AlertDescription>
 				</Alert>
 			)}
+
+			{/* KYC SECTION */}
+			<div className='mb-8'>
+				<h2 className='text-xl font-semibold mb-4 text-foreground/80'>
+					Identity Verification
+				</h2>
+				<KycManager />
+			</div>
 
 			{/* Profile Card */}
 			<Card className='bg-card border-border'>
