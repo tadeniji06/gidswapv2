@@ -10,8 +10,8 @@ import {
 	ArrowUpDown,
 	Wallet,
 	Banknote,
-	Shuffle,
 	AlertTriangle,
+	Zap,
 } from "lucide-react";
 import { useSwapStore } from "@/lib/swap-store";
 import { kycService } from "@/lib/services/kyc";
@@ -25,8 +25,8 @@ import { Button } from "@/src/components/ui/button";
 
 import { CryptoSwapFlow } from "@/_components/dashboard/services/crypto-swap-flow";
 import CryptoFiatFlow from "@/_components/dashboard/services/crypto-fiat-flow";
-import CexTransferFlow from "@/_components/dashboard/services/cex-transfer-flow";
 import { FiatCryptoFlow } from "@/_components/dashboard/services/fiat-crypto-flow";
+import { OnrampFlow } from "@/_components/dashboard/services/onramp-flow";
 
 // SERVICE TYPE
 
@@ -34,8 +34,7 @@ type ServiceType =
 	| "crypto-crypto"
 	| "crypto-fiat"
 	| "fiat-crypto"
-	| "cex-transfer"
-	// | "color"
+	| "onramp"
 	| null;
 
 // SERVICE DEFINITIONS
@@ -50,19 +49,19 @@ const services = [
 	},
 	{
 		id: "crypto-fiat" as ServiceType,
-		title: "Crypto to Cash",
+		title: "Stablecoins to Cash",
 		description:
-			"Convert your crypto to cash seamlessly and withdraw to your bank.",
+			"Convert your stablecoins to cash seamlessly and withdraw to your bank.",
 		icon: Banknote,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
 	{
-		id: "cex-transfer" as ServiceType,
-		title: "Exchange Transfer",
+		id: "onramp" as ServiceType,
+		title: "Crypto to Cash (Direct)",
 		description:
-			"Move funds between exchanges with a smooth, secure* flow.",
-		icon: Shuffle,
-		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
+			"Send any crypto directly to your bank account with our 2-step automated pipeline.",
+		icon: Zap,
+		style: "hover:bg-blue-50 dark:hover:bg-blue-900/20",
 	},
 ];
 
@@ -96,8 +95,8 @@ export default function Dashboard() {
 				return <CryptoFiatFlow />;
 			case "fiat-crypto":
 				return <FiatCryptoFlow />;
-			case "cex-transfer":
-				return <CexTransferFlow />;
+			case "onramp":
+				return <OnrampFlow />;
 			default:
 				return null;
 		}

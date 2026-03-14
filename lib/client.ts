@@ -1,9 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const baseURL =
-	process.env.NEXT_PUBLIC_PROD_API ||
-	"https://gids-7pni.onrender.com";
+const baseURL = process.env.NEXT_PUBLIC_PROD_API;
 
 export const apiClient = axios.create({
 	baseURL: `${baseURL}/api`,
