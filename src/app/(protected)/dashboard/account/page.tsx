@@ -13,6 +13,7 @@ import { Label } from "@/src/components/ui/label";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { useUserStore } from "@/lib/user-store";
 import { KycManager } from "@/_components/settings/kyc/kyc-manager";
+import { SavedAccountsSection } from "@/_components/settings/saved-accounts-section";
 import {
 	User,
 	Mail,
@@ -159,6 +160,21 @@ export default function AccountPage() {
 					Identity Verification
 				</h2>
 				<KycManager />
+			</div>
+
+			{/* SAVED ACCOUNTS SECTION */}
+			<div className='mb-8'>
+				<div className='flex items-center justify-between mb-4'>
+					<div>
+						<h2 className='text-xl font-semibold text-foreground/80'>
+							Saved Bank Accounts
+						</h2>
+						<p className='text-sm text-muted-foreground mt-0.5'>
+							Your saved accounts are pre-filled automatically when you initiate a new transaction.
+						</p>
+					</div>
+				</div>
+				<SavedAccountsSection />
 			</div>
 
 			{/* Profile Card */}

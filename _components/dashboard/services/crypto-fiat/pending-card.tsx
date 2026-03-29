@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Cookies from "js-cookie";
 import { useState, useEffect, JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,7 +28,17 @@ import {
 	QrCode,
 	ExternalLink,
 	PartyPopper,
+	FileDown,
 } from "lucide-react";
+
+// PDF receipt: dynamically imported so it only loads client-side
+const PDFReceiptButton = dynamic(
+	() =>
+		import("@/_components/dashboard/receipt/PDFReceipt").then(
+			(m) => m.PDFReceiptButton
+		),
+	{ ssr: false, loading: () => <span className="text-xs text-gray-500">Loading receipt...</span> }
+);
 import {
 	Dialog,
 	DialogContent,
@@ -47,6 +58,7 @@ interface PendingPaymentData {
 	transactionFee: string;
 	validUntil: string;
 	status: string;
+	isCompleted?: boolean; // 🎯 Provided by the backend
 }
 
 interface PendingPaymentCardProps {
@@ -79,7 +91,9 @@ export function PendingPaymentCard({
 		setIsDesktop(!mobileRegex.test(userAgent));
 	}, []);
 
-	// 🔥 KEY FIX: Poll YOUR backend endpoint every 3 seconds
+	// 🔥 Poll backend every 3s — backend live-queries PayCrest on each call
+	const TERMINAL_STATUSES = ["validated", "fulfilled", "settled", "cancelled", "refunded", "expired", "failed"];
+
 	const { data: statusData, isError } = useQuery<PendingPaymentData>({
 		queryKey: ["payment-status", paymentData.id],
 		queryFn: async () => {
@@ -94,16 +108,17 @@ export function PendingPaymentCard({
 				}
 			);
 
-			if (!res.ok) {
-				console.error("Failed to fetch status:", res.status);
-				throw new Error("Failed to fetch payment status");
-			}
-
+			if (!res.ok) throw new Error("Failed to fetch payment status");
 			const data = await res.json();
-			console.log(`✅ Current status from DB: ${data.status}`);
+			console.log(`✅ Status: ${data.status} | isCompleted: ${data.isCompleted}`);
 			return data;
 		},
-		refetchInterval: 3000, // Poll every 3 seconds
+		refetchInterval: (query) => {
+			// Stop polling once terminal status is reached
+			const status = query.state.data?.status;
+			if (status && TERMINAL_STATUSES.includes(status)) return false;
+			return 3000;
+		},
 		refetchIntervalInBackground: true,
 		initialData: paymentData,
 		retry: 3,
@@ -111,60 +126,50 @@ export function PendingPaymentCard({
 	});
 
 	const currentStatus = statusData?.status ?? paymentData.status;
+	const isCompleted = statusData?.isCompleted ?? false;
 
-	// Detect when transaction is settled and show success modal
+	// 🎯 Trigger success as soon as isCompleted is true (validated, fulfilled, or settled)
 	useEffect(() => {
-		if (currentStatus === "settled" && !hasShownSuccess) {
-			console.log("🎉 Transaction settled! Showing success modal");
+		if (isCompleted && !hasShownSuccess) {
+			console.log(`🎉 Transaction completed! Status: ${currentStatus}`);
 
-			// Calculate completion time
 			const duration = Date.now() - transactionStartTime;
 			const seconds = Math.floor(duration / 1000);
 			const minutes = Math.floor(seconds / 60);
 			const remainingSeconds = seconds % 60;
 
-			if (minutes > 0) {
-				setCompletionTime(`${minutes}m ${remainingSeconds}s`);
-			} else {
-				setCompletionTime(`${seconds}s`);
-			}
-
+			setCompletionTime(
+				minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${seconds}s`
+			);
 			setShowSuccessModal(true);
 			setHasShownSuccess(true);
 		}
-	}, [currentStatus, hasShownSuccess, transactionStartTime]);
+	}, [isCompleted, hasShownSuccess, transactionStartTime, currentStatus]);
 
-	// Status map with animations
-	const statusMap: Record<
-		string,
-		{ label: string; icon: JSX.Element; color: string }
-	> = {
+	// Status display map
+	const statusMap: Record<string, { label: string; icon: JSX.Element; color: string }> = {
 		pending: {
 			label: "Order created, waiting for deposit",
-			icon: (
-				<Loader2 className='w-5 h-5 text-yellow-400 animate-spin' />
-			),
+			icon: <Loader2 className='w-5 h-5 text-yellow-400 animate-spin' />,
 			color: "text-yellow-400",
 		},
 		processing: {
 			label: "Provider assigned, processing payment",
-			icon: (
-				<RefreshCw className='w-5 h-5 text-blue-400 animate-spin' />
-			),
+			icon: <RefreshCw className='w-5 h-5 text-blue-400 animate-spin' />,
 			color: "text-blue-400",
 		},
 		fulfilled: {
-			label: "Payment completed by provider",
+			label: "Fiat sent — payment completed ✓",
 			icon: <CheckCircle2 className='w-5 h-5 text-green-400' />,
 			color: "text-green-400",
 		},
 		validated: {
-			label: "Payment validated and confirmed",
+			label: "Payment confirmed — funds received ✓",
 			icon: <ShieldCheck className='w-5 h-5 text-emerald-400' />,
 			color: "text-emerald-400",
 		},
 		settled: {
-			label: "Order fully completed on blockchain",
+			label: "Fully settled on blockchain ✓",
 			icon: <CircleDollarSign className='w-5 h-5 text-green-500' />,
 			color: "text-green-500",
 		},
@@ -561,6 +566,25 @@ export function PendingPaymentCard({
 							</div>
 
 							<div className='flex gap-3'>
+							{/* PDF Receipt Download */}
+							<div className='w-full'>
+								<PDFReceiptButton
+									data={{
+										orderId: paymentData.id,
+										reference: paymentData.reference,
+										amount: paymentData.amount,
+										token: paymentData.token,
+										network: paymentData.network,
+										status: currentStatus,
+										receiveAddress: paymentData.receiveAddress,
+										completionTime,
+										date: new Date().toLocaleString(),
+									}}
+								/>
+							</div>
+						</div>
+
+						<div className='flex gap-3'>
 								<motion.div
 									className='flex-1'
 									whileHover={{ scale: 1.02 }}
