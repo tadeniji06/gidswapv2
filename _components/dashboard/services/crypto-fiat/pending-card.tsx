@@ -26,18 +26,17 @@ import {
 	CircleDollarSign,
 	RotateCw,
 	QrCode,
-	ExternalLink,
 	PartyPopper,
-	FileDown,
 } from "lucide-react";
 
-// PDF receipt: dynamically imported so it only loads client-side
+// PDF receipt + share — dynamically imported (client only, @react-pdf/renderer)
 const PDFReceiptButton = dynamic(
-	() =>
-		import("@/_components/dashboard/receipt/PDFReceipt").then(
-			(m) => m.PDFReceiptButton
-		),
-	{ ssr: false, loading: () => <span className="text-xs text-gray-500">Loading receipt...</span> }
+	() => import("@/_components/dashboard/receipt/PDFReceipt").then((m) => m.PDFReceiptButton),
+	{ ssr: false, loading: () => <span className="text-xs text-gray-500">Loading…</span> }
+);
+const ShareReceiptButton = dynamic(
+	() => import("@/_components/dashboard/receipt/PDFReceipt").then((m) => m.ShareReceiptButton),
+	{ ssr: false, loading: () => null }
 );
 import {
 	Dialog,
@@ -81,6 +80,13 @@ export function PendingPaymentCard({
 
 	const API_URL = process.env.NEXT_PUBLIC_PROD_API;
 	const authToken = Cookies.get("token");
+
+	// Read recipient bank details from cookie (set during account selection / verification)
+	const _bankRaw = Cookies.get("verifiedBank");
+	const _bank = _bankRaw ? JSON.parse(_bankRaw) : null;
+	const recipientAccount = _bank?.accountNumber as string | undefined;
+	const recipientName    = _bank?.accountName  as string | undefined;
+	const bankName         = _bank?.bankName      as string | undefined;
 
 	// Detect desktop
 	useEffect(() => {
@@ -565,9 +571,9 @@ export function PendingPaymentCard({
 								</div>
 							</div>
 
-							<div className='flex gap-3'>
-							{/* PDF Receipt Download */}
-							<div className='w-full'>
+							{/* ── Receipt actions ── */}
+							<div className='space-y-2 mt-2'>
+								{/* Download PDF */}
 								<PDFReceiptButton
 									data={{
 										orderId: paymentData.id,
@@ -579,39 +585,38 @@ export function PendingPaymentCard({
 										receiveAddress: paymentData.receiveAddress,
 										completionTime,
 										date: new Date().toLocaleString(),
+										recipientAccount,
+										recipientName,
+										bankName,
 									}}
 								/>
-							</div>
-						</div>
 
-						<div className='flex gap-3'>
-								<motion.div
-									className='flex-1'
-									whileHover={{ scale: 1.02 }}
-									whileTap={{ scale: 0.98 }}
-								>
-									<Button
-										onClick={shareOnX}
-										className='w-full bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-semibold shadow-lg shadow-blue-500/20'
-									>
-										<ExternalLink className='w-4 h-4 mr-2' />
-										Share on X
-									</Button>
-								</motion.div>
+								{/* Share (WhatsApp / Telegram / X / Copy) */}
+								<ShareReceiptButton
+									data={{
+										orderId: paymentData.id,
+										reference: paymentData.reference,
+										amount: paymentData.amount,
+										token: paymentData.token,
+										network: paymentData.network,
+										status: currentStatus,
+										receiveAddress: paymentData.receiveAddress,
+										completionTime,
+										date: new Date().toLocaleString(),
+										recipientAccount,
+										recipientName,
+										bankName,
+									}}
+								/>
 
-								<motion.div
-									className='flex-1'
-									whileHover={{ scale: 1.02 }}
-									whileTap={{ scale: 0.98 }}
+								{/* Close */}
+								<Button
+									onClick={() => setShowSuccessModal(false)}
+									variant='outline'
+									className='w-full border-gray-600 hover:bg-gray-800 text-white'
 								>
-									<Button
-										onClick={() => setShowSuccessModal(false)}
-										variant='outline'
-										className='w-full border-gray-600 hover:bg-gray-800 text-white'
-									>
-										Close
-									</Button>
-								</motion.div>
+									Close
+								</Button>
 							</div>
 						</motion.div>
 					</motion.div>
