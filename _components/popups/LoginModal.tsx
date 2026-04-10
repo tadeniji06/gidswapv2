@@ -20,8 +20,10 @@ export function LoginModal() {
     isLoginModalOpen,
     setLoginModalOpen,
     setRegisterModalOpen,
+    setForgotModalOpen,
     setAuthStatus,
     setToken,
+    setTempEmail,
   } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,11 +50,19 @@ export function LoginModal() {
       router.push("/dashboard");
     } catch (err: any) {
       if (err.response) {
+        if (err.response.status === 403 && err.response.data.isVerified === false) {
+          // User exists but not verified
+          setError("Account not verified. Redirecting to verification...");
+          setTempEmail(email);
+          setTimeout(() => {
+            setLoginModalOpen(false);
+            setRegisterModalOpen(true);
+          }, 1500);
+          return;
+        }
         setError(err.response.data?.message || "Something went wrong.");
-      } else if (err.request) {
-        setError("No response from server. Please try again.");
       } else {
-        setError(err.message);
+        setError("Network error. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -146,12 +156,16 @@ export function LoginModal() {
 
           {/* Forgot Password */}
           <div className="text-right">
-            <Link
-              href="/forgot"
+            <button
+              type="button"
+              onClick={() => {
+                setLoginModalOpen(false);
+                setForgotModalOpen(true);
+              }}
               className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
               Forgot password?
-            </Link>
+            </button>
           </div>
 
           {/* Submit Button */}

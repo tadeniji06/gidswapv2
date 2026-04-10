@@ -79,12 +79,12 @@ const SwapForm: React.FC<{
 
   // Receive is ETH or USDT
   const receiveOptions = currencies.filter((c) =>
-    ["usd", "euro"].includes(c.id)
+    ["usd", "eur"].includes(c.id)
   );
 
   useEffect(() => {
-    if (!receiveOptions.some((c) => c.id === receiveCurrency.id)) {
-      setReceiveCurrency(receiveOptions[0]);
+    if (!receiveCurrency || !receiveOptions.some((c) => c.id === receiveCurrency.id)) {
+      setReceiveCurrency(receiveOptions[0] || currencies[1]);
     }
   }, [receiveOptions, receiveCurrency, setReceiveCurrency]);
 
@@ -169,15 +169,17 @@ const SwapForm: React.FC<{
                   defaultValue={receiveCurrency.name}
                 >
                   <SelectTrigger className="w-fit flex h-9 items-center gap-2 rounded-full p-2 border-2 border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 dark:hover:bg-purple-400/10 hover:shadow-[0_0_6px_rgba(147,51,234,0.3)] transition-all duration-300 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm">
-                    <Image
-                      src={receiveCurrency.logo}
-                      alt={`${receiveCurrency.name} logo`}
-                      width={16}
-                      height={16}
-                      className="w-4 h-4 rounded-full"
-                    />
+                    {receiveCurrency?.logo && (
+                      <Image
+                        src={receiveCurrency.logo || "/placeholder.svg"}
+                        alt={`${receiveCurrency?.name || 'Currency'} logo`}
+                        width={16}
+                        height={16}
+                        className="w-4 h-4 rounded-full"
+                      />
+                    )}
                     <span className="text-xs font-medium">
-                      {receiveCurrency.name}
+                      {receiveCurrency?.name || "Select"}
                     </span>
                   </SelectTrigger>
 

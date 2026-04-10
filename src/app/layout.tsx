@@ -7,6 +7,7 @@ import Footer from "@/_components/layout/footer";
 import { Toaster } from "sonner";
 import { RegistrationModal } from "@/_components/popups/NewRegisterModal";
 import { LoginModal } from "@/_components/popups/LoginModal";
+import { ForgotPasswordModal } from "@/_components/popups/ForgotPasswordModal";
 import OneSignalInit from "@/src/components/OneSignalInit";
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({
 	return (
 		<html lang='en' suppressHydrationWarning>
 			<body
+				suppressHydrationWarning
 				className={`${geistSans.variable} ${geistMono.variable} antialiased w-full bg-neutral-900`}
 			>
 				<ThemeProvider
@@ -44,6 +46,7 @@ export default function RootLayout({
 					<Footer />
 					<RegistrationModal />
 					<LoginModal />
+					<ForgotPasswordModal />
 					<Toaster position='top-right' richColors />
 				</ThemeProvider>
 			</body>

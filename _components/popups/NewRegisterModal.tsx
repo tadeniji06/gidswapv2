@@ -11,6 +11,9 @@ import { ResponsiveModal } from "./responsive-modal";
 import StepOne from "../steps/registrationStepOne";
 import StepTwo from "../steps/registrationStepTwo";
 import StepThree from "../steps/stepThree";
+import OtpVerificationStep from "../steps/OtpVerificationStep";
+import axios from "axios";
+import { toast } from "sonner";
 
 export function RegistrationModal() {
   const router = useRouter();
@@ -24,9 +27,20 @@ export function RegistrationModal() {
     setAuthStatus,
     setRegStatus,
     setToken,
+    tempEmail,
+    setTempEmail,
   } = useAuthStore();
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    if (isRegisterModalOpen && tempEmail) {
+      setFormData(prev => ({ ...prev, email: tempEmail }));
+      setStep(4);
+      setTempEmail("");
+    }
+  }, [isRegisterModalOpen, tempEmail, setTempEmail]);
   const [loading, setLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -44,30 +58,50 @@ export function RegistrationModal() {
     setTimeout(() => {
       setStep((prev) => Math.min(prev + 1, 3)); 
       setLoading(false);
-    }, 1000);
+    }, 500);
   };
 
-  useEffect(() => {
-    console.log("🪜 Current step:", step);
-  }, [step]);
+  const handleResendOtp = async () => {
+    try {
+      const api_url = process.env.NEXT_PUBLIC_PROD_API;
+      await axios.post(`${api_url}/api/auth/request-otp`, { email: formData.email });
+      toast.success("A new OTP has been sent to your email.");
+    } catch (err: any) {
+      toast.error("Failed to resend OTP. Please try again.");
+    }
+  };
 
   const handlePreviousStep = () => setStep((prev) => prev - 1);
 
+  const handleVerifyOtp = async (otp: string) => {
+    setIsVerifying(true);
+    try {
+      const api_url = process.env.NEXT_PUBLIC_PROD_API;
+      const res = await axios.post(`${api_url}/api/auth/verify-email`, {
+        email: formData.email,
+        otp
+      });
+
+      if (res.data.success) {
+        toast.success("Email verified successfully!");
+        handleFinalRegistrationSuccess(res.data.token);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Invalid OTP. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const handleFinalRegistrationSuccess = (token: string) => {
-    setLoading(true);
+    setCookie("token", token, { expires: 1, path: "/" });
+    setCookie("regstatus", "true", { expires: 365, path: "/" });
 
-    setTimeout(() => {
-      // Store token (24-hour expiry)
-      setCookie("token", token, { expires: 1, path: "/" });
-      setCookie("regstatus", "true", { expires: 365 * 10, path: "/" });
-
-      setToken(token);
-      setAuthStatus(true);
-      setRegStatus(true);
-      setRegisterModalOpen(false);
-      setLoading(false);
-      router.push("/dashboard");
-    }, 1500);
+    setToken(token);
+    setAuthStatus(true);
+    setRegStatus(true);
+    setRegisterModalOpen(false);
+    router.push("/dashboard");
   };
 
   const switchToLogin = () => {
@@ -88,21 +122,20 @@ export function RegistrationModal() {
         );
       case 2:
         return (
-          <StepTwo
+          <StepThree
             data={formData}
             onChange={handleFormChange}
-            onNext={handleNextStep}
+            onNext={() => setStep(3)}
             onBack={handlePreviousStep}
-            loading={loading}
           />
         );
       case 3:
         return (
-          <StepThree
-            data={formData}
-            onChange={handleFormChange}
-            onNext={handleFinalRegistrationSuccess}
-            onBack={handlePreviousStep}
+          <OtpVerificationStep
+            email={formData.email}
+            onVerify={handleVerifyOtp}
+            onResend={handleResendOtp}
+            loading={isVerifying}
           />
         );
       default:
@@ -114,18 +147,20 @@ export function RegistrationModal() {
     <ResponsiveModal
       open={isRegisterModalOpen}
       onClose={() => setRegisterModalOpen(false)}
-      title={`Step ${step} of 3`}
+      title={step < 3 ? `Step ${step} of 2` : "Final Verification"}
     >
       <div className="space-y-6">
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <motion.div
-            className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full"
-            initial={{ width: "0%" }}
-            animate={{ width: `${(step / 3) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        {step < 3 && (
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <motion.div
+              className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: `${(step / 2) * 100}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+        )}
 
         {/* Step Content */}
         <AnimatePresence mode="wait">

@@ -40,17 +40,8 @@ export default function StepOne({ data, onChange, onNext }: any) {
         return;
       }
 
-      //Send OTP if user doesn't exist
-      const otpRes = await axios.post("/api/send-otp", {
-        email: data.email,
-      });
-
-      if (otpRes.data.success) {
-        toast.success("OTP sent successfully!");
-        onNext();
-      } else {
-        throw new Error(otpRes.data.error || "OTP send failed");
-      }
+      // Just proceed to next step if user doesn't exist
+      onNext();
     } catch (err: any) {
       toast.error(
         `Failed: ${

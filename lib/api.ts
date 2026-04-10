@@ -1,7 +1,8 @@
 import axios from "axios"
 
+const API_BASE = process.env.NEXT_PUBLIC_PROD_API || "https://gids-7pni.onrender.com";
 const api = axios.create({
-  baseURL: "https://gids-7pni.onrender.com/api/auth", 
+  baseURL: `${API_BASE}/api/auth`, 
   headers: {
     "Content-Type": "application/json",
   },

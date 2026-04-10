@@ -7,7 +7,8 @@ import { setCookie } from '@/lib/cookies';
 export default function StepThree({ data, onChange, onBack, onNext }: any) {
   const [submitting, setSubmitting] = useState(false);
   const [regstatus, setRegstatus] = useState(false);
-  const url = "https://gids-7pni.onrender.com/api/auth/signup"
+  const api_url = process.env.NEXT_PUBLIC_PROD_API;
+  const url = `${api_url}/api/auth/signup`
   const handleSubmit = async () => {
   try {
     setSubmitting(true);
@@ -18,13 +19,9 @@ export default function StepThree({ data, onChange, onBack, onNext }: any) {
       password: data.password,
     });
 
-    const msg = res.data.message;
-    const token = res.data.token;
-    // const user = res.data.user;
-    console.log(token)
-    toast.success(`${msg}`);
-    if (msg) {
-      onNext(token);
+    if (res.data.success) {
+      toast.success(res.data.message);
+      onNext();
     } else {
       toast.error(res.data.message || 'Registration failed.');
     }
