@@ -8,9 +8,17 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Newsletter from "../sections/Newsletter";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 function ThemeToggle() {
 	const { theme, setTheme } = useTheme();
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+
+	// Render a placeholder or neutral state during hydration
+	if (!mounted) {
+		return <div className="flex h-11 items-center justify-between gap-2 rounded-full bg-blue-900/20 backdrop-blur-md border border-blue-400/20 p-1 w-full max-w-[200px]" />;
+	}
 
 	return (
 		<div

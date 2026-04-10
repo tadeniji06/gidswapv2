@@ -258,28 +258,51 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 		try {
 			const authToken = Cookies.get("token");
 			const api_url = process.env.NEXT_PUBLIC_PROD_API;
+			
+			// Find the network for the current token from our state
+			const selectedToken = get().selectedToken;
+			const safeNetwork = (selectedToken?.network || "bnb-smart-chain")
+				.toLowerCase()
+				.replace(/\s+/g, "-");
+
 			const response = await axios.get(
-				`${api_url}/api/payCrest/trade/tokenRates/${tokenSymbol}/${amount}/${currency}`,
+				`${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${amount}/${currency}?side=sell`,
 				{ headers: { Authorization: `Bearer ${authToken}` } },
 			);
 			const quoteData = response.data;
 
-			if (quoteData.status === "success") {
-				const ratePerUnit = Number.parseFloat(quoteData.data);
-				const amountNum = Number.parseFloat(amount);
-				const total = amountNum * ratePerUnit;
+			if (quoteData.status === "success" && quoteData.data) {
+				const payload = quoteData.data;
+				let ratePerUnit = 0;
 
-				const quote: Quote = {
-					rate: ratePerUnit,
-					total,
-					tokenSymbol,
-					currencyCode: currency,
-				};
+				// V2 Response structure (with side=sell)
+				if (payload.sell && payload.sell.rate) {
+					ratePerUnit = Number.parseFloat(payload.sell.rate);
+				} else if (payload.rate) {
+					ratePerUnit = Number.parseFloat(payload.rate);
+				} else if (typeof payload === "string" || typeof payload === "number") {
+					// Fallback for legacy support if backend returned a string
+					ratePerUnit = Number.parseFloat(payload as unknown as string);
+				}
 
-				set({ quote, fiatAmount: total.toFixed(2) });
-				Cookies.set("crypto-fiat-quote", JSON.stringify(quote), {
-					expires: 1 / 24,
-				});
+				if (ratePerUnit > 0) {
+					const amountNum = Number.parseFloat(amount);
+					const total = amountNum * ratePerUnit;
+
+					const quote: Quote = {
+						rate: ratePerUnit,
+						total,
+						tokenSymbol,
+						currencyCode: currency,
+					};
+
+					set({ quote, fiatAmount: total.toFixed(2) });
+					Cookies.set("crypto-fiat-quote", JSON.stringify(quote), {
+						expires: 1 / 24,
+					});
+				} else {
+					set({ quote: null, fiatAmount: "0.00" });
+				}
 			}
 		} catch (error) {
 			console.error("Failed to fetch quote:", error);
@@ -393,8 +416,18 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 				response.data;
 
 			if (success && paycrestResponse?.status === "success") {
+				const orderData = paycrestResponse.data;
 				const paymentOrder: PaymentOrder = {
-					...paycrestResponse.data,
+					id: orderData.id,
+					reference: orderData.reference || reference,
+					amount: orderData.amount || tokenAmount,
+					token: orderData.token || selectedToken.symbol,
+					// Map v2 nested providerAccount to flat interface
+					network: orderData.providerAccount?.network || transaction.network,
+					receiveAddress: orderData.providerAccount?.receiveAddress || transaction.receiveAddress,
+					senderFee: orderData.senderFee || "0",
+					transactionFee: orderData.transactionFee || "0",
+					validUntil: orderData.providerAccount?.validUntil || orderData.validUntil,
 					status: transaction.status,
 				};
 

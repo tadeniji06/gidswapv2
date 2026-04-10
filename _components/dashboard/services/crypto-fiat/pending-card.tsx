@@ -225,11 +225,13 @@ export function PendingPaymentCard({
 		setTimeout(() => setCopied(""), 2000);
 	};
 
-	const formatNetwork = (network: string) =>
-		network
+	const formatNetwork = (network: string) => {
+		if (!network) return "Unknown Network";
+		return network
 			.split("-")
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 			.join(" ");
+	};
 
 	const shareOnX = () => {
 		const text = `I just completed a payment of ${

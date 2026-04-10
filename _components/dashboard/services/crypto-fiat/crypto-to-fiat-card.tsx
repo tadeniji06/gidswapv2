@@ -98,7 +98,7 @@ function TokenDropdown({
             {filteredTokens.length > 0 ? (
               filteredTokens.map((t) => (
                 <button
-                  key={t.symbol}
+                  key={`${t.symbol}-${t.network}`}
                   className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#3a3d4a] text-left transition-colors"
                   onClick={() => {
                     onSelect(t);

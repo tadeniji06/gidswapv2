@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/Authstore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useState } from "react";
 
 export default function Header() {
   const {
@@ -20,8 +21,10 @@ export default function Header() {
     logout,
   } = useAuthStore();
 
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     initializeAuth();
+    setMounted(true);
   }, [initializeAuth]);
 
   const handleRegisterClick = () => {
@@ -37,9 +40,9 @@ export default function Header() {
   const { theme } = useTheme();
   return (
     <header
-      className={theme === "dark" ? `sticky left-0 top-0 z-20 w-full bg-transparent backdrop-blur transition-all dark:bg-transparent ${
+      className={(!mounted || theme === "dark") ? `sticky left-0 top-0 z-20 w-full bg-transparent backdrop-blur transition-all dark:bg-transparent ${
         hideHeader ? "hidden" : "block"
-      }`: `sticky left-0 top-0 z-20 w-full bg-white backdrop-blur transition-all dark:bg-transparent ${
+      }` : `sticky left-0 top-0 z-20 w-full bg-white backdrop-blur transition-all dark:bg-transparent ${
         hideHeader ? "hidden" : "block"
       }`}
     >
@@ -48,7 +51,7 @@ export default function Header() {
         <div className="relative flex-shrink-0 group">
           {/* Trigger (logo + chevron) */}
           <div className="flex items-center gap-2 cursor-pointer">
-            {theme === "light" ? (
+            {mounted && theme === "light" ? (
               <Image
                 src="/images/Gidswaplogo.png"
                 alt="Logo"
