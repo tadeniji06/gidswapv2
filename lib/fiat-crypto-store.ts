@@ -198,34 +198,60 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 		try {
 			const authToken = Cookies.get("token");
 			const api_url = process.env.NEXT_PUBLIC_PROD_API || "";
-			// Use the v2 rates endpoint to specify network
 			const safeNetwork = network.toLowerCase().replace(/\s+/g, '-');
 			
-			// We query the rate for exactly 1 Crypto (USDC/USDT) to get the base exchange rate
-			// This prevents hitting 'no provider' issues for large total fiat amounts in the rates path
-			const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}?side=buy`;
+			// Volume-Matched Quoting Logic:
+			// PayCrest Rates API treats 'amount' as Crypto units by default.
+			// To get an accurate rate without hitting min/max liquidity limits, 
+			// we estimate the crypto value of the user's fiat input.
+			const selectedCurrency = get().currencies.find(c => c.code === fiatCode);
+			const marketRate = selectedCurrency?.marketRate || 1500;
+			const estimatedCryptoValue = Number(amount) / marketRate;
 			
-			const response = await axios.get(url, {
-				headers: { Authorization: `Bearer ${authToken}` },
-			});
+			// We use the estimated crypto value as the 'amount' for the rate fetch.
+			// We cap it to a minimum of 1 for stability with smaller fiat amounts.
+			const quoteAmount = Math.max(1, Math.round(estimatedCryptoValue * 100) / 100);
 
-			// Onramp => user buys crypto with fiat. Use buy rate.
-			// The response struct might have `data.buy.rate` or `data.rate` depending on whether it mapped it directly
+			let response;
+			try {
+				// level 1: Matched amount + Buy side
+				const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${quoteAmount}/${fiatCode}?side=buy`;
+				response = await axios.get(url, {
+					headers: { Authorization: `Bearer ${authToken}` },
+				});
+			} catch (firstError: any) {
+				try {
+					// Level 2: Unit amount ($1) + Buy side
+					console.warn(`No provider for matched amount ${quoteAmount}. Retrying with unit rate...`);
+					const unitUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}?side=buy`;
+					response = await axios.get(unitUrl, {
+						headers: { Authorization: `Bearer ${authToken}` },
+					});
+				} catch (secondError: any) {
+					// Level 3: Unit amount ($1) WITHOUT Side (some providers might be misconfigured)
+					console.warn(`No provider for unit rate with side=buy. Retrying without side filter...`);
+					const simpleUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}`;
+					response = await axios.get(simpleUrl, {
+						headers: { Authorization: `Bearer ${authToken}` },
+					});
+				}
+			}
+
 			const payload = response.data.data;
-			
 			let rate = 0;
-			let totalTokenEstimate = 0;
-
-			// If payload has buy, use buy
+			
+			// Extract rate from various potential PayCrest response structures
 			if (payload && payload.buy) {
 				rate = Number.parseFloat(payload.buy.rate);
-				totalTokenEstimate = Number.parseFloat(amount) / rate;
+			} else if (payload && payload.sell && !payload.buy) {
+				// If only sell is available, use it as a reference (better than failing)
+				rate = Number.parseFloat(payload.sell.rate);
 			} else if (payload && payload.rate) {
 				rate = Number.parseFloat(payload.rate);
-				totalTokenEstimate = Number.parseFloat(amount) / rate;
 			}
 
 			if (rate > 0) {
+				const totalTokenEstimate = Number.parseFloat(amount) / rate;
 				const quoteData = {
 					rate,
 					total: totalTokenEstimate,
