@@ -1,10 +1,6 @@
-// Updated Dashboard Page with Lucide Icons + Improved UX
-// (Place in your component file)
-
 "use client";
 
 import { useEffect, useState } from "react";
-// import Snowfall from "react-snowfall";
 import {
 	ArrowLeft,
 	ArrowUpDown,
@@ -35,6 +31,14 @@ type ServiceType =
 
 // SERVICE DEFINITIONS
 const services = [
+	{
+		id: "fiat-crypto" as ServiceType,
+		title: "Fiat to Stablecoins",
+		description:
+			"Buy stablecoins directly with cash from your Naira bank account.",
+		icon: Banknote,
+		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
+	},
 	{
 		id: "crypto-crypto" as ServiceType,
 		title: "Crypto to Crypto",
@@ -91,7 +95,6 @@ export default function Dashboard() {
 	// Render service selection page
 	const renderServiceSelection = () => (
 		<div className='w-full max-w-6xl mx-auto px-4'>
-			{/* <Snowfall color="#ffff" /> */}
 			{/* HEADER */}
 			<div className='text-center mb-12'>
 				<h1 className='text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3'>

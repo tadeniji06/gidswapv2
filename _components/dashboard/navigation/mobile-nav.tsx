@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useAuthStore } from "@/store/Authstore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 export function MobileNav() {
 	const { theme, setTheme } = useTheme();
@@ -17,6 +18,9 @@ export function MobileNav() {
 		router.push("/");
 		toast.info("Logged out");
 	};
+
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
 
 	return (
 		<nav
@@ -31,7 +35,7 @@ export function MobileNav() {
 		>
 			{/* Logo */}
 			<div className='flex items-center gap-2'>
-				{theme === "dark" ? (
+				{mounted && theme === "dark" ? (
 					<Image
 						src='/images/gidsfull.png'
 						alt='Logo'
@@ -65,7 +69,9 @@ export function MobileNav() {
             transition
           '
 				>
-					{theme === "dark" ? (
+					{!mounted ? (
+						<div className="w-5 h-5" />
+					) : theme === "dark" ? (
 						<Sun className='w-5 h-5' />
 					) : (
 						<Moon className='w-5 h-5' />

@@ -8,6 +8,7 @@ import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useAuthStore } from "@/store/Authstore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 interface NavLink {
 	name: string;
@@ -38,13 +39,19 @@ export function DesktopNav({
 		toast.info("Logged out");
 	};
 
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+
+  // During SSR and initial hydration, we render a placeholder for theme-dependent bits
+  // to prevent mismatch between server-rendered HTML and client state.
+
 	return (
 		<nav className='hidden md:flex sticky top-0 z-50 bg-white dark:bg-[#1a1d29] items-center justify-between px-8 py-4 border-b border-gray-300 dark:border-neutral-800 shadow-sm'>
 			{/* Left: Logo + Nav Links */}
 			<div className='flex items-center gap-10'>
 				{/* Logo */}
 				<div className='flex-shrink-0'>
-					{theme === "dark" ? (
+					{mounted && theme === "dark" ? (
 						<Image
 							src='/images/gidsfull.png'
 							alt='Logo'
@@ -109,7 +116,9 @@ export function DesktopNav({
             transition
           '
 				>
-					{theme === "dark" ? (
+					{!mounted ? (
+						<div className="w-5 h-5" /> // Empty placeholder until mounted
+					) : theme === "dark" ? (
 						<Sun className='w-5 h-5' />
 					) : (
 						<Moon className='w-5 h-5' />
