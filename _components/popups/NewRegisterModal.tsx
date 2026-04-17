@@ -35,7 +35,7 @@ export function RegistrationModal() {
   useEffect(() => {
     if (isRegisterModalOpen && tempEmail) {
       setFormData(prev => ({ ...prev, email: tempEmail }));
-      setStep(4);
+      setStep(3); // Corrected from 4 to 3 (OTP Step)
       setTempEmail("");
     }
   }, [isRegisterModalOpen, tempEmail, setTempEmail]);
