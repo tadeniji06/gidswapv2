@@ -95,10 +95,15 @@ export function KycManager() {
 				{/* Status Text */}
 				<div className='text-sm text-muted-foreground'>
 					{isVerified ? (
-						<p>
-							Your identity has been verified. You have full access to
-							trading features.
-						</p>
+						<div className="space-y-1">
+							<p className="font-medium text-green-600 dark:text-green-400">
+								Identity Verification Complete
+							</p>
+							<p>
+								Your identity has been verified. You have full access to
+								trading features and can now trade up to <strong className="text-foreground">$10,000 USD</strong>.
+							</p>
+						</div>
 					) : isFailed ? (
 						<div className='flex items-start gap-2 text-red-400 bg-red-500/5 p-3 rounded-lg border border-red-500/10'>
 							<AlertTriangle className='w-4 h-4 mt-0.5 shrink-0' />
@@ -127,7 +132,7 @@ export function KycManager() {
 									: "Start Verification"}
 							</Button>
 						</DialogTrigger>
-						<DialogContent className='sm:max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none'>
+						<DialogContent className='sm:max-w-md p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl rounded-2xl'>
 							<KycFlow
 								onCancel={() => setOpen(false)}
 								onComplete={handleVerifySuccess}
