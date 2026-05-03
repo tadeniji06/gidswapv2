@@ -3,6 +3,8 @@ import { ThemeProvider } from "@/_components/theme-provider";
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation";
 
+import { OnboardingModal } from "@/_components/popups/OnboardingModal";
+
 export default async function ProtectedLayout({children,}: {children: React.ReactNode}) {
     const cookieStore = await cookies()
     const token = cookieStore.get("token");
@@ -19,6 +21,7 @@ export default async function ProtectedLayout({children,}: {children: React.Reac
     >
     <main>
       <QueryProvider>
+         <OnboardingModal />
          {children}
       </QueryProvider>
      

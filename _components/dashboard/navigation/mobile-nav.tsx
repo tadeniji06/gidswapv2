@@ -26,10 +26,10 @@ export function MobileNav() {
 		<nav
 			className='
         md:hidden sticky top-0 z-50 
-        bg-white dark:bg-[#1a1d29]
+        glass-panel
         flex items-center justify-between
         px-4 py-3
-        border-b border-gray-600 dark:border-white
+        border-b border-white/5
         shadow-sm
       '
 		>

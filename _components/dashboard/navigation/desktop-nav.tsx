@@ -46,11 +46,11 @@ export function DesktopNav({
   // to prevent mismatch between server-rendered HTML and client state.
 
 	return (
-		<nav className='hidden md:flex sticky top-0 z-50 bg-white dark:bg-[#1a1d29] items-center justify-between px-8 py-4 border-b border-gray-300 dark:border-neutral-800 shadow-sm'>
+		<nav className='hidden md:flex sticky top-0 z-50 glass-panel border-b border-white/5 shadow-sm items-center justify-between px-8 py-4 transition-all duration-300'>
 			{/* Left: Logo + Nav Links */}
 			<div className='flex items-center gap-10'>
 				{/* Logo */}
-				<div className='flex-shrink-0'>
+				<div className='flex-shrink-0 cursor-pointer hover:scale-105 transition-transform'>
 					{mounted && theme === "dark" ? (
 						<Image
 							src='/images/gidsfull.png'
@@ -71,7 +71,7 @@ export function DesktopNav({
 				</div>
 
 				{/* Navigation */}
-				<div className='flex items-center gap-6'>
+				<div className='flex items-center gap-4 bg-background/30 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md'>
 					{navLinks.map((link) => {
 						const isActive = activeLink === link.name;
 						return (
@@ -81,17 +81,16 @@ export function DesktopNav({
 										variant='ghost'
 										onClick={() => onLinkClick(link.name)}
 										className={`
-                      flex items-center gap-2 text-gray-700 dark:text-gray-200
-                      hover:text-blue-600 dark:hover:text-blue-400
-                      px-4 py-2 rounded-lg transition
+                      flex items-center gap-2 text-sm font-semibold tracking-wide
+                      px-5 py-2.5 rounded-xl transition-all duration-300
                       ${
 												isActive
-													? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-													: "bg-transparent"
+													? "bg-primary text-white shadow-[0_0_15px_rgba(100,150,255,0.3)]"
+													: "text-muted-foreground hover:text-white hover:bg-white/5"
 											}
                     `}
 									>
-										<link.icon className='w-5 h-5' />
+										<link.icon className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
 										<span>{link.name}</span>
 									</Button>
 								</Link>
@@ -102,18 +101,18 @@ export function DesktopNav({
 			</div>
 
 			{/* Right: Theme toggle + Logout */}
-			<div className='flex items-center gap-3'>
+			<div className='flex items-center gap-4'>
 				{/* Theme toggle */}
 				<button
 					onClick={() =>
 						setTheme(theme === "dark" ? "light" : "dark")
 					}
 					className='
-            w-9 h-9 rounded-full flex items-center justify-center
-            bg-gray-100 dark:bg-neutral-800
-            text-gray-600 dark:text-gray-300
-            hover:bg-gray-200 dark:hover:bg-neutral-700
-            transition
+            w-10 h-10 rounded-xl flex items-center justify-center
+            bg-background/50 border border-white/5
+            text-muted-foreground hover:text-white
+            hover:bg-white/10 hover:border-white/10
+            transition-all duration-300 shadow-sm
           '
 				>
 					{!mounted ? (
@@ -130,12 +129,11 @@ export function DesktopNav({
 					variant='outline'
 					onClick={handleLogout}
 					className='
-            px-6 py-2 rounded-lg
-            text-red-600 hover:text-red-500
-            bg-transparent dark:bg-transparent
-            border border-red-600 dark:border-red-500
-            hover:bg-red-50 dark:hover:bg-red-900/20
-            transition
+            px-6 py-2.5 rounded-xl font-semibold tracking-wide
+            text-red-400 hover:text-white
+            bg-red-500/10 border border-red-500/20
+            hover:bg-red-500 hover:border-red-500 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)]
+            transition-all duration-300
           '
 				>
 					Logout

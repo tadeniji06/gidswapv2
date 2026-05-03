@@ -40,79 +40,56 @@ export default function Header() {
   const { theme } = useTheme();
   return (
     <header
-      className={(!mounted || theme === "dark") ? `sticky left-0 top-0 z-20 w-full bg-transparent backdrop-blur transition-all dark:bg-transparent ${
+      className={`sticky left-0 top-0 z-50 w-full transition-all duration-300 ${
         hideHeader ? "hidden" : "block"
-      }` : `sticky left-0 top-0 z-20 w-full bg-white backdrop-blur transition-all dark:bg-transparent ${
-        hideHeader ? "hidden" : "block"
-      }`}
+      } ${mounted && theme === "dark" ? "glass-panel border-b border-white/5" : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"}`}
     >
-      <nav className="mx-auto container max-w-6xl flex items-center justify-between py-3 px-4 text-neutral-900 dark:text-white">
-        {/* Logo & dropdown */}
-        <div className="relative flex-shrink-0 group">
-          {/* Trigger (logo + chevron) */}
-          <div className="flex items-center gap-2 cursor-pointer">
-            {mounted && theme === "light" ? (
-              <Image
-                src="/images/Gidswaplogo.png"
-                alt="Logo"
-                width={100}
-                height={80}
-              />
-            ) : (
-              <Image
-                src="/images/gidsfull.png"
-                alt="Logo"
-                width={100}
-                height={80}
-              />
-            )}
-            {/* <ChevronDown className="hidden sm:inline size-5 text-gray-400 dark:text-white/50 transition-transform duration-200 group-hover:rotate-180" /> */}
-          </div>
-
-
-          {/* Popup - stays inside same group */}
-          {/* <div
-            className="absolute top-full left-0 mt-2 flex-col gap-3 w-[9rem] text-gray-800 text-sm 
-                  bg-white/90 dark:bg-transparent backdrop-blur-sm p-3 rounded-sm shadow-md 
-                  dark:text-gray-200 z-50 hidden group-hover:flex"
-          >
-            <Link href="/privacy" className="hover:underline">
-              Privacy Policy
-            </Link>
-            <Link href="/policy" className="hover:underline">
-              Terms
-            </Link>
-          </div>*/}
-        </div> 
+      <nav className="mx-auto container max-w-7xl flex items-center justify-between py-4 px-6">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-300">
+          {mounted && theme === "light" ? (
+            <Image
+              src="/images/Gidswaplogo.png"
+              alt="Logo"
+              width={110}
+              height={40}
+              className="select-none"
+            />
+          ) : (
+            <Image
+              src="/images/gidsfull.png"
+              alt="Logo"
+              width={110}
+              height={40}
+              className="select-none"
+            />
+          )}
+        </Link>
 
         {/* CTA */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {isAuthenticated ? (
-            <>
-              <Link href="/dashboard" passHref>
-                <Button className="futuristic-button bg-black/20 dark:bg-white/20 backdrop-blur-sm text-blue-600/90 font-semibold text-sm hover:bg-blue-300/20">
-                  Dashboard
-                </Button>
-              </Link>
-            </>
+            <Link href="/dashboard" passHref>
+              <Button className="futuristic-button bg-primary text-white font-bold text-sm px-8 py-6 rounded-2xl shadow-[0_0_20px_rgba(100,150,255,0.3)]">
+                DASHBOARD
+              </Button>
+            </Link>
           ) : (
-            <>
-              {regStatus ? (
-                <Button
-                  onClick={handleSignInClick}
-                  className="futuristic-button bg-black/20 dark:bg-white/20 backdrop-blur-md text-blue-600/90 font-semibold text-sm hover:bg-blue-300/20"
-                >
-                  Sign in
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleRegisterClick}
-                  className="futuristic-button bg-black/20 dark:bg-white/20 backdrop-blur-md text-blue-600/90 font-semibold text-sm hover:bg-blue-300/20"
-                >
-                  Register
-                </Button>
-              )}
-            </>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleSignInClick}
+                className="text-muted-foreground hover:text-white font-bold text-xs tracking-widest uppercase px-6"
+              >
+                Sign in
+              </Button>
+              <Button
+                onClick={handleRegisterClick}
+                className="futuristic-button bg-primary text-white font-black text-xs tracking-widest uppercase px-8 py-5 rounded-xl shadow-[0_0_15px_rgba(100,150,255,0.2)]"
+              >
+                Get Started
+              </Button>
+            </div>
           )}
         </div>
       </nav>

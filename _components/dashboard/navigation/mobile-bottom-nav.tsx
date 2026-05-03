@@ -28,7 +28,7 @@ export function MobileBottomNav({
 }: MobileBottomNavProps) {
 	return (
 		<nav
-			className={`md:hidden p-3 fixed bottom-0 left-0 right-0 bg-white dark:bg-[#2a2d3a] border-t border-gray-300 dark:border-gray-700 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-[#2a2d3a]/60 z-50 ${className}`}
+			className={`md:hidden p-3 fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 shadow-lg z-50 ${className}`}
 		>
 			<div className='flex items-center justify-around py-2 px-4'>
 				{navLinks.map((link) => {

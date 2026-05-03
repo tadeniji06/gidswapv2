@@ -16,7 +16,7 @@ export default function DashboardLayout({
   const [activeLink, setActiveLink] = useState("Swap");
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#1a1d29] text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* Navigation */}
       <DesktopNav
         navLinks={navLinks}

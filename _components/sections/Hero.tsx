@@ -49,30 +49,31 @@ export default function Hero() {
       className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-transparent pt-10 pb-10 text-white"
     >
       {/* Background radial glows */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-200px] top-1/4 h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-[200px]" />
-        <div className="absolute right-[-200px] top-1/4 h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-[200px]" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute left-[-20%] top-0 h-[600px] w-[600px] rounded-full bg-primary/20 blur-[150px] animate-pulse-glow" />
+        <div className="absolute right-[-20%] bottom-0 h-[600px] w-[600px] rounded-full bg-blue-600/20 blur-[150px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
       </div>
 
       {/* Hero Content */}
-      <AnimatedSection className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-        <h1 className="font-poppins flex flex-col gap-2 font-semibold poppins leading-tight">
-          <span className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] bg-gradient-to-b from-gray-800 to-blue-600 dark:from-white dark:to-blue-200 bg-clip-text text-transparent">
-            <span ref={sellRef} className="inline-block">
+      <AnimatedSection className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-6xl">
+        <h1 className="font-poppins flex flex-col gap-2 font-semibold leading-tight tracking-tight">
+          <span className="text-5xl sm:text-6xl md:text-7xl lg:text-[6rem] bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-blue-100 dark:to-white bg-clip-text text-transparent drop-shadow-sm">
+            <span ref={sellRef} className="inline-block text-primary drop-shadow-[0_0_15px_rgba(100,150,255,0.5)]">
               Sell
             </span>{" "}
-            <span className="font-playfair text-4xl sm:text-5xl md:text-6xl lg:text-[7rem] italic font-medium bg-gradient-to-b from-gray-900 to-blue-700 dark:from-white dark:to-blue-300 bg-clip-text text-transparent">
+            <span className="font-playfair text-5xl sm:text-6xl md:text-7xl lg:text-[7.5rem] italic font-medium bg-gradient-to-br from-gray-900 to-blue-700 dark:from-white dark:to-primary bg-clip-text text-transparent">
               Crypto
             </span>
           </span>
-          <span className="text-4xl sm:text-5xl md:text-6xl lg:text-[6rem] font-medium bg-gradient-to-b from-gray-800 to-blue-600 dark:from-white dark:to-blue-200 bg-clip-text text-transparent">
+          <span className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-medium text-muted-foreground mt-2">
             in seconds
           </span>
         </h1>
 
         {/* Swap Form */}
-        <AnimatedSection delay={0.2}>
-          <div className="mt-12 w-full max-w-md rounded-2xl bg-neutral- backdrop-blur-md border border-white/10 shadow-xl px-6 py-8">
+        <AnimatedSection delay={0.2} className="w-full flex justify-center">
+          <div className="mt-16 w-full max-w-[480px] rounded-3xl glass-panel neon-border p-8 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-b from-primary/30 to-transparent rounded-3xl opacity-50 blur-sm -z-10"></div>
             <HeroSwapForm
               sendAmount={sendAmount}
               setSendAmount={setSendAmount}
@@ -90,11 +91,13 @@ export default function Hero() {
 
         {/* Scroll Indicator */}
         <AnimatedSection delay={0.4}>
-          <div className="flex flex-col items-center gap-2 mt-16 animate-bounce">
-            <span className="text-sm text-gray-400">
-              Scroll down to learn more
+          <div className="flex flex-col items-center gap-3 mt-20 animate-bounce cursor-pointer">
+            <span className="text-sm font-medium text-muted-foreground tracking-widest uppercase">
+              Scroll to explore
             </span>
-            <ChevronDown className="w-5 h-5 text-gray-300" />
+            <div className="p-2 rounded-full glass-panel">
+              <ChevronDown className="w-5 h-5 text-primary" />
+            </div>
           </div>
         </AnimatedSection>
       </AnimatedSection>
