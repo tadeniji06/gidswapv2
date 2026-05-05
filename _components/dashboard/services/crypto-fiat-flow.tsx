@@ -138,7 +138,10 @@ function CryptoFiatFlow() {
             )}
 
             {currentStep === "payment" && (
-              <PendingPaymentCard onNewTransaction={handleNewTransaction} />
+              <PendingPaymentCard 
+                paymentData={paymentOrder!} 
+                onTimeout={handleNewTransaction} 
+              />
             )}
           </motion.div>
         </AnimatePresence>

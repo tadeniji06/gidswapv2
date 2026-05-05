@@ -101,8 +101,9 @@ export function PendingPaymentCard({
 	const TERMINAL_STATUSES = ["validated", "fulfilled", "settled", "cancelled", "refunded", "expired", "failed"];
 
 	const { data: statusData, isError } = useQuery<PendingPaymentData>({
-		queryKey: ["payment-status", paymentData.id],
+		queryKey: ["payment-status", paymentData?.id],
 		queryFn: async () => {
+			if (!paymentData?.id) throw new Error("No payment ID");
 			console.log(`🔄 Polling payment status for: ${paymentData.id}`);
 			const res = await fetch(
 				`${API_URL}/api/payCrest/trade/status/${paymentData.id}`,
@@ -119,6 +120,7 @@ export function PendingPaymentCard({
 			console.log(`✅ Status: ${data.status} | isCompleted: ${data.isCompleted}`);
 			return data;
 		},
+		enabled: !!paymentData?.id,
 		refetchInterval: (query) => {
 			// Stop polling once terminal status is reached
 			const status = query.state.data?.status;
@@ -199,6 +201,7 @@ export function PendingPaymentCard({
 
 	// Timer logic for expiration countdown
 	useEffect(() => {
+		if (!paymentData?.validUntil) return;
 		const calculateTimeLeft = () => {
 			const now = new Date().getTime();
 			const validUntil = new Date(paymentData.validUntil).getTime();
@@ -217,7 +220,7 @@ export function PendingPaymentCard({
 		}, 60000);
 
 		return () => clearInterval(timer);
-	}, [paymentData.validUntil, onTimeout]);
+	}, [paymentData?.validUntil, onTimeout]);
 
 	const copyToClipboard = (text: string, type: string) => {
 		navigator.clipboard.writeText(text);
@@ -234,6 +237,7 @@ export function PendingPaymentCard({
 	};
 
 	const shareOnX = () => {
+		if (!paymentData) return;
 		const text = `I just completed a payment of ${
 			paymentData.amount
 		} ${paymentData.token} on ${formatNetwork(
@@ -244,6 +248,14 @@ export function PendingPaymentCard({
 		)}`;
 		window.open(url, "_blank", "noopener,noreferrer");
 	};
+
+	if (!paymentData) {
+		return (
+			<div className='flex items-center justify-center p-12'>
+				<Loader2 className='w-8 h-8 animate-spin text-primary' />
+			</div>
+		);
+	}
 
 	return (
 		<div className='w-full max-w-lg mx-auto'>
