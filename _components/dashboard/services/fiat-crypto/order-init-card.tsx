@@ -1,11 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Loader2, ArrowRight, Building2, Wallet } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  Loader2, ArrowRight, Building2, Wallet,
+  ShieldCheck, Sparkles, FileText, ArrowLeft
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
 import Cookies from "js-cookie"
+import { toast } from "sonner"
 
 export function OrderInitializationCard({
   onSuccess,
@@ -32,12 +36,17 @@ export function OrderInitializationCard({
     if (cookieData) {
       try {
         setBankData(JSON.parse(cookieData))
-      } catch (e) {}
+      } catch (e) {
+        console.error("Failed to parse bank data", e)
+      }
     }
   }, [])
 
   const handleInitialize = async () => {
-    if (!bankData) return
+    if (!bankData) {
+      toast.error("Refund bank data is missing")
+      return
+    }
     const success = await initializeOrder(bankData)
     if (success) {
       onSuccess()
@@ -46,115 +55,135 @@ export function OrderInitializationCard({
 
   if (!bankData) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 glass-panel neon-border rounded-2xl w-full max-w-md mx-auto relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center p-12 glass-panel neon-border rounded-3xl w-full max-w-md mx-auto relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 blur-2xl z-0" />
         <Loader2 className="w-8 h-8 text-primary animate-spin mb-4 relative z-10" />
-        <p className="text-muted-foreground font-medium relative z-10">Loading your refund bank data...</p>
+        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs relative z-10">Loading refund data...</p>
       </div>
     )
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="glass-panel neon-border shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden group"
+      className="glass-panel neon-border shadow-2xl rounded-3xl relative overflow-hidden"
     >
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 group-hover:bg-primary/20 transition-all duration-700" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -z-10 group-hover:bg-blue-500/20 transition-all duration-700" />
+      {/* Ambient glows */}
+      <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="space-y-8 relative z-10">
+      <div className="relative z-10 p-6 md:p-8 space-y-6">
+        {/* Header */}
         <div className="text-center space-y-1">
-          <h3 className="text-2xl font-semibold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Order Summary</h3>
-          <p className="text-sm text-muted-foreground tracking-wide">Review your transaction details</p>
+          <h3 className="text-2xl font-black tracking-tight text-white uppercase">Order Summary</h3>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Review & Confirm Payment</p>
         </div>
 
         {/* Transaction Amounts */}
-        <div className="bg-black/30 backdrop-blur-md p-6 rounded-2xl border border-white/5 space-y-5 shadow-inner">
-          <div className="flex justify-between items-center pb-5 border-b border-white/10">
-            <span className="text-muted-foreground font-medium">You pay</span>
-            <span className="text-2xl font-bold text-white drop-shadow-md">
-              {Number(fiatAmount).toLocaleString()} <span className="text-gray-400 text-lg">{selectedCurrency?.code}</span>
+        <div className="bg-black/40 backdrop-blur-md p-6 rounded-2xl border border-white/5 space-y-4 shadow-inner">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-1">
+            <Sparkles className="w-3 h-3 text-primary" /> Breakdown
+          </p>
+          <div className="flex justify-between items-center pb-4 border-b border-white/5">
+            <span className="text-muted-foreground text-sm font-medium">You pay</span>
+            <span className="text-xl font-black text-white tabular-nums">
+              {Number(fiatAmount).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-muted-foreground/60 text-sm font-bold ml-1">{selectedCurrency?.code}</span>
             </span>
           </div>
-          <div className="flex justify-between items-center pb-5 border-b border-white/10">
-            <span className="text-muted-foreground font-medium">You receive</span>
-            <span className="text-2xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
-              {tokenAmount} <span className="text-emerald-500/70 text-lg">{selectedToken?.symbol}</span>
+          <div className="flex justify-between items-center pb-4 border-b border-white/5">
+            <span className="text-muted-foreground text-sm font-medium">You receive</span>
+            <span className="text-xl font-black text-emerald-400 tabular-nums">
+              {Number(tokenAmount).toLocaleString(undefined, { maximumFractionDigits: 6 })} <span className="text-emerald-500/60 text-sm font-bold ml-1">{selectedToken?.symbol}</span>
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground font-medium">Rate</span>
-            <span className="text-gray-200 font-medium">
-              1 {selectedToken?.symbol} = {quote?.rate.toLocaleString()} {selectedCurrency?.code}
+          <div className="flex justify-between items-center pt-1">
+            <span className="text-muted-foreground text-xs font-medium">Exchange Rate</span>
+            <span className="text-white/80 font-bold text-xs tabular-nums">
+              1 {selectedToken?.symbol} = {selectedCurrency?.symbol}{quote?.rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}
             </span>
           </div>
         </div>
 
         {/* Destination Wallet */}
-        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner transition-colors hover:border-primary/30">
+        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner group/wallet hover:border-primary/30 transition-all">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Wallet className="w-5 h-5 text-blue-400" />
+            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20 group-hover/wallet:scale-110 transition-transform">
+              <Wallet className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm font-semibold text-gray-200">Destination Wallet</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Receiving Wallet</span>
           </div>
-          <p className="text-xs text-muted-foreground break-all bg-black/50 p-3 rounded-xl font-mono border border-white/5">
-            {destinationAddress}
-          </p>
-        </div>
-
-        {/* Refund Bank Account */}
-        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner transition-colors hover:border-purple-500/30">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <Building2 className="w-5 h-5 text-purple-400" />
-              </div>
-              <span className="text-sm font-semibold text-gray-200">Refund Bank Account</span>
-            </div>
-            <button onClick={onChangeAccount} className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full">
-              Change
-            </button>
-          </div>
-          <div className="bg-black/50 p-4 rounded-xl text-sm text-gray-300 border border-white/5 space-y-1">
-            <p className="font-bold text-white text-base mb-2">{bankData.bankName}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Account</span>
-              <span className="font-mono">{bankData.accountNumber}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Name</span>
-              <span className="font-medium text-white">{bankData.accountName}</span>
-            </div>
-          </div>
-          <div className="mt-3 inline-flex items-center gap-2 bg-yellow-500/10 px-3 py-2 rounded-lg w-full">
-            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-            <p className="text-xs text-yellow-500/90 font-medium">
-              Used exclusively if a refund is necessary.
+          <div className="bg-black/50 p-3.5 rounded-xl border border-white/5">
+            <p className="text-xs text-muted-foreground break-all font-mono leading-relaxed">
+              {destinationAddress}
             </p>
           </div>
         </div>
 
-        <Button
-          onClick={handleInitialize}
-          disabled={isInitializingOrder}
-          className="w-full futuristic-button bg-primary text-white py-7 text-lg font-semibold rounded-2xl flex justify-center items-center gap-2 mt-4"
-        >
-          {isInitializingOrder ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Initializing Order...
-            </>
-          ) : (
-            <>
-              Confirm & Request Payment Details
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </>
-          )}
-        </Button>
+        {/* Refund Bank Account */}
+        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner group/bank hover:border-emerald-500/30 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group-hover/bank:scale-110 transition-transform">
+                <Building2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Refund Bank</span>
+            </div>
+            <button 
+              onClick={onChangeAccount} 
+              className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors bg-primary/10 hover:bg-primary px-3 py-1.5 rounded-xl"
+            >
+              Change
+            </button>
+          </div>
+          <div className="bg-black/50 p-4 rounded-xl border border-white/5 space-y-3">
+            <p className="font-black text-white text-base leading-tight">{bankData.bankName}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Account</p>
+                <p className="text-sm font-mono text-white font-bold">{bankData.accountNumber}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Name</p>
+                <p className="text-sm font-bold text-white truncate">{bankData.accountName}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2.5 bg-yellow-500/5 border border-yellow-500/10 p-3 rounded-xl">
+            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse flex-shrink-0" />
+            <p className="text-[10px] text-yellow-500/80 font-bold uppercase tracking-tight leading-tight">
+              Used ONLY for safety if a transaction fails.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="space-y-4">
+          <button
+            onClick={handleInitialize}
+            disabled={isInitializingOrder}
+            className="w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_25px_rgba(100,150,255,0.25)] disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+          >
+            {isInitializingOrder ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Confirm & Pay
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </button>
+          
+          <div className="flex items-center justify-center gap-2 opacity-40">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Secured via PayCrest Protocol</span>
+          </div>
+        </div>
       </div>
     </motion.div>
   )

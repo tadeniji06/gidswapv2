@@ -1,18 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  Loader2, ArrowLeft, PlusCircle, ShieldCheck,
+  Building2, Wallet, FileText, Sparkles, ArrowRight
+} from "lucide-react"
 import { useCryptoFiatStore } from "@/lib/crypto-fiat-store"
 import { useSavedAccountsStore } from "@/lib/saved-accounts-store"
-import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Label } from "@/src/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
-import {
-  Loader2,
-  ArrowLeft,
-  PlusCircle,
-  ShieldCheck,
-} from "lucide-react"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
 
@@ -20,17 +15,15 @@ interface OrderInitializationCardProps {
   onBack?: () => void
   onNext?: () => void
   onOrderComplete?: () => void
-  /** Called when user wants to switch to a different bank account */
   onChangAccount?: () => void
 }
 
 const LP_FEE_PERCENT = 0.01
 
+const MEMO_SUGGESTIONS = ["Personal", "Purchase", "Bills", "Groceries", "Transfer", "Investment"]
+
 export function OrderInitializationCard({
-  onBack,
-  onNext,
-  onOrderComplete,
-  onChangAccount,
+  onBack, onNext, onOrderComplete, onChangAccount,
 }: OrderInitializationCardProps) {
   const [memo, setMemo] = useState("")
   const [returnAddress, setReturnAddress] = useState("")
@@ -39,28 +32,18 @@ export function OrderInitializationCard({
   const [saveLabel, setSaveLabel] = useState("My Account")
 
   const { saveAccount, isSaving, accounts } = useSavedAccountsStore()
-  const { selectedToken, selectedCurrency, tokenAmount, quote, isInitializingOrder, initializeOrder } =
-    useCryptoFiatStore()
+  const { selectedToken, selectedCurrency, tokenAmount, quote, isInitializingOrder, initializeOrder } = useCryptoFiatStore()
 
-  // Bank data from cookie (set either by verification flow or by AccountGateway loading a saved account)
   const verifiedBank = Cookies.get("verifiedBank")
   const bankData = verifiedBank ? JSON.parse(verifiedBank) : null
   const { accountNumber, accountName, bankName, bankCode } = bankData || {}
 
-  // If this exact account is already saved, don't offer to save it again
-  const alreadySaved = accounts.some(
-    (a) => a.accountNumber === accountNumber && a.bankCode === bankCode
-  )
+  const alreadySaved = accounts.some((a) => a.accountNumber === accountNumber && a.bankCode === bankCode)
 
-  // Pre-fill returnAddress if a saved account carrying one was loaded
   useEffect(() => {
     if (!returnAddress) {
-      const saved = accounts.find(
-        (a) => a.accountNumber === accountNumber && a.bankCode === bankCode
-      )
-      if (saved?.returnAddress) {
-        setReturnAddress(saved.returnAddress)
-      }
+      const saved = accounts.find((a) => a.accountNumber === accountNumber && a.bankCode === bankCode)
+      if (saved?.returnAddress) setReturnAddress(saved.returnAddress)
     }
   }, [accounts, accountNumber, bankCode, returnAddress])
 
@@ -70,42 +53,23 @@ export function OrderInitializationCard({
   const validateForm = () => {
     const newErrors: { memo?: string; returnAddress?: string } = {}
     if (!memo.trim()) newErrors.memo = "Remarks are required"
-    if (!returnAddress.trim()) {
-      newErrors.returnAddress = "Refund wallet address is required"
-    } else if (!/^0x[a-fA-F0-9]{40}$/.test(returnAddress)) {
-      newErrors.returnAddress = "Invalid EVM wallet address (must start with 0x)"
-    }
+    if (!returnAddress.trim()) newErrors.returnAddress = "Refund wallet address is required"
+    else if (!/^0x[a-fA-F0-9]{40}$/.test(returnAddress)) newErrors.returnAddress = "Invalid EVM address (must start with 0x)"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleInitializeOrder = async () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return
-    if (!bankData) {
-      toast.error("Missing bank details — please go back and select an account")
-      return
-    }
+    if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
 
-    const payload = {
-      institution: bankCode,
-      accountIdentifier: accountNumber,
-      accountName: accountName,
-    }
-
+    const payload = { institution: bankCode, accountIdentifier: accountNumber, accountName }
     const success = await initializeOrder(memo, returnAddress, payload)
     if (!success) return
 
-    // Optionally save the account for next time
     if (saveThisAccount && !alreadySaved && bankCode && accountNumber && accountName && bankName) {
-      const saved = await saveAccount({
-        label: saveLabel || "My Account",
-        bankName,
-        bankCode,
-        accountNumber,
-        accountName,
-        returnAddress: returnAddress || undefined,
-      })
-      if (saved) toast.success(`Account "${saveLabel}" saved for future transactions!`)
+      const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined })
+      if (saved) toast.success(`Account "${saveLabel}" saved!`)
     }
 
     if (onOrderComplete) onOrderComplete()
@@ -113,169 +77,167 @@ export function OrderInitializationCard({
   }
 
   return (
-    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-xl font-bold text-gray-800 dark:text-gray-200">
-          Initialize Order
-        </CardTitle>
-        {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-        )}
-      </CardHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="glass-panel neon-border shadow-2xl rounded-3xl relative overflow-hidden"
+    >
+      {/* Ambient glows */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-      <CardContent className="space-y-5">
-        {/* ── Order Summary ──────────────────────────────────── */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2.5">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
-            Order Summary
-          </h3>
+      <div className="relative z-10 p-6 md:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black tracking-tight text-white">Finalize Order</h3>
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Almost there — review & confirm</p>
+          </div>
+          {onBack && (
+            <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl font-bold">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            </button>
+          )}
+        </div>
+
+        {/* Order Summary */}
+        <div className="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Sparkles className="w-3 h-3 text-primary" /> Order Summary
+          </p>
           {[
-            ["Amount", `${tokenAmount} ${selectedToken?.symbol}`],
-            ["LP Fee", `${lpFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selectedCurrency?.code}`],
-            ["You Receive", `${netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selectedCurrency?.code}`],
-          ].map(([label, value]) => (
-            <div key={label} className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">{label}</span>
-              <span className="font-medium text-gray-900 dark:text-white">{value}</span>
+            { label: "Sending", value: `${tokenAmount} ${selectedToken?.symbol}`, highlight: false },
+            { label: "LP Fee (1%)", value: `-${selectedCurrency?.symbol}${lpFee.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: false },
+            { label: "You receive", value: `${selectedCurrency?.symbol}${netTotal.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: true },
+          ].map(({ label, value, highlight }) => (
+            <div key={label} className={`flex justify-between items-center ${highlight ? "pt-3 border-t border-white/5" : ""}`}>
+              <span className="text-muted-foreground text-sm font-medium">{label}</span>
+              <span className={`font-black text-sm tabular-nums ${highlight ? "text-emerald-400 text-base" : "text-white"}`}>{value}</span>
             </div>
           ))}
         </div>
 
-        {/* ── Active Bank Account ────────────────────────────── */}
+        {/* Bank Account */}
         {bankData && (
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/15 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {bankName}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5">
-                    {accountNumber} · {accountName}
-                  </p>
-                </div>
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
+                <Building2 className="w-5 h-5 text-emerald-400" />
               </div>
-              {/* Allow switching account */}
-              {onChangAccount && (
-                <button
-                  type="button"
-                  onClick={onChangAccount}
-                  className="shrink-0 text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
-                >
-                  Change
-                </button>
-              )}
+              <div>
+                <p className="text-white font-bold text-sm">{bankName}</p>
+                <p className="text-muted-foreground text-xs font-mono mt-0.5">{accountNumber} · {accountName}</p>
+              </div>
             </div>
+            {onChangAccount && (
+              <button onClick={onChangAccount} className="text-xs text-primary hover:text-primary/80 font-black uppercase tracking-widest bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all">
+                Change
+              </button>
+            )}
           </div>
         )}
 
-        {/* ── Remarks / Memo ─────────────────────────────────── */}
-        <div className="space-y-2">
-          <Label htmlFor="memo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Remarks *
-          </Label>
-          <Input
-            id="memo"
+        {/* Memo */}
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <FileText className="w-3.5 h-3.5 text-primary" /> Remarks *
+          </label>
+          <input
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             placeholder="e.g. Personal transfer"
-            className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
+            className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-sm font-medium placeholder:text-muted-foreground/40 outline-none transition-all duration-200
+              ${errors.memo ? "border-red-500/60 focus:ring-red-500/10" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"}`}
           />
-          <div className="flex flex-wrap gap-2 pt-1">
-            {["Personal", "Purchase", "Bills", "Groceries", "Transfer"].map((s) => (
+          <div className="flex flex-wrap gap-2">
+            {MEMO_SUGGESTIONS.map((s) => (
               <button
-                key={s}
-                type="button"
-                onClick={() => setMemo(s)}
-                className="px-3 py-1 text-xs rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition"
+                key={s} type="button" onClick={() => setMemo(s)}
+                className={`px-3 py-1.5 text-xs rounded-xl font-bold transition-all duration-200 ${
+                  memo === s
+                    ? "bg-primary/30 border-primary/50 text-white border"
+                    : "bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-muted-foreground hover:text-white"
+                }`}
               >
                 {s}
               </button>
             ))}
           </div>
-          {errors.memo && <p className="text-xs text-red-500">{errors.memo}</p>}
+          {errors.memo && <p className="text-xs text-red-400 font-bold">{errors.memo}</p>}
         </div>
 
-        {/* ── Refund Wallet Address ─────────────────────────── */}
-        <div className="space-y-2">
-          <Label htmlFor="returnAddress" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Refund Wallet Address *
-          </Label>
-          <Input
-            id="returnAddress"
+        {/* Refund Address */}
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <Wallet className="w-3.5 h-3.5 text-primary" /> Refund Wallet Address *
+          </label>
+          <input
             value={returnAddress}
             onChange={(e) => setReturnAddress(e.target.value)}
-            placeholder="0x…"
-            className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+            placeholder="0x..."
+            className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-sm font-mono placeholder:text-muted-foreground/40 placeholder:font-sans outline-none transition-all duration-200
+              ${errors.returnAddress ? "border-red-500/60 focus:ring-red-500/10" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"}`}
           />
-          {errors.returnAddress && (
-            <p className="text-xs text-red-500">{errors.returnAddress}</p>
-          )}
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Tokens are refunded here if anything goes wrong. Do not use an exchange address.
-          </p>
+          {errors.returnAddress
+            ? <p className="text-xs text-red-400 font-bold">{errors.returnAddress}</p>
+            : <p className="text-xs text-muted-foreground font-medium">Crypto is sent here if anything goes wrong. Never use an exchange address.</p>
+          }
         </div>
 
-        {/* ── Save account for next time (only if not already saved) ── */}
+        {/* Save account */}
         {!alreadySaved && bankData && (
-          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-3.5 space-y-2">
+          <div className={`rounded-2xl border border-dashed p-4 space-y-3 transition-all ${saveThisAccount ? "border-primary/40 bg-primary/5" : "border-white/10"}`}>
             <button
-              type="button"
-              onClick={() => setSaveThisAccount(!saveThisAccount)}
-              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              type="button" onClick={() => setSaveThisAccount(!saveThisAccount)}
+              className="flex items-center gap-2.5 text-sm font-bold text-muted-foreground hover:text-white transition-colors w-full"
             >
-              <PlusCircle
-                className={`h-4 w-4 flex-shrink-0 ${
-                  saveThisAccount ? "text-blue-500" : "text-gray-400"
-                }`}
-              />
-              {saveThisAccount
-                ? "Will save this account after order"
-                : "Save this account for next time"}
-            </button>
-
-            {saveThisAccount && (
-              <div className="pt-1">
-                <Label htmlFor="saveLabel" className="text-xs text-gray-500 dark:text-gray-400">
-                  Nickname (optional)
-                </Label>
-                <Input
-                  id="saveLabel"
-                  value={saveLabel}
-                  onChange={(e) => setSaveLabel(e.target.value)}
-                  placeholder="e.g. GTB Personal"
-                  className="mt-1 h-8 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                />
+              <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${saveThisAccount ? "border-primary bg-primary" : "border-white/20"}`}>
+                {saveThisAccount && <PlusCircle className="w-3 h-3 text-white" />}
               </div>
-            )}
+              Save this account for next time
+            </button>
+            <AnimatePresence>
+              {saveThisAccount && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-widest block mb-2">Nickname (optional)</label>
+                  <input
+                    value={saveLabel}
+                    onChange={(e) => setSaveLabel(e.target.value)}
+                    placeholder="e.g. GTB Personal"
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-all"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
-        {/* ── Submit ────────────────────────────────────────── */}
-        <Button
-          onClick={handleInitializeOrder}
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
           disabled={isInitializingOrder || isSaving || !memo.trim() || !returnAddress.trim()}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl disabled:opacity-60"
+          className="w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_25px_rgba(100,150,255,0.25)] disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
         >
-          {isInitializingOrder ? (
+          {isInitializingOrder || isSaving ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Initializing Order…
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isInitializingOrder ? "Initializing Order..." : "Saving Account..."}
             </>
           ) : (
-            "Initialize Order"
+            <>
+              Initialize Order
+              <ArrowRight className="h-4 w-4" />
+            </>
           )}
-        </Button>
-      </CardContent>
-    </Card>
+        </button>
+
+        {/* Trust badge */}
+        <div className="flex items-center justify-center gap-2 opacity-40">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Non-custodial · Secured by PayCrest</span>
+        </div>
+      </div>
+    </motion.div>
   )
 }

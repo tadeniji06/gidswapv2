@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { ChevronDown, Check, Loader2, Search } from "lucide-react"
+import React, { useEffect, useRef, useState, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ChevronDown, CheckCircle2, Loader2, Search, Building2, Hash, ShieldCheck } from "lucide-react"
 import { useBankVerificationStore } from "@/lib/bank-verification-store"
 
 interface BankVerificationCardProps {
@@ -10,154 +11,232 @@ interface BankVerificationCardProps {
 
 export function BankVerificationCard({ onProceed }: BankVerificationCardProps) {
   const {
-    banks,
-    selectedBank,
-    accountNumber,
-    accountName,
-    isLoadingBanks,
-    isVerifying,
-    isVerified,
-    error,
-    fetchBanks,
-    setSelectedBank,
-    setAccountNumber,
-    reset,
+    banks, selectedBank, accountNumber, accountName,
+    isLoadingBanks, isVerifying, isVerified, error,
+    fetchBanks, setSelectedBank, setAccountNumber, reset,
   } = useBankVerificationStore()
 
-  const [showBankDropdown, setShowBankDropdown] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     fetchBanks()
     return () => reset()
   }, [fetchBanks, reset])
 
-  const filteredBanks = banks.filter((bank) =>
-    bank.name.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (triggerRef.current && !triggerRef.current.contains(target)) {
+        const dd = document.getElementById("bank-dropdown")
+        if (dd && !dd.contains(target)) setShowDropdown(false)
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener("mousedown", handler)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handler)
+    }
+  }, [showDropdown])
+
+  const filteredBanks = banks.filter((b) =>
+    b.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const digits = accountNumber.length
+
   return (
-    <div className="w-full">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
-        {/* Bank Selection */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Bank</label>
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="glass-panel neon-border rounded-3xl relative shadow-2xl"
+    >
+      {/* Ambient glows */}
+      <div className="absolute -top-16 -right-16 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 p-6 md:p-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h3 className="text-xl font-black tracking-tight text-white">Bank Verification</h3>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">
+            Confirm your payout account
+          </p>
+        </div>
+
+        {/* Bank Selector */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <Building2 className="w-3.5 h-3.5 text-primary" /> Select Bank
+          </label>
           <div className="relative">
             <button
-              onClick={() => setShowBankDropdown(!showBankDropdown)}
-              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors flex items-center justify-between"
+              ref={triggerRef}
+              onClick={() => setShowDropdown(!showDropdown)}
               disabled={isLoadingBanks}
+              className={`w-full flex items-center justify-between bg-black/30 border px-4 py-3.5 rounded-2xl transition-all duration-200 text-left
+                ${showDropdown ? "border-primary/60 bg-black/40 shadow-[0_0_0_3px_rgba(100,150,255,0.1)]" : "border-white/10 hover:border-white/20"}`}
             >
-              <span className="truncate">
-                {isLoadingBanks ? "Loading banks..." : selectedBank ? selectedBank.name : "Select your bank"}
+              <span className={`text-sm font-semibold ${selectedBank ? "text-white" : "text-muted-foreground"}`}>
+                {isLoadingBanks ? "Loading banks..." : selectedBank ? selectedBank.name : "Choose your bank"}
               </span>
-              {isLoadingBanks ? (
-                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-              ) : (
-                <ChevronDown
-                  className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${
-                    showBankDropdown ? "rotate-180" : ""
-                  }`}
-                />
-              )}
+              {isLoadingBanks
+                ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                : <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
+              }
             </button>
 
-            {showBankDropdown && !isLoadingBanks && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                {/* 🔍 Search Bar */}
-                <div className="p-2 sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search bank..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+            <AnimatePresence>
+              {showDropdown && !isLoadingBanks && (
+                <motion.div
+                  id="bank-dropdown"
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full right-0 mt-2 glass-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] backdrop-blur-3xl -translate-x-3"
+                >
+                  {/* Search */}
+                  <div className="p-3 border-b border-white/5 bg-black/60 backdrop-blur-xl">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search bank name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        autoFocus
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Bank List */}
-                {filteredBanks.length > 0 ? (
-                  filteredBanks.map((bank) => (
-                    <button
-                      key={bank.code}
-                      onClick={() => {
-                        setSelectedBank(bank)
-                        setShowBankDropdown(false)
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-                    >
-                      <div className="font-medium">{bank.name}</div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No banks found</div>
-                )}
-              </div>
-            )}
+                  {/* Bank list */}
+                  <div className="max-h-56 overflow-y-auto divide-y divide-white/5">
+                    {filteredBanks.length > 0 ? (
+                      filteredBanks.map((bank) => (
+                        <button
+                          key={bank.code}
+                          onClick={() => { setSelectedBank(bank); setShowDropdown(false); setSearchTerm("") }}
+                          className={`w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-white/5 transition-colors
+                            ${selectedBank?.code === bank.code ? "bg-primary/10" : ""}`}
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-black text-primary">{bank.name[0]}</span>
+                          </div>
+                          <span className="text-white text-sm font-semibold">{bank.name}</span>
+                          {selectedBank?.code === bank.code && (
+                            <CheckCircle2 className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                        No banks found for "{searchTerm}"
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Account Number Input */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Number</label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <Hash className="w-3.5 h-3.5 text-primary" /> Account Number
+          </label>
           <div className="relative">
             <input
               type="text"
+              inputMode="numeric"
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
               placeholder="Enter 10-digit account number"
-              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               maxLength={10}
               disabled={!selectedBank}
+              className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-lg font-mono tracking-widest placeholder:text-muted-foreground/40 placeholder:text-sm placeholder:tracking-normal outline-none transition-all duration-200
+                ${!selectedBank ? "opacity-40 cursor-not-allowed border-white/5" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 focus:bg-black/40"}
+                ${isVerified ? "border-emerald-500/60 bg-emerald-500/5" : ""}
+              `}
             />
-            {isVerifying && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              </div>
-            )}
-            {isVerified && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <Check className="h-4 w-4 text-green-500" />
-              </div>
-            )}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              {isVerifying && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              {isVerified && !isVerifying && (
+                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              )}
+            </div>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{accountNumber.length}/10 digits</div>
+
+          {/* Progress dots */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-200 ${
+                    i < digits
+                      ? isVerified ? "w-3 bg-emerald-500" : "w-3 bg-primary"
+                      : "w-2 bg-white/10"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] font-black text-muted-foreground tabular-nums">{digits}/10</span>
+          </div>
         </div>
 
-        {/* Account Name Display */}
-        {accountName && (
-          <div className="mb-4 p-2 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded-xl">
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-600 dark:text-green-500" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">Account Verified</span>
-            </div>
-            <div className="text-gray-900 dark:text-white font-medium mt-1 text-sm">{accountName}</div>
-          </div>
-        )}
+        {/* Account verified */}
+        <AnimatePresence>
+          {accountName && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-center gap-4"
+            >
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Verified ✓</p>
+                <p className="text-white font-bold text-sm">{accountName}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-xl">
-            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-          </div>
-        )}
+        {/* Error */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4"
+            >
+              <p className="text-red-400 text-sm font-medium">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Proceed Button */}
+        {/* CTA */}
         <button
           onClick={onProceed}
           disabled={!isVerified}
-          className={`w-full py-3 px-4 rounded-xl font-medium transition-all ${
+          className={`w-full py-5 px-4 rounded-2xl font-black tracking-widest uppercase text-sm transition-all duration-300 ${
             isVerified
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
-              : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
+              ? "futuristic-button bg-primary text-white shadow-[0_0_20px_rgba(100,150,255,0.25)] hover:scale-[1.02]"
+              : "bg-white/5 border border-white/5 text-muted-foreground cursor-not-allowed"
           }`}
         >
-          {isVerified ? "Proceed" : "Complete Verification to Continue"}
+          {isVerified ? "Proceed to Order →" : "Complete Verification to Continue"}
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }

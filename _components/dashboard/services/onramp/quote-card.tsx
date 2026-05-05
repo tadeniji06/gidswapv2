@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { ArrowDown, Info } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { useOnrampStore } from "@/lib/onramp-store";
+"use client"
 
-// Hardcoded for onramp
+import React, { useState, useEffect, useRef, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ArrowDown, ChevronDown, Search, Zap, Loader2, Info, Sparkles } from "lucide-react"
+import { useOnrampStore } from "@/lib/onramp-store"
+import { Button } from "@/src/components/ui/button"
+
 const supportedCryptos = [
   { symbol: "BTC", name: "Bitcoin", network: "BTC", logo: "/images/bitcoin.png" },
   { symbol: "ETH", name: "Ethereum", network: "ETH", logo: "/images/ethereum.png" },
@@ -11,125 +13,253 @@ const supportedCryptos = [
   { symbol: "BNB", name: "Binance Coin", network: "BSC", logo: "/placeholder.svg" },
   { symbol: "SOL", name: "Solana", network: "SOL", logo: "/placeholder.svg" },
   { symbol: "MATIC", name: "Polygon", network: "MATIC", logo: "/placeholder.svg" },
-];
+]
 
-interface QuoteCardProps {
-  onNext: () => void;
+function NetworkBadge({ network }: { network: string }) {
+  const colors: Record<string, string> = {
+    "BTC": "from-orange-400 to-orange-600",
+    "ETH": "from-blue-400 to-indigo-600",
+    "TRX": "from-red-400 to-red-600",
+    "BSC": "from-yellow-400 to-yellow-600",
+    "SOL": "from-purple-400 to-purple-600",
+    "MATIC": "from-purple-500 to-indigo-700",
+  }
+  const color = colors[network] ?? "from-gray-400 to-gray-600"
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black tracking-widest bg-gradient-to-r ${color} text-white`}>
+      {network}
+    </span>
+  )
 }
 
-export function OnrampQuoteCard({ onNext }: QuoteCardProps) {
-  const { fromCurrency, fromNetwork, fromAmount, rateData, isFetchingRate, setField, fetchRate } = useOnrampStore();
+function CryptoSelector({
+  cryptos,
+  selected,
+  onSelect,
+}: {
+  cryptos: typeof supportedCryptos
+  selected: typeof supportedCryptos[0]
+  onSelect: (c: typeof supportedCryptos[0]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (triggerRef.current && !triggerRef.current.contains(target)) {
+        const dd = document.getElementById("crypto-selector-dropdown-onramp")
+        if (dd && !dd.contains(target)) setOpen(false)
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handler)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handler)
+    }
+  }, [open])
 
-  const handleAmountChange = (val: string) => {
-    setField("fromAmount", val);
-  };
-
-  const handleBlur = () => {
-    fetchRate();
-  };
-
-  const selectedCrypto = supportedCryptos.find(c => c.symbol === fromCurrency) || supportedCryptos[0];
-
-  const isValid = parseFloat(fromAmount) > 0 && rateData?.to?.estimatedAmount;
+  const filtered = cryptos.filter(c => 
+    c.symbol.toLowerCase().includes(search.toLowerCase()) || 
+    c.name.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-2xl py-6 px-4 mb-4 relative flex flex-col gap-1">
-        
-        {/* Send Crypto */}
-        <div className="bg-gray-100 dark:bg-black p-4 rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-gray-400 text-sm font-medium">Send Crypto</label>
-            <select 
-               className="bg-blue-600 outline-none text-white rounded-full px-4 py-2 text-sm font-medium appearance-none cursor-pointer"
-               value={fromCurrency}
-               onChange={(e) => {
-                 const t = supportedCryptos.find(c => c.symbol === e.target.value);
-                 if (t) {
-                   setField("fromCurrency", t.symbol);
-                   setField("fromNetwork", t.network);
-                   setTimeout(fetchRate, 100);
-                 }
-               }}
-            >
-              {supportedCryptos.map(c => (
-                <option key={c.symbol} value={c.symbol}>{c.symbol} ({c.network})</option>
-              ))}
-            </select>
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-3 py-2 transition-all group"
+      >
+        <img src={selected.logo} alt={selected.symbol} className="w-5 h-5 rounded-full ring-1 ring-white/10" />
+        <div className="text-left">
+          <div className="text-white text-xs font-black leading-none">{selected.symbol}</div>
+          <NetworkBadge network={selected.network} />
+        </div>
+        <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            id="crypto-selector-dropdown-onramp"
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full right-0 mt-2 w-64 glass-panel border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[9999] backdrop-blur-3xl -translate-x-3"
+          >
+            <div className="p-2 border-b border-white/5">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autoFocus
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-primary/50 transition-all"
+                />
+              </div>
+            </div>
+            <div className="max-h-60 overflow-y-auto divide-y divide-white/5">
+              {filtered.map(c => {
+                const isSel = selected.symbol === c.symbol
+                return (
+                  <button
+                    key={c.symbol}
+                    onClick={() => { onSelect(c); setOpen(false); setSearch("") }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left ${isSel ? "bg-primary/10" : ""}`}
+                  >
+                    <img src={c.logo} alt={c.symbol} className="w-7 h-7 rounded-full ring-1 ring-white/10" />
+                    <div className="flex-1">
+                      <div className="text-white font-bold text-sm">{c.symbol}</div>
+                      <div className="flex items-center gap-1.5">
+                        <NetworkBadge network={c.network} />
+                        <span className="text-[9px] text-muted-foreground">{c.name}</span>
+                      </div>
+                    </div>
+                    {isSel && <Zap className="w-3.5 h-3.5 text-primary" />}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export function OnrampQuoteCard({ onNext }: { onNext: () => void }) {
+  const { fromCurrency, fromNetwork, fromAmount, rateData, isFetchingRate, setField, fetchRate } = useOnrampStore()
+
+  const selectedCrypto = supportedCryptos.find(c => c.symbol === fromCurrency) || supportedCryptos[0]
+  const isValid = parseFloat(fromAmount) > 0 && rateData?.to?.estimatedAmount
+
+  const handleAmountChange = (val: string) => {
+    // Max 8 decimals for crypto usually, but let's keep it simple
+    if (/^\d*\.?\d*$/.test(val) || val === "") {
+      setField("fromAmount", val)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      className="glass-panel neon-border shadow-2xl rounded-3xl relative"
+    >
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 p-6 md:p-8 space-y-4">
+        {/* Send (Crypto) */}
+        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 focus-within:border-primary/50 transition-all shadow-inner">
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">Send Crypto</label>
+            <CryptoSelector
+              cryptos={supportedCryptos}
+              selected={selectedCrypto}
+              onSelect={(c) => {
+                setField("fromCurrency", c.symbol)
+                setField("fromNetwork", c.network)
+                setTimeout(fetchRate, 100)
+              }}
+            />
           </div>
           <input
             type="number"
             value={fromAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
-            onBlur={handleBlur}
-            placeholder="0"
-            className="w-full bg-transparent text-2xl sm:text-3xl font-bold text-black dark:text-white placeholder-gray-500 border-none outline-none"
+            onBlur={() => fetchRate()}
+            placeholder="0.00"
+            className="w-full bg-transparent text-4xl font-black text-white outline-none h-12 tracking-tight placeholder:text-white/15"
           />
-           <div className="text-xs text-gray-500 mt-2">
-            Minimum: {rateData?.ffMinAmount || 0} {selectedCrypto.symbol} | Maximum: {rateData?.ffMaxAmount || "∞"} {selectedCrypto.symbol}
+          <div className="flex items-center gap-2 mt-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+            <span>Min: {rateData?.ffMinAmount || 0} {selectedCrypto.symbol}</span>
+            <span>·</span>
+            <span>Max: {rateData?.ffMaxAmount || "∞"}</span>
           </div>
         </div>
 
-        {/* Swap Arrow Down */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="bg-gray-100 dark:bg-black border-4 border-white dark:border-gray-800 hover:bg-[#4a4d5a] rounded-full p-2 
-            absolute top-[calc(50%-1.5rem)] left-1/2 transform -translate-x-1/2 -translate-y-1/2
-            z-10 w-10 h-10 flex items-center justify-center transition-transform hover:scale-110"
-        >
-          <ArrowDown className="w-5 h-5 text-black dark:text-white" />
-        </Button>
+        {/* Arrow */}
+        <div className="flex justify-center py-1">
+          <div className="bg-background/80 backdrop-blur-xl p-2.5 rounded-full border border-white/10 shadow-lg hover:scale-110 hover:border-primary/50 transition-all cursor-pointer">
+            <ArrowDown className="w-4 h-4 text-primary" />
+          </div>
+        </div>
 
-        {/* Receive Fiat */}
-        <div className="bg-gray-100 dark:bg-black p-4 rounded-xl mt-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-400 text-sm font-medium">Receive Fiat</span>
-            <div className="flex items-center gap-2 bg-green-600 text-white rounded-full px-4 py-2 text-sm font-medium">
-              <span>₦ NGN</span>
+        {/* Receive (Fiat) */}
+        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner">
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">Receive Fiat</label>
+            <div className="bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
+              <span className="text-emerald-400 text-[10px] font-black">₦ NGN</span>
             </div>
           </div>
-          <div className="w-full bg-transparent text-2xl sm:text-3xl font-bold text-black dark:text-white border-none outline-none">
-             {isFetchingRate ? <span className="text-gray-400 text-lg">Fetching est...</span> : (rateData?.to?.estimatedAmount ? `₦${rateData.to.estimatedAmount.toLocaleString()}` : "0")}
+          <div className="w-full bg-transparent text-4xl font-black text-emerald-400 outline-none h-12 tracking-tight">
+            {isFetchingRate ? (
+              <div className="flex items-center gap-1.5 h-full">
+                {[0, 1, 2].map(i => <div key={i} className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.12}s` }} />)}
+              </div>
+            ) : rateData?.to?.estimatedAmount ? (
+              `₦${rateData.to.estimatedAmount.toLocaleString()}`
+            ) : "0.00"}
           </div>
-          {rateData?.warning && (
-            <div className="text-xs text-yellow-500 mt-2">
-              Note: {rateData.warning}
-            </div>
+        </div>
+
+        {/* Breakdown */}
+        <AnimatePresence>
+          {rateData && !isFetchingRate && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden text-sm"
+            >
+              <div className="p-4 space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium">Rate</span>
+                  <span className="text-white font-bold tabular-nums">
+                    1 {selectedCrypto.symbol} ≈ ₦{((rateData.to.estimatedAmount) / parseFloat(fromAmount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+                    Leg 1 (Stables)
+                    <Info className="w-3.5 h-3.5 opacity-40 cursor-help" />
+                  </span>
+                  <span className="text-white/80 font-medium tabular-nums">
+                    {rateData.intermediate?.estimatedAmount} {rateData.intermediate?.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-t border-white/5 pt-2.5">
+                  <span className="text-white font-black uppercase tracking-widest text-xs">Final Payout</span>
+                  <span className="text-emerald-400 font-black text-lg tabular-nums">
+                    ₦{rateData.to.estimatedAmount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+
+        {/* CTA */}
+        <button
+          onClick={onNext}
+          disabled={!isValid || isFetchingRate}
+          className="w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_20px_rgba(100,150,255,0.25)] disabled:opacity-40 disabled:shadow-none transition-all hover:scale-[1.01]"
+        >
+          {isFetchingRate ? "Calculating..." : "Continue to Payout →"}
+        </button>
+
+        {rateData?.warning && (
+          <p className="text-[10px] text-yellow-500/80 font-bold text-center uppercase tracking-tight">
+            ⚠️ {rateData.warning}
+          </p>
+        )}
       </div>
-
-      {rateData && rateData.to.estimatedAmount && (
-        <div className="bg-white border shadow-sm dark:bg-[#333746] rounded-xl p-4 mb-4 text-sm">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-700 dark:text-gray-200">Rate</span>
-            <span className="text-gray-700 dark:text-white font-medium">
-               1 Crypto ≈ ₦{((rateData.to.estimatedAmount) / parseFloat(fromAmount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-700 dark:text-gray-200">Estimated Stables (Leg 1)</span>
-            <span className="text-gray-700 dark:text-white font-medium">
-               {rateData.intermediate?.estimatedAmount} {rateData.intermediate?.currency}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-200">Final Fiat Payout (Leg 2)</span>
-            <span className="text-green-600 dark:text-green-400 font-bold">
-               ₦{rateData.to.estimatedAmount.toLocaleString()}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <Button
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl disabled:opacity-50"
-        onClick={onNext}
-        disabled={!isValid || isFetchingRate}
-      >
-        {isFetchingRate ? "Calculating..." : "Continue to Payout Details"}
-      </Button>
-    </div>
-  );
+    </motion.div>
+  )
 }

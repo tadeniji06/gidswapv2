@@ -3,51 +3,44 @@
 import { useState, useEffect, JSX } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
-import { Copy, Clock, Loader2, CheckCircle2, ShieldCheck, Banknote, RefreshCw, XCircle, FileDown, PartyPopper } from "lucide-react"
+import {
+  Copy, Clock, Loader2, CheckCircle2, ShieldCheck, Banknote,
+  RefreshCw, XCircle, PartyPopper, Sparkles, ArrowRight,
+  ExternalLink, ChevronRight
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { useFiatCryptoStore, OnrampPaymentOrder } from "@/lib/fiat-crypto-store"
+import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
 import Cookies from "js-cookie"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/src/components/ui/dialog"
 
-// Time display helper
 function formatTimeLeft(endTimeStr: string) {
-  const endTime = new Date(endTimeStr).getTime()
-  const now = new Date().getTime()
-  const diff = endTime - now
-
+  const diff = new Date(endTimeStr).getTime() - Date.now()
   if (diff <= 0) return "Expired"
-
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-
-  return `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false)
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(value)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
   return (
-    <div className="flex items-center justify-between bg-black/30 p-3 rounded-lg border border-[#2d3142]">
-      <div className="flex flex-col">
-        <span className="text-xs text-gray-500 mb-1">{label}</span>
-        <span className="text-sm font-mono text-gray-200">{text}</span>
+    <div className="group flex items-center justify-between bg-black/40 hover:bg-black/50 border border-white/5 hover:border-white/10 p-4 rounded-2xl transition-all duration-200 cursor-pointer" onClick={handleCopy}>
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+        <p className="text-sm font-mono text-white truncate">{value}</p>
       </div>
-      <button
-        onClick={handleCopy}
-        className="p-2 hover:bg-white/5 rounded-md transition-colors group"
-      >
-        {copied ? (
-          <CheckCircle2 className="w-4 h-4 text-green-500" />
-        ) : (
-          <Copy className="w-4 h-4 text-gray-400 group-hover:text-white" />
-        )}
+      <button className="flex-shrink-0 ml-3 w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-primary/20 transition-all duration-200">
+        {copied
+          ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          : <Copy className="w-4 h-4 text-muted-foreground group-hover:text-white" />
+        }
       </button>
     </div>
   )
@@ -57,234 +50,255 @@ export function PendingPaymentCard({ onNewTransaction }: { onNewTransaction: () 
   const { paymentOrder, pollPaymentStatus, selectedToken } = useFiatCryptoStore()
   const [timeLeft, setTimeLeft] = useState<string>("")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [confettiActive, setConfettiActive] = useState(false)
 
-  // Validate state
   if (!paymentOrder || !paymentOrder.providerAccount) {
     return (
-      <div className="w-full max-w-lg mx-auto glass-panel p-12 text-center rounded-3xl">
-        <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-6" />
-        <p className="text-muted-foreground font-medium">Securing your transaction details...</p>
+      <div className="w-full max-w-lg mx-auto glass-panel p-16 text-center rounded-3xl">
+        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/20">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+        <p className="text-muted-foreground font-bold">Securing your transaction details...</p>
+        <p className="text-muted-foreground/50 text-xs font-medium mt-2">This only takes a moment</p>
       </div>
     )
   }
 
   const { providerAccount } = paymentOrder
 
-  // Polling via React Query
   const { data: isCompleted } = useQuery({
     queryKey: ["pollPayment", paymentOrder.id],
-    queryFn: async () => {
-      return await pollPaymentStatus(paymentOrder.id)
-    },
-    refetchInterval: (query) => {
-      if (query.state.data) return false // stop polling if completed
-      return 3000 // Poll every 3s
-    },
+    queryFn: () => pollPaymentStatus(paymentOrder.id),
+    refetchInterval: (query) => (query.state.data ? false : 3000),
     refetchIntervalInBackground: true,
   })
 
   useEffect(() => {
     if (isCompleted) {
       setShowSuccessModal(true)
+      setConfettiActive(true)
+      setTimeout(() => setConfettiActive(false), 4000)
     }
   }, [isCompleted])
 
-  // Timer effect
   useEffect(() => {
     if (!paymentOrder.validUntil) return
-    const interval = setInterval(() => {
-      setTimeLeft(formatTimeLeft(paymentOrder.validUntil))
-    }, 1000)
+    const interval = setInterval(() => setTimeLeft(formatTimeLeft(paymentOrder.validUntil)), 1000)
     return () => clearInterval(interval)
   }, [paymentOrder.validUntil])
 
   const terminalStates = ["cancelled", "refunded", "expired", "failed"]
   const isTerminal = terminalStates.includes(paymentOrder.status)
 
-  // Status mapping UI
-  const getStatusDisplay = (): { color: string; bg: string; icon: JSX.Element; text: string } => {
+  type StatusUI = { color: string; bg: string; border: string; icon: JSX.Element; text: string; sub: string }
+  const getStatusUI = (): StatusUI => {
     switch (paymentOrder.status) {
       case "settled":
       case "fulfilled":
       case "validated":
-        return {
-          color: "text-emerald-400",
-          bg: "bg-emerald-400/10",
-          icon: <CheckCircle2 className="w-4 h-4" />,
-          text: "Transfer completed successfully",
-        }
+        return { color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20", icon: <CheckCircle2 className="w-5 h-5" />, text: "Transfer Completed", sub: "Your crypto is on its way" }
       case "processing":
-        return {
-          color: "text-blue-400",
-          bg: "bg-blue-400/10",
-          icon: <Loader2 className="w-4 h-4 animate-spin" />,
-          text: "Deposit detected. Processing mint...",
-        }
+        return { color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20", icon: <Loader2 className="w-5 h-5 animate-spin" />, text: "Processing Deposit", sub: "Minting tokens to your wallet..." }
       case "failed":
       case "expired":
       case "cancelled":
-        return {
-          color: "text-red-400",
-          bg: "bg-red-400/10",
-          icon: <XCircle className="w-4 h-4" />,
-          text: "Payment Expired/Failed",
-        }
+        return { color: "text-red-400", bg: "bg-red-400/10", border: "border-red-400/20", icon: <XCircle className="w-5 h-5" />, text: "Payment Failed", sub: "Funds will be refunded if sent" }
       default:
-        return {
-          color: "text-amber-400",
-          bg: "bg-amber-400/10",
-          icon: <RefreshCw className="w-4 h-4 animate-spin" />,
-          text: "Awaiting fiat transfer...",
-        }
+        return { color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20", icon: <RefreshCw className="w-5 h-5 animate-spin" />, text: "Awaiting Transfer", sub: "Send exact amount to complete" }
     }
   }
 
-  const statusUI = getStatusDisplay()
+  const statusUI = getStatusUI()
+  const isExpiring = timeLeft !== "Expired" && timeLeft !== "" && parseInt(timeLeft.split(":")[0]) === 0 && parseInt(timeLeft.split(":")[1]) < 120
 
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-lg mx-auto relative group"
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{ duration: 0.45 }}
+        className="w-full max-w-lg mx-auto"
       >
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-blue-500/30 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-        
-        <div className="glass-panel neon-border shadow-2xl rounded-3xl overflow-hidden relative z-10">
-          <div className="p-8 text-center border-b border-white/5 bg-white/5 backdrop-blur-xl">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20 shadow-inner group-hover:scale-110 transition-transform">
-              <Banknote className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Fiat Transfer Details</h3>
-            <p className="text-muted-foreground text-sm mt-2 font-medium">
-              Transfer the exact amount to complete your swap.
-            </p>
-          </div>
+        {/* Outer glow ring */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-blue-500/20 to-primary/30 rounded-[2.5rem] blur-lg opacity-30 group-hover:opacity-60 transition-all duration-1000" />
 
-          <div className="p-8 space-y-8">
-            {/* Amount / Timer */}
-            <div className="flex justify-between items-center bg-black/40 backdrop-blur-md p-6 rounded-2xl border border-white/5 shadow-inner">
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs mb-1 uppercase tracking-widest font-bold">
-                  Amount to transfer
-                </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-white tracking-tighter">
-                    {Number(providerAccount.amountToTransfer).toLocaleString()}
-                  </span>
-                  <span className="text-primary font-black">NGN</span>
-                </div>
+          <div className="relative glass-panel neon-border rounded-[2rem] overflow-hidden shadow-2xl">
+            {/* Top accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-primary via-blue-400 to-primary" />
+
+            {/* Header */}
+            <div className="p-6 md:p-8 border-b border-white/5 flex items-center gap-4">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 flex-shrink-0">
+                <Banknote className="w-7 h-7 text-primary" />
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-xs mb-1 uppercase tracking-widest font-bold flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Time left
-                </span>
-                <span
-                  className={`text-2xl font-black tracking-widest font-mono ${
-                    timeLeft === "Expired" ? "text-red-500 animate-pulse" : "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]"
-                  }`}
-                >
-                  {timeLeft}
-                </span>
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Bank Transfer</h3>
+                <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-0.5">
+                  Send exact amount to receive crypto
+                </p>
               </div>
             </div>
 
-            {/* Bank Transfer Details Box */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2 text-primary">
-                <ShieldCheck className="w-5 h-5" />
-                <h4 className="font-bold uppercase tracking-wider text-sm">Bank Instructions</h4>
-              </div>
-
-              <div className="space-y-3">
-                <CopyButton text={providerAccount.institution} label="Bank Name" />
-                <CopyButton text={providerAccount.accountIdentifier} label="Account Number" />
-                <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl border border-white/5">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter mb-1">Account Name</span>
-                    <span className="text-md font-bold text-white tracking-wide">{providerAccount.accountName}</span>
+            <div className="p-6 md:p-8 space-y-5">
+              {/* Amount + Timer */}
+              <div className="bg-black/40 rounded-2xl p-5 border border-white/5 flex justify-between items-center">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-2">Amount to transfer</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-white tabular-nums tracking-tighter">
+                      {Number(providerAccount.amountToTransfer).toLocaleString("en-NG")}
+                    </span>
+                    <span className="text-primary font-black text-lg">NGN</span>
                   </div>
                 </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-end gap-1">
+                    <Clock className="w-3 h-3" /> Time left
+                  </p>
+                  <span className={`text-2xl font-black font-mono tracking-widest tabular-nums ${
+                    timeLeft === "Expired" ? "text-red-500 animate-pulse"
+                    : isExpiring ? "text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]"
+                    : "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                  }`}>
+                    {timeLeft}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Status Warning */}
-            <div
-              className={`flex items-center gap-4 p-5 rounded-2xl border transition-all duration-500 ${statusUI.bg} ${statusUI.color} border-current/20 shadow-lg`}
-            >
-              <div className="flex-shrink-0 animate-pulse bg-white/10 p-2 rounded-lg">{statusUI.icon}</div>
-              <p className="text-sm font-bold tracking-wide uppercase">{statusUI.text}</p>
-            </div>
+              {/* Bank details */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-primary mb-3">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Transfer Instructions</span>
+                </div>
+                <CopyField label="Bank Name" value={providerAccount.institution} />
+                <CopyField label="Account Number" value={providerAccount.accountIdentifier} />
+                <div className="bg-black/40 border border-white/5 p-4 rounded-2xl">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Account Name</p>
+                  <p className="text-white font-bold">{providerAccount.accountName}</p>
+                </div>
+              </div>
 
-            <div className="text-center pt-2">
-              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest opacity-50">
-                Order Reference: <span className="font-mono ml-1 text-white opacity-100">{paymentOrder.reference}</span>
+              {/* Warning */}
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse mt-2 flex-shrink-0" />
+                <p className="text-amber-400/80 text-xs font-bold leading-relaxed">
+                  Transfer <strong className="text-amber-400">exactly</strong> the amount shown above. Wrong amounts may cause delays or loss of funds.
+                </p>
+              </div>
+
+              {/* Status pill */}
+              <div className={`flex items-center gap-3 p-4 rounded-2xl border ${statusUI.bg} ${statusUI.border}`}>
+                <div className={`${statusUI.color} flex-shrink-0`}>{statusUI.icon}</div>
+                <div>
+                  <p className={`text-sm font-black ${statusUI.color}`}>{statusUI.text}</p>
+                  <p className="text-muted-foreground text-xs font-medium">{statusUI.sub}</p>
+                </div>
+              </div>
+
+              {/* Reference */}
+              <p className="text-center text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest">
+                Ref: <span className="text-white/30 font-mono">{paymentOrder.reference}</span>
               </p>
-            </div>
-            
-            {isTerminal && (
-              <Button
-                variant="outline"
-                className="w-full mt-4 glass-panel border-white/10 text-white hover:bg-white/10 transition-all py-6 rounded-2xl font-bold tracking-wide uppercase"
-                onClick={onNewTransaction}
-              >
-                Start New Transaction
-              </Button>
-            )}
 
+              {isTerminal && (
+                <Button
+                  onClick={onNewTransaction}
+                  className="w-full glass-panel border-white/10 text-white hover:bg-white/10 py-6 rounded-2xl font-black tracking-widest uppercase text-sm"
+                  variant="outline"
+                >
+                  Start New Transaction
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Success Modal */}
+      {/* ── Success Modal ──────────────────────────────────── */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md glass-panel text-white border-white/10 p-0 overflow-hidden hide-close-button rounded-[2rem]">
-          <div className="bg-gradient-to-b from-emerald-500/20 to-transparent p-10 text-center relative">
-            <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
-            
-            <div className="w-20 h-20 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.3)] animate-bounce">
-              <PartyPopper className="w-10 h-10 text-emerald-400" />
-            </div>
-            <DialogTitle className="text-3xl font-black tracking-tighter text-center mb-3">Order Confirmed!</DialogTitle>
-            <p className="text-muted-foreground text-sm font-medium px-4 leading-relaxed">
-              We've successfully verified your deposit and sent <span className="text-white font-bold">{paymentOrder.amount} {selectedToken?.symbol}</span> to your wallet.
-            </p>
-          </div>
-          
-          <div className="p-8 space-y-6 pt-0">
-            <div className="bg-black/50 backdrop-blur-md p-6 rounded-2xl border border-white/5 space-y-4 shadow-inner">
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Status</span>
-                <span className="text-emerald-400 font-bold flex items-center gap-2 bg-emerald-400/10 px-3 py-1 rounded-full text-xs">
-                  <CheckCircle2 className="w-3 h-3" /> SETTLED
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Received</span>
-                <span className="text-white font-black tracking-tight text-lg">
-                  {paymentOrder.amount} {selectedToken?.symbol}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Ref</span>
-                <span className="font-mono text-xs text-white/50">{paymentOrder.reference.slice(0, 12)}...</span>
-              </div>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="glass-panel border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(52,211,153,0.2)]"
+          >
+            {/* Top gradient */}
+            <div className="relative bg-gradient-to-b from-emerald-500/25 via-emerald-500/10 to-transparent pt-12 pb-8 px-8 text-center overflow-hidden">
+              {/* Confetti dots */}
+              {confettiActive && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 rounded-full"
+                      style={{
+                        backgroundColor: ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444"][i % 5],
+                        left: `${Math.random() * 100}%`,
+                        top: "-10%",
+                      }}
+                      animate={{ y: "120vh", rotate: 360 * Math.random(), opacity: [1, 1, 0] }}
+                      transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 1.5, ease: "easeIn" }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Icon */}
+              <motion.div
+                animate={{ scale: [1, 1.15, 1], rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="w-24 h-24 bg-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.4)]"
+              >
+                <PartyPopper className="w-12 h-12 text-emerald-400" />
+              </motion.div>
+
+              <DialogTitle className="text-3xl font-black tracking-tighter mb-2 text-white">
+                You're in! 🎉
+              </DialogTitle>
+              <p className="text-muted-foreground text-sm font-medium leading-relaxed px-4">
+                We've confirmed your NGN deposit and sent{" "}
+                <span className="text-white font-black">{paymentOrder.amount} {selectedToken?.symbol}</span>{" "}
+                to your wallet.
+              </p>
             </div>
 
-            <DialogFooter className="flex-col sm:flex-col gap-3">
-              <Button
-                className="w-full futuristic-button bg-primary text-white py-8 text-lg font-black rounded-2xl shadow-[0_0_30px_rgba(100,150,255,0.3)]"
-                onClick={() => {
-                  setShowSuccessModal(false)
-                  onNewTransaction()
-                }}
+            {/* Receipt-style breakdown */}
+            <div className="px-8 pb-8 space-y-4">
+              <div className="bg-black/50 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden">
+                {[
+                  { label: "Status", value: "Settled", valueClass: "text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full text-xs font-black" },
+                  { label: "Received", value: `${paymentOrder.amount} ${selectedToken?.symbol}`, valueClass: "text-white font-black text-lg tabular-nums" },
+                  { label: "Reference", value: `${paymentOrder.reference.slice(0, 14)}...`, valueClass: "font-mono text-xs text-white/50" },
+                ].map(({ label, value, valueClass }, i) => (
+                  <div key={label} className={`flex items-center justify-between px-5 py-4 ${i !== 0 ? "border-t border-white/5" : ""}`}>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
+                    <span className={valueClass}>{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stars / social proof */}
+              <div className="flex items-center justify-center gap-1 opacity-60">
+                {[1,2,3,4,5].map(i => (
+                  <Sparkles key={i} className="w-3 h-3 text-amber-400" />
+                ))}
+                <span className="text-[10px] text-muted-foreground font-bold ml-1">Secured by Gidswap Protocol</span>
+              </div>
+
+              {/* CTA */}
+              <button
+                className="w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_30px_rgba(100,150,255,0.4)] flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+                onClick={() => { setShowSuccessModal(false); onNewTransaction() }}
               >
-                RETURN TO DASHBOARD
-              </Button>
-            </DialogFooter>
-          </div>
+                <ArrowRight className="w-4 h-4" />
+                Return to Dashboard
+              </button>
+            </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </>
