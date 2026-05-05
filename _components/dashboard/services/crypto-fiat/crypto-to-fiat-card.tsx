@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowDown, ChevronDown, Search, Info, Zap, Loader2 } from "lucide-react";
+import { ArrowDown, ChevronDown, Search, Info, Zap, Loader2, X } from "lucide-react";
 import { useCryptoFiatStore, type Token, type FiatCurrency } from "@/lib/crypto-fiat-store";
 import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog";
 
 // ─── Network badge ────────────────────────────────────────────────────────────
 const NETWORK_META: Record<string, { short: string; color: string }> = {
@@ -24,98 +25,93 @@ function NetworkBadge({ network }: { network: string }) {
   );
 }
 
-// ─── Token dropdown (fixed-position, escapes overflow:hidden) ─────────────────
-function TokenDropdown({ token, tokens, onSelect, isOpen, onToggle }: {
-  token: Token | null; tokens: Token[]; onSelect: (t: Token) => void; isOpen: boolean; onToggle: () => void;
+// ─── Token Selector (Modal based for professional UX) ────────────────────────
+function TokenSelector({ token, tokens, onSelect }: {
+  token: Token | null; tokens: Token[]; onSelect: (t: Token) => void;
 }) {
   const [search, setSearch] = useState("");
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (triggerRef.current && !triggerRef.current.contains(target)) {
-        const dd = document.getElementById("token-dropdown-offramp");
-        if (dd && !dd.contains(target)) onToggle();
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handler);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handler);
-    };
-  }, [isOpen, onToggle]);
+  const [isOpen, setIsOpen] = useState(false);
 
   const filtered = tokens.filter(
     (t) => t.symbol.toLowerCase().includes(search.toLowerCase()) || t.network.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="relative">
-      <button
-        ref={triggerRef}
-        onClick={onToggle}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-3 py-2 transition-all"
-      >
-        {token ? (
-          <>
-            <img src={token.logo || "/placeholder.svg"} alt={token.symbol} className="w-6 h-6 rounded-full ring-1 ring-white/20" />
-            <div className="text-left">
-              <div className="text-white text-sm font-black leading-none">{token.symbol}</div>
-              <NetworkBadge network={token.network} />
-            </div>
-          </>
-        ) : <span className="text-muted-foreground text-sm font-medium">Select token</span>}
-        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            id="token-dropdown-offramp"
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full right-0 mt-2 w-72 glass-panel border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[9999] backdrop-blur-3xl -translate-x-3"
-          >
-            <div className="p-3 border-b border-white/5">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text" placeholder="Search token or chain..." value={search}
-                  onChange={(e) => setSearch(e.target.value)} autoFocus
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                />
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <button className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-4 py-2.5 transition-all shadow-lg active:scale-95 group">
+          {token ? (
+            <>
+              <img src={token.logo || "/placeholder.svg"} alt={token.symbol} className="w-6 h-6 rounded-full ring-2 ring-white/20" />
+              <div className="text-left">
+                <div className="text-white text-sm font-black leading-none">{token.symbol}</div>
+                <NetworkBadge network={token.network} />
               </div>
+            </>
+          ) : <span className="text-muted-foreground text-sm font-medium">Select token</span>}
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[420px] bg-[#0d0e12] border-white/10 p-0 overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] outline-none">
+        <DialogHeader className="p-6 pb-2 border-b border-white/5">
+          <DialogTitle className="text-xl font-black text-white flex items-center justify-between">
+            Select Token
+          </DialogTitle>
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text" placeholder="Search by token name or network..." value={search}
+              onChange={(e) => setSearch(e.target.value)} autoFocus
+              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-inner"
+            />
+          </div>
+        </DialogHeader>
+
+        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1">
+          {filtered.length > 0 ? filtered.map((t) => {
+            const isSel = token?.symbol === t.symbol && token?.network === t.network;
+            return (
+              <button key={`${t.symbol}-${t.network}`}
+                onClick={() => { onSelect(t); setIsOpen(false); setSearch(""); }}
+                className={`w-full flex items-center gap-4 px-4 py-3.5 hover:bg-white/5 rounded-2xl transition-all text-left group ${isSel ? "bg-primary/20 border border-primary/20" : "border border-transparent"}`}
+              >
+                <div className="relative">
+                  <img src={t.logo || "/placeholder.svg"} alt={t.symbol} className="w-10 h-10 rounded-full ring-2 ring-white/5 shadow-xl group-hover:scale-105 transition-transform" />
+                  {isSel && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full border-2 border-[#0d0e12]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-black text-base tracking-tight">{t.symbol}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <NetworkBadge network={t.network} />
+                    <span className="text-xs text-muted-foreground capitalize font-bold tracking-tight">{t.network.replace(/-/g, " ")}</span>
+                  </div>
+                </div>
+                {isSel && (
+                  <div className="flex flex-col items-end gap-1">
+                    <Zap className="w-4 h-4 text-primary" />
+                    <span className="text-[10px] text-primary font-black uppercase tracking-tighter">Active</span>
+                  </div>
+                )}
+              </button>
+            );
+          }) : (
+            <div className="py-12 text-center">
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-muted-foreground/20" />
+              </div>
+              <p className="text-muted-foreground text-sm font-medium">No tokens found for "{search}"</p>
             </div>
-            <div className="max-h-64 overflow-y-auto divide-y divide-white/5">
-              {filtered.length > 0 ? filtered.map((t) => {
-                const isSel = token?.symbol === t.symbol && token?.network === t.network;
-                return (
-                  <button key={`${t.symbol}-${t.network}`}
-                    onClick={() => { onSelect(t); onToggle(); setSearch(""); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left ${isSel ? "bg-primary/10" : ""}`}
-                  >
-                    <img src={t.logo || "/placeholder.svg"} alt={t.symbol} className="w-8 h-8 rounded-full ring-1 ring-white/10" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-bold text-sm">{t.symbol}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <NetworkBadge network={t.network} />
-                        <span className="text-[10px] text-muted-foreground capitalize">{t.network.replace(/-/g, " ")}</span>
-                      </div>
-                    </div>
-                    {isSel && <Zap className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                  </button>
-                );
-              }) : (
-                <div className="px-4 py-8 text-center text-muted-foreground text-sm">No tokens found for "{search}"</div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </div>
+        
+        <div className="p-4 bg-white/5 border-t border-white/5">
+          <p className="text-[10px] text-center text-muted-foreground font-bold uppercase tracking-widest">
+            Don't see your token? Check the network selection
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -138,7 +134,7 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
     fetchTokens, fetchCurrencies, setSelectedToken, setSelectedCurrency, setTokenAmount, fetchQuote,
   } = useCryptoFiatStore();
 
-  const [tokenOpen, setTokenOpen] = useState(false);
+  // Removed tokenOpen state as we use Modal now
 
   useEffect(() => { fetchTokens(); fetchCurrencies(); }, [fetchTokens, fetchCurrencies]);
   useEffect(() => { if (currencies.length === 1 && !selectedCurrency) setSelectedCurrency(currencies[0]); }, [currencies, selectedCurrency, setSelectedCurrency]);
@@ -170,7 +166,7 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="glass-panel neon-border shadow-2xl rounded-3xl relative"
+      className="glass-panel neon-border rounded-3xl relative shadow-2xl overflow-hidden"
     >
       {/* Ambient glows */}
       <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -178,18 +174,17 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
 
       <div className="relative z-10 p-6 md:p-8 space-y-3">
         {/* Header */}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <h3 className="text-xl font-black tracking-tight text-white">Off-Ramp</h3>
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mt-1">Crypto → Fiat</p>
-        </div>
+        </div> */}
 
         {/* Send (crypto) */}
         <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 focus-within:border-primary/50 transition-all duration-300 shadow-inner">
           <div className="flex justify-between items-center mb-3">
             <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">You send</label>
-            <TokenDropdown
+            <TokenSelector
               token={selectedToken} tokens={tokens} onSelect={setSelectedToken}
-              isOpen={tokenOpen} onToggle={() => setTokenOpen(!tokenOpen)}
             />
           </div>
           <input

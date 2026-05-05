@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, CheckCircle2, Loader2, Search, Building2, Hash, ShieldCheck } from "lucide-react"
+import { ChevronDown, CheckCircle2, Loader2, Search, Building2, Hash, ShieldCheck, X } from "lucide-react"
 import { useBankVerificationStore } from "@/lib/bank-verification-store"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog"
 
 interface BankVerificationCardProps {
   onProceed: () => void
@@ -73,75 +74,67 @@ export function BankVerificationCard({ onProceed }: BankVerificationCardProps) {
             <Building2 className="w-3.5 h-3.5 text-primary" /> Select Bank
           </label>
           <div className="relative">
-            <button
-              ref={triggerRef}
-              onClick={() => setShowDropdown(!showDropdown)}
-              disabled={isLoadingBanks}
-              className={`w-full flex items-center justify-between bg-black/30 border px-4 py-3.5 rounded-2xl transition-all duration-200 text-left
-                ${showDropdown ? "border-primary/60 bg-black/40 shadow-[0_0_0_3px_rgba(100,150,255,0.1)]" : "border-white/10 hover:border-white/20"}`}
-            >
-              <span className={`text-sm font-semibold ${selectedBank ? "text-white" : "text-muted-foreground"}`}>
-                {isLoadingBanks ? "Loading banks..." : selectedBank ? selectedBank.name : "Choose your bank"}
-              </span>
-              {isLoadingBanks
-                ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                : <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
-              }
-            </button>
-
-            <AnimatePresence>
-              {showDropdown && !isLoadingBanks && (
-                <motion.div
-                  id="bank-dropdown"
-                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full right-0 mt-2 glass-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] backdrop-blur-3xl -translate-x-3"
+            <Dialog open={showDropdown} onOpenChange={setShowDropdown}>
+              <DialogTrigger asChild>
+                <button
+                  disabled={isLoadingBanks}
+                  className={`w-full flex items-center justify-between bg-black/30 border px-4 py-3.5 rounded-2xl transition-all duration-200 text-left active:scale-[0.99] shadow-lg
+                    ${showDropdown ? "border-primary/60 bg-black/40 shadow-[0_0_0_3px_rgba(100,150,255,0.1)]" : "border-white/10 hover:border-white/20"}`}
                 >
-                  {/* Search */}
-                  <div className="p-3 border-b border-white/5 bg-black/60 backdrop-blur-xl">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="Search bank name..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        autoFocus
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                      />
-                    </div>
-                  </div>
+                  <span className={`text-sm font-semibold ${selectedBank ? "text-white" : "text-muted-foreground"}`}>
+                    {isLoadingBanks ? "Loading banks..." : selectedBank ? selectedBank.name : "Choose your bank"}
+                  </span>
+                  {isLoadingBanks
+                    ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    : <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
+                  }
+                </button>
+              </DialogTrigger>
 
-                  {/* Bank list */}
-                  <div className="max-h-56 overflow-y-auto divide-y divide-white/5">
-                    {filteredBanks.length > 0 ? (
-                      filteredBanks.map((bank) => (
-                        <button
-                          key={bank.code}
-                          onClick={() => { setSelectedBank(bank); setShowDropdown(false); setSearchTerm("") }}
-                          className={`w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-white/5 transition-colors
-                            ${selectedBank?.code === bank.code ? "bg-primary/10" : ""}`}
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-black text-primary">{bank.name[0]}</span>
-                          </div>
-                          <span className="text-white text-sm font-semibold">{bank.name}</span>
-                          {selectedBank?.code === bank.code && (
-                            <CheckCircle2 className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
-                          )}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-8 text-center text-muted-foreground text-sm">
-                        No banks found for "{searchTerm}"
-                      </div>
-                    )}
+              <DialogContent className="sm:max-w-[420px] bg-[#0d0e12] border-white/10 p-0 overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] outline-none">
+                <DialogHeader className="p-6 pb-2 border-b border-white/5">
+                  <DialogTitle className="text-xl font-black text-white">Select Bank</DialogTitle>
+                  <div className="relative mt-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search bank name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      autoFocus
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-inner"
+                    />
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </DialogHeader>
+
+                <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1">
+                  {filteredBanks.length > 0 ? (
+                    filteredBanks.map((bank) => (
+                      <button
+                        key={bank.code}
+                        onClick={() => { setSelectedBank(bank); setShowDropdown(false); setSearchTerm("") }}
+                        className={`w-full flex items-center gap-4 px-4 py-3.5 hover:bg-white/5 rounded-2xl transition-all text-left group ${selectedBank?.code === bank.code ? "bg-primary/20 border border-primary/20" : "border border-transparent"}`}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-lg ring-1 ring-white/5">
+                          <span className="text-sm font-black text-primary">{bank.name[0]}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-white text-base font-black tracking-tight block truncate">{bank.name}</span>
+                          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Verified Institution</span>
+                        </div>
+                        {selectedBank?.code === bank.code && (
+                          <CheckCircle2 className="w-5 h-5 text-primary ml-auto flex-shrink-0" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-muted-foreground text-sm font-medium italic">
+                      No banks match "{searchTerm}"
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

@@ -30,7 +30,7 @@ export function MobileBottomNav({
 		<nav
 			className={`md:hidden p-3 fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 shadow-lg z-50 ${className}`}
 		>
-			<div className='flex items-center justify-around py-2 px-4'>
+			<div className='flex items-center justify-between py-2 px-4'>
 				{navLinks.map((link) => {
 					const Icon = link.icon;
 					const isActive = activeLink === link.name;

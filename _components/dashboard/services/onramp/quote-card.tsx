@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowDown, ChevronDown, Search, Zap, Loader2, Info, Sparkles } from "lucide-react"
 import { useOnrampStore } from "@/lib/onramp-store"
 import { Button } from "@/src/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog"
 
 const supportedCryptos = [
   { symbol: "BTC", name: "Bitcoin", network: "BTC", logo: "/images/bitcoin.png" },
@@ -43,22 +44,6 @@ function CryptoSelector({
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node
-      if (triggerRef.current && !triggerRef.current.contains(target)) {
-        const dd = document.getElementById("crypto-selector-dropdown-onramp")
-        if (dd && !dd.contains(target)) setOpen(false)
-      }
-    }
-    if (open) {
-      document.addEventListener("mousedown", handler)
-    }
-    return () => {
-      document.removeEventListener("mousedown", handler)
-    }
-  }, [open])
 
   const filtered = cryptos.filter(c => 
     c.symbol.toLowerCase().includes(search.toLowerCase()) || 
@@ -66,69 +51,64 @@ function CryptoSelector({
   )
 
   return (
-    <div className="relative">
-      <button
-        ref={triggerRef}
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-3 py-2 transition-all group"
-      >
-        <img src={selected.logo} alt={selected.symbol} className="w-5 h-5 rounded-full ring-1 ring-white/10" />
-        <div className="text-left">
-          <div className="text-white text-xs font-black leading-none">{selected.symbol}</div>
-          <NetworkBadge network={selected.network} />
-        </div>
-        <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-3 py-2 transition-all group active:scale-95 shadow-lg"
+        >
+          <img src={selected.logo} alt={selected.symbol} className="w-5 h-5 rounded-full ring-2 ring-white/10" />
+          <div className="text-left">
+            <div className="text-white text-xs font-black leading-none">{selected.symbol}</div>
+            <NetworkBadge network={selected.network} />
+          </div>
+          <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      </DialogTrigger>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            id="crypto-selector-dropdown-onramp"
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full right-0 mt-2 w-64 glass-panel border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[9999] backdrop-blur-3xl -translate-x-3"
-          >
-            <div className="p-2 border-b border-white/5">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoFocus
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-primary/50 transition-all"
-                />
-              </div>
-            </div>
-            <div className="max-h-60 overflow-y-auto divide-y divide-white/5">
-              {filtered.map(c => {
-                const isSel = selected.symbol === c.symbol
-                return (
-                  <button
-                    key={c.symbol}
-                    onClick={() => { onSelect(c); setOpen(false); setSearch("") }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left ${isSel ? "bg-primary/10" : ""}`}
-                  >
-                    <img src={c.logo} alt={c.symbol} className="w-7 h-7 rounded-full ring-1 ring-white/10" />
-                    <div className="flex-1">
-                      <div className="text-white font-bold text-sm">{c.symbol}</div>
-                      <div className="flex items-center gap-1.5">
-                        <NetworkBadge network={c.network} />
-                        <span className="text-[9px] text-muted-foreground">{c.name}</span>
-                      </div>
+      <DialogContent className="sm:max-w-[420px] bg-[#0d0e12] border-white/10 p-0 overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] outline-none">
+        <DialogHeader className="p-6 pb-2 border-b border-white/5">
+          <DialogTitle className="text-xl font-black text-white">Select Token</DialogTitle>
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text" placeholder="Search token..." value={search}
+              onChange={(e) => setSearch(e.target.value)} autoFocus
+              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-inner"
+            />
+          </div>
+        </DialogHeader>
+
+        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1">
+          {filtered.length > 0 ? (
+            filtered.map((c) => {
+              const isSel = selected.symbol === c.symbol
+              return (
+                <button
+                  key={c.symbol}
+                  onClick={() => { onSelect(c); setOpen(false); setSearch("") }}
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 hover:bg-white/5 rounded-2xl transition-all text-left group ${isSel ? "bg-primary/20 border border-primary/20" : "border border-transparent"}`}
+                >
+                  <div className="relative">
+                    <img src={c.logo} alt={c.symbol} className="w-10 h-10 rounded-full ring-2 ring-white/5 shadow-xl group-hover:scale-105 transition-transform" />
+                    {isSel && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full border-2 border-[#0d0e12]" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white font-black text-base tracking-tight">{c.symbol}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <NetworkBadge network={c.network} />
+                      <span className="text-xs text-muted-foreground capitalize font-bold tracking-tight">{c.name}</span>
                     </div>
-                    {isSel && <Zap className="w-3.5 h-3.5 text-primary" />}
-                  </button>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+                  </div>
+                  {isSel && <Zap className="w-4 h-4 text-primary" />}
+                </button>
+              )
+            })
+          ) : (
+            <div className="py-12 text-center text-muted-foreground text-sm font-medium">No results found</div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -149,7 +129,7 @@ export function OnrampQuoteCard({ onNext }: { onNext: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="glass-panel neon-border shadow-2xl rounded-3xl relative"
+      className="glass-panel neon-border rounded-3xl relative shadow-2xl overflow-hidden"
     >
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />

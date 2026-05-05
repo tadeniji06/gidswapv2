@@ -33,28 +33,29 @@ type ServiceType =
 const services = [
 	{
 		id: "fiat-crypto" as ServiceType,
-		title: "Fiat to Stablecoins",
+		title: "Buy Crypto With Naira",
 		description:
-			"Buy stablecoins directly with cash from your Naira bank account.",
+			"Buy stablecoins directly with cash from your bank account.",
+		icon: Banknote,
+		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
+	},
+	{
+		id: "crypto-fiat" as ServiceType,
+		title: "Sell Crypto To Naira",
+		description:
+			"Sell your crypto and get paid directly to your bank account.",
 		icon: Banknote,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
 	{
 		id: "crypto-crypto" as ServiceType,
-		title: "Crypto to Crypto",
+		title: "Swap Crypto To Crypto",
 		description:
-			"Swap between any cryptocurrencies instantly with real-time rates.",
+			"Swap between cryptocurrencies instantly.",
 		icon: ArrowUpDown,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
-	{
-		id: "crypto-fiat" as ServiceType,
-		title: "Stablecoins to Cash",
-		description:
-			"Convert your stablecoins to cash seamlessly and withdraw to your bank.",
-		icon: Banknote,
-		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
-	},
+
 ];
 
 export default function Dashboard() {
@@ -98,10 +99,10 @@ export default function Dashboard() {
 			{/* HEADER */}
 			<div className='text-center mb-12'>
 				<h1 className='text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3'>
-					Flip, Swap & Send
+					Buy, Sell & Swap 
 				</h1>
 				<p className='text-gray-600 dark:text-gray-400 text-lg'>
-					Your entire crypto workflow — simplified.
+					Your Daily Crypto Needs - In One Place.
 				</p>
 			</div>
 
@@ -140,7 +141,7 @@ export default function Dashboard() {
 						<button
 							key={service.id}
 							onClick={() => setSelectedService(service.id)}
-							className='group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.015] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500/30 p-8 text-left motion-safe:animate-fadeIn'
+							className='group relative overflow-hidden rounded-4xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.015] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500/30 p-8 text-left motion-safe:animate-fadeIn'
 						>
 							<div
 								className={`absolute inset-0 bg-gradient-to-br opacity-[0.07] group-hover:opacity-10 transition-opacity duration-300`}

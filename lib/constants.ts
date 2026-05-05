@@ -119,11 +119,11 @@ export const navLinks = [
 		icon: History,
 		href: "/dashboard/history",
 	},
-	{
-		name: "Markets",
-		icon: BarChart3,
-		href: "/dashboard/markets",
-	},
+	// {
+	// 	name: "Markets",
+	// 	icon: BarChart3,
+	// 	href: "/dashboard/markets",
+	// },
 	{
 		name: "Rewards",
 		icon: Gift,
