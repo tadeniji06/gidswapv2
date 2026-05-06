@@ -18,7 +18,7 @@ const STEP_LABELS: Record<FlowStep, { title: string; subtitle: string }> = {
   account:      { title: "Payout Account",    subtitle: "Choose where to receive your funds" },
   verification: { title: "Verify Account",    subtitle: "Verify a new bank account" },
   order:        { title: "Finalize Order",    subtitle: "Provide transaction details to start" },
-  payment:      { title: "Payment Pending",   subtitle: "Complete your bank transfer" },
+  payment:      { title: "Payment Pending",   subtitle: "" },
 }
 
 // Step progress indicator

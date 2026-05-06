@@ -17,7 +17,9 @@ function ThemeToggle() {
 
 	// Render a placeholder or neutral state during hydration
 	if (!mounted) {
-		return <div className="flex h-11 items-center justify-between gap-2 rounded-full bg-blue-900/20 backdrop-blur-md border border-blue-400/20 p-1 w-full max-w-[200px]" />;
+		return (
+			<div className='flex h-11 items-center justify-between gap-2 rounded-full bg-blue-900/20 backdrop-blur-md border border-blue-400/20 p-1 w-full max-w-[200px]' />
+		);
 	}
 
 	return (
@@ -107,7 +109,10 @@ export default function Footer() {
 				<div className='grid grid-cols-1 lg:grid-cols-4 gap-12 mb-20'>
 					{/* Brand Column */}
 					<div className='lg:col-span-2 space-y-8'>
-						<Link href="/" className='inline-block hover:scale-105 transition-transform duration-300'>
+						<Link
+							href='/'
+							className='inline-block hover:scale-105 transition-transform duration-300'
+						>
 							<Image
 								src='/images/gidsfull.png'
 								width={140}
@@ -118,56 +123,40 @@ export default function Footer() {
 							/>
 						</Link>
 						<p className='text-muted-foreground text-lg leading-relaxed max-w-md font-medium'>
-							The next generation of cross-chain liquidity. 
-              Trade assets instantly with institutional-grade security and zero friction.
+							The next generation of cross-chain liquidity. Trade
+							assets instantly with institutional-grade security and
+							zero friction.
 						</p>
-            
-            <div className='flex gap-4'>
-              {socialLinks.map((social) => {
-                const Icon = social.icon;
-                return (
-                  <Link 
-                    key={social.label}
-                    href={social.href}
-                    className='w-12 h-12 rounded-2xl glass-panel flex items-center justify-center text-muted-foreground hover:text-white hover:border-primary/50 hover:shadow-[0_0_15px_rgba(100,150,255,0.2)] transition-all duration-300 group'
-                  >
-                    <Icon className='size-5 group-hover:scale-110 transition-transform' />
-                  </Link>
-                );
-              })}
-            </div>
-					</div>
 
-					{/* Links Columns */}
-					<div className='space-y-6'>
-						<h4 className='text-white font-bold tracking-widest uppercase text-xs opacity-50'>Platform</h4>
-						<ul className='space-y-4'>
-							{['Swap', 'Markets', 'Rates', 'Dashboard'].map((item) => (
-								<li key={item}>
-									<Link href={`/${item.toLowerCase()}`} className='text-muted-foreground hover:text-primary transition-colors font-medium'>
-										{item}
+						<div className='flex gap-4'>
+							{socialLinks.map((social) => {
+								const Icon = social.icon;
+								return (
+									<Link
+										key={social.label}
+										href={social.href}
+										className='w-12 h-12 rounded-2xl glass-panel flex items-center justify-center text-muted-foreground hover:text-white hover:border-primary/50 hover:shadow-[0_0_15px_rgba(100,150,255,0.2)] transition-all duration-300 group'
+									>
+										<Icon className='size-5 group-hover:scale-110 transition-transform' />
 									</Link>
-								</li>
-							))}
-						</ul>
+								);
+							})}
+						</div>
 					</div>
 
 					<div className='space-y-6'>
-						<h4 className='text-white font-bold tracking-widest uppercase text-xs opacity-50'>Preferences</h4>
+						<h4 className='text-white font-bold tracking-widest uppercase text-xs opacity-50'>
+							Preferences
+						</h4>
 						<ThemeToggle />
-            <div className='flex items-center gap-2 mt-4'>
-              <div className='w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' />
-              <p className='text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-50'>
-                All Systems Operational
-              </p>
-            </div>
 					</div>
 				</div>
 
 				{/* Disclaimer Section */}
 				<div className='mb-12 glass-panel p-8 rounded-3xl border-white/5'>
 					<h5 className='text-xs font-black uppercase tracking-widest text-white/40 mb-4 flex items-center gap-2'>
-						<ShieldCheck className='size-4 text-primary' /> Risk Disclosure
+						<ShieldCheck className='size-4 text-primary' /> Risk
+						Disclosure
 					</h5>
 					<p className='text-[11px] text-muted-foreground leading-relaxed text-justify font-medium opacity-80'>
 						Gidswap is a decentralized interface facilitating
@@ -186,7 +175,9 @@ export default function Footer() {
 				{/* Bottom Bar */}
 				<div className='pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6'>
 					<div className='flex flex-col md:flex-row items-center gap-6 text-xs text-muted-foreground font-bold uppercase tracking-widest'>
-						<span className='opacity-40 tracking-normal'>© {date} Gidswap Protocol</span>
+						<span className='opacity-40 tracking-normal'>
+							© {date} Gidswap Protocol
+						</span>
 						<Link
 							href='https://www.fixedfloat.com'
 							target='_blank'

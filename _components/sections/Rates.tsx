@@ -84,12 +84,6 @@ export default function RatesSection() {
               Get Started Now
             </button>
 
-            <div className="flex items-center gap-3 px-6 py-3 glass-panel rounded-2xl border-white/5">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                Live Rates Active
-              </span>
-            </div>
           </div>
         </div>
 
@@ -126,9 +120,9 @@ export default function RatesSection() {
             </div>
           )}
 
-          <p className="text-[9px] text-muted-foreground/40 uppercase tracking-widest font-bold mt-8 text-right">
+          {/* <p className="text-[9px] text-muted-foreground/40 uppercase tracking-widest font-bold mt-8 text-right">
             Powered by PayCrest Protocol · Updates every 60s
-          </p>
+          </p> */}
         </div>
       </div>
     </AnimatedSection>

@@ -177,7 +177,7 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
     }
   }
 
-  const isValid = Number(fiatAmount) > 0 && Number(tokenAmount) > 0 && selectedToken
+  const isValid = Number(fiatAmount) >= 500 && Number(tokenAmount) > 0 && selectedToken
 
   return (
     <motion.div
@@ -201,7 +201,7 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
         {/* You Pay (Fiat) */}
         <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 focus-within:border-primary/50 transition-all duration-300 shadow-inner group/pay">
           <div className="flex justify-between items-center mb-3">
-            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">You pay</label>
+            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">pay</label>
             {isLoadingCurrencies ? (
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
             ) : (
@@ -221,8 +221,10 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
             className="w-full bg-transparent text-4xl font-black text-white outline-none h-12 tracking-tight placeholder:text-white/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           {selectedCurrency && (
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2 opacity-60">
-              Min: {selectedCurrency.symbol}500 · Max: {selectedCurrency.symbol}5,000,000
+            <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 transition-colors duration-200 ${
+              fiatAmount && Number(fiatAmount) < 500 ? "text-red-400" : "text-muted-foreground opacity-60"
+            }`}>
+              Min: {selectedCurrency.symbol}500
             </p>
           )}
         </div>
@@ -237,7 +239,7 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
         {/* You Receive (Crypto) */}
         <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner">
           <div className="flex justify-between items-center mb-3">
-            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">You receive</label>
+            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">receive</label>
             <TokenSelector
               tokens={tokens}
               selectedToken={selectedToken}

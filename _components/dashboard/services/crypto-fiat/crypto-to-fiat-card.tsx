@@ -239,11 +239,11 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <span className="font-medium">LP Fee</span>
+                    <span className="font-medium">Provider Fee</span>
                     <div className="relative group">
                       <Info className="w-3.5 h-3.5 cursor-help" />
                       <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-black/90 border border-white/10 rounded-xl px-3 py-2 text-xs w-52 z-50 text-white shadow-xl">
-                        A 1% Liquidity Provider fee is deducted from your total.
+                        0.5% <span className="text-primary">Provider</span> fee is deducted from your total.
                       </div>
                     </div>
                   </div>

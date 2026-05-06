@@ -16,10 +16,10 @@ type FlowStep = "swap" | "wallet" | "account" | "verification" | "order" | "paym
 
 const STEP_LABELS: Record<FlowStep, { title: string; subtitle: string }> = {
   swap:         { title: "On-Ramp",           subtitle: "Buy crypto natively with NGN" },
-  wallet:       { title: "Wallet Address",    subtitle: "Where should we send your tokens?" },
+  wallet:       { title: "Wallet Address",    subtitle: "" },
   account:      { title: "Refund Bank",       subtitle: "Select an account for failed transaction refunds" },
   verification: { title: "Verify Bank",       subtitle: "Add a new refund account" },
-  order:        { title: "Review Order",      subtitle: "Check your transaction details" },
+  order:        { title: "Review Order",      subtitle: "" },
   payment:      { title: "Deposit Funds",     subtitle: "Transfer NGN to complete your purchase" },
 }
 

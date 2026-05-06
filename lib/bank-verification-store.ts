@@ -48,7 +48,27 @@ export const useBankVerificationStore = create<BankVerificationState>((set, get)
       )
 
       if (response.data && response.data.data) {
-        set({ banks: response.data.data, isLoadingBanks: false })
+        const fetchedBanks = response.data.data as Bank[]
+        
+        // Define priority banks
+        const priorityNames = ["opay", "moniepoint", "kuda", "palmpay", "guaranty trust", "zenith", "access bank", "first bank", "united bank for africa", "uba"]
+        
+        // Sort: popular banks first, then alphabetical
+        const sortedBanks = [...fetchedBanks].sort((a, b) => {
+          const aName = a.name.toLowerCase()
+          const bName = b.name.toLowerCase()
+          
+          const aPriority = priorityNames.findIndex(p => aName.includes(p))
+          const bPriority = priorityNames.findIndex(p => bName.includes(p))
+          
+          if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority
+          if (aPriority !== -1) return -1
+          if (bPriority !== -1) return 1
+          
+          return aName.localeCompare(bName)
+        })
+
+        set({ banks: sortedBanks, isLoadingBanks: false })
       } else {
         set({isLoadingBanks: false})
         toast.error("Failed to fetch data")

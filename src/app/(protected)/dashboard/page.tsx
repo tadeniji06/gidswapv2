@@ -35,7 +35,7 @@ const services = [
 		id: "fiat-crypto" as ServiceType,
 		title: "Buy Crypto With Naira",
 		description:
-			"Buy stablecoins directly with cash from your bank account.",
+			"Buy stables with naira.",
 		icon: Banknote,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
@@ -43,7 +43,7 @@ const services = [
 		id: "crypto-fiat" as ServiceType,
 		title: "Sell Crypto To Naira",
 		description:
-			"Sell your crypto and get paid directly to your bank account.",
+			"Sell your crypto and get paid instantly.",
 		icon: Banknote,
 		style: "hover:bg-gray-100 dark:hover:bg-gray-700",
 	},
@@ -141,7 +141,7 @@ export default function Dashboard() {
 						<button
 							key={service.id}
 							onClick={() => setSelectedService(service.id)}
-							className='group relative overflow-hidden rounded-4xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.015] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500/30 p-8 text-left motion-safe:animate-fadeIn'
+							className='group relative cursor-pointer overflow-hidden rounded-4xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.015] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500/30 p-8 text-left motion-safe:animate-fadeIn'
 						>
 							<div
 								className={`absolute inset-0 bg-gradient-to-br opacity-[0.07] group-hover:opacity-10 transition-opacity duration-300`}
@@ -160,11 +160,6 @@ export default function Dashboard() {
 										{service.description}
 									</p>
 								</div>
-							</div>
-
-							<div className='mt-6 flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm'>
-								Start now
-								<ArrowLeft className='w-3 h-3 ml-1 rotate-180' />
 							</div>
 						</button>
 					);

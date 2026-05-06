@@ -14,6 +14,8 @@ export interface OnrampPaymentOrder {
 	status: string;
 	isCompleted: boolean;
 	validUntil: string;
+	fiatAmount?: string;
+	txHash?: string;
 	providerAccount?: {
 		institution: string;
 		accountIdentifier: string;
@@ -52,8 +54,8 @@ export interface FiatCryptoState {
 	// Actions
 	setFiatAmount: (amount: string) => void;
 	setDestinationAddress: (address: string) => void;
-	setSelectedToken: (token: Token) => void;
-	setSelectedCurrency: (currency: FiatCurrency) => void;
+	setSelectedToken: (token: Token | null) => void;
+	setSelectedCurrency: (currency: FiatCurrency | null) => void;
 	
 	fetchTokens: () => Promise<void>;
 	fetchCurrencies: () => Promise<void>;
@@ -137,11 +139,44 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 				{ headers: { Authorization: `Bearer ${authToken}` } }
 			);
 
-			const filteredTokens = response.data.data.filter((token: any) =>
-				["USDT", "USDC", "USDS", "PYUSD"].includes(token.symbol.toUpperCase())
+			const tokensData = response.data.data || [];
+
+			// Allowed symbol + network pairs (sorted order)
+			const allowedTokens = [
+				{ symbol: "USDT", network: "bnb-smart-chain" },
+				{ symbol: "USDC", network: "bnb-smart-chain" },
+				{ symbol: "USDT", network: "polygon" },
+				{ symbol: "USDC", network: "polygon" },
+				{ symbol: "USDT", network: "arbitrum-one" },
+				{ symbol: "USDT", network: "ethereum" },
+				{ symbol: "USDC", network: "ethereum" },
+				{ symbol: "USDT", network: "base" },
+				{ symbol: "USDC", network: "base" },
+			];
+
+			// Filter only allowed tokens
+			const filteredTokens = tokensData.filter((token: any) =>
+				allowedTokens.some(
+					(allowed) =>
+						token.symbol.toUpperCase() === allowed.symbol &&
+						token.network.toLowerCase() ===
+							allowed.network.toLowerCase(),
+				),
 			);
 
-			const tokensWithLogos = filteredTokens.map((token: any) => ({
+			// Sort according to allowedTokens order
+			const sortedTokens = allowedTokens
+				.map((allowed) =>
+					filteredTokens.find(
+						(token: { symbol: string; network: string }) =>
+							token.symbol.toUpperCase() === allowed.symbol &&
+							token.network.toLowerCase() ===
+								allowed.network.toLowerCase(),
+					),
+				)
+				.filter(Boolean);
+
+			const tokensWithLogos = sortedTokens.map((token: any) => ({
 				symbol: token.symbol,
 				contractAddress: token.contractAddress,
 				decimals: token.decimals,
@@ -324,9 +359,9 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 						reference: txn.reference,
 						amount: txn.amount || fiatAmount,
 						token: txn.currency || selectedToken.symbol,
-						network: txn.network || selectedToken.network,
-						status: txn.status || "pending",
-						validUntil: txn.validUntil,
+						network: (txn.network || selectedToken.network) as string,
+						status: (txn.status || "pending") as string,
+						validUntil: (txn.validUntil || "") as string,
 						isCompleted: false,
 						fiatAmount: fiatAmount, // Store the original NGN amount paid
 						providerAccount: txn.paycrestData?.providerAccount || response.data.paycrestResponse?.providerAccount
@@ -346,18 +381,33 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 
 	pollPaymentStatus: async (orderId: string) => {
 		if (!orderId) return true;
-		
+
 		try {
 			const authToken = Cookies.get("token");
 			const api_url = process.env.NEXT_PUBLIC_PROD_API || "";
 			const response = await axios.get(
 				`${api_url}/api/payCrest/trade/status/${orderId}`,
-				{ headers: { Authorization: `Bearer ${authToken}` } }
+				{ headers: { Authorization: `Bearer ${authToken}` } },
 			);
 
-			if (response.data) {
-				set({ paymentOrder: response.data });
-				return response.data.isCompleted;
+			const resData = response.data;
+			if (resData.success || resData.status === "success") {
+				const data = resData.data || resData;
+				const currentOrder = get().paymentOrder;
+
+				const updatedOrder = {
+					...currentOrder,
+					status: data.status,
+					txHash: data.txHash || data.transactionHash,
+					isCompleted:
+						data.isCompleted ||
+						["settled", "fulfilled", "validated"].includes(
+							data.status,
+						),
+				} as OnrampPaymentOrder;
+
+				set({ paymentOrder: updatedOrder });
+				return updatedOrder.isCompleted;
 			}
 			return false;
 		} catch (error) {

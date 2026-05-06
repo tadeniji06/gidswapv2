@@ -20,7 +20,7 @@ interface OrderInitializationCardProps {
 
 const LP_FEE_PERCENT = 0.01
 
-const MEMO_SUGGESTIONS = ["Personal", "Purchase", "Bills", "Groceries", "Transfer", "Investment"]
+const MEMO_SUGGESTIONS = ["Personal","Transfer","Bills"]
 
 export function OrderInitializationCard({
   onBack, onNext, onOrderComplete, onChangAccount,
@@ -108,7 +108,7 @@ export function OrderInitializationCard({
           </p>
           {[
             { label: "Sending", value: `${tokenAmount} ${selectedToken?.symbol}`, highlight: false },
-            { label: "LP Fee (1%)", value: `-${selectedCurrency?.symbol}${lpFee.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: false },
+            { label: "Provider Fee (0.5%)", value: `-${selectedCurrency?.symbol}${lpFee.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: false },
             { label: "You receive", value: `${selectedCurrency?.symbol}${netTotal.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: true },
           ].map(({ label, value, highlight }) => (
             <div key={label} className={`flex justify-between items-center ${highlight ? "pt-3 border-t border-white/5" : ""}`}>
@@ -141,12 +141,12 @@ export function OrderInitializationCard({
         {/* Memo */}
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-            <FileText className="w-3.5 h-3.5 text-primary" /> Remarks *
+            <FileText className="w-3.5 h-3.5 text-primary" /> Description *
           </label>
           <input
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
-            placeholder="e.g. Personal transfer"
+            placeholder="Select reason for this transaction"
             className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-sm font-medium placeholder:text-muted-foreground/40 outline-none transition-all duration-200
               ${errors.memo ? "border-red-500/60 focus:ring-red-500/10" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"}`}
           />
@@ -231,12 +231,6 @@ export function OrderInitializationCard({
             </>
           )}
         </button>
-
-        {/* Trust badge */}
-        <div className="flex items-center justify-center gap-2 opacity-40">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Non-custodial · Secured by PayCrest</span>
-        </div>
       </div>
     </motion.div>
   )

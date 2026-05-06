@@ -8,12 +8,12 @@ import { Button } from "@/src/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog"
 
 const supportedCryptos = [
+  { symbol: "BNB", name: "Binance Coin", network: "BSC", logo: "/placeholder.svg" },
+  { symbol: "MATIC", name: "Polygon", network: "MATIC", logo: "/placeholder.svg" },
+  { symbol: "USDT", name: "Tether (TRC20)", network: "TRX", logo: "/images/usdt.png" },
   { symbol: "BTC", name: "Bitcoin", network: "BTC", logo: "/images/bitcoin.png" },
   { symbol: "ETH", name: "Ethereum", network: "ETH", logo: "/images/ethereum.png" },
-  { symbol: "USDT", name: "Tether (TRC20)", network: "TRX", logo: "/images/usdt.png" },
-  { symbol: "BNB", name: "Binance Coin", network: "BSC", logo: "/placeholder.svg" },
   { symbol: "SOL", name: "Solana", network: "SOL", logo: "/placeholder.svg" },
-  { symbol: "MATIC", name: "Polygon", network: "MATIC", logo: "/placeholder.svg" },
 ]
 
 function NetworkBadge({ network }: { network: string }) {

@@ -133,13 +133,13 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 
 			// Allowed symbol + network pairs (sorted order)
 			const allowedTokens = [
-				{ symbol: "USDT", network: "ethereum" },
-				{ symbol: "USDC", network: "ethereum" },
 				{ symbol: "USDT", network: "bnb-smart-chain" },
 				{ symbol: "USDC", network: "bnb-smart-chain" },
 				{ symbol: "USDT", network: "polygon" },
 				{ symbol: "USDC", network: "polygon" },
 				{ symbol: "USDT", network: "arbitrum-one" },
+				{ symbol: "USDT", network: "ethereum" },
+				{ symbol: "USDC", network: "ethereum" },
 				{ symbol: "USDT", network: "base" },
 				{ symbol: "USDC", network: "base" },
 			];

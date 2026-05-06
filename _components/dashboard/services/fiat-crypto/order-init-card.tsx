@@ -84,25 +84,22 @@ export function OrderInitializationCard({
 
         {/* Transaction Amounts */}
         <div className="bg-black/40 backdrop-blur-md p-6 rounded-2xl border border-white/5 space-y-4 shadow-inner">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-1">
-            <Sparkles className="w-3 h-3 text-primary" /> Breakdown
-          </p>
-          <div className="flex justify-between items-center pb-4 border-b border-white/5">
-            <span className="text-muted-foreground text-sm font-medium">You pay</span>
+          <div className="flex justify-between items-center pb-4 pt-1">
+            <span className="text-muted-foreground text-xs font-medium">Rate</span>
+            <span className="text-white/80 font-bold text-xs tabular-nums">
+              1 {selectedToken?.symbol} = {selectedCurrency?.symbol}{quote?.rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex justify-between items-center pb-4">
+            <span className="text-muted-foreground text-sm font-medium">Pay</span>
             <span className="text-xl font-black text-white tabular-nums">
               {Number(fiatAmount).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-muted-foreground/60 text-sm font-bold ml-1">{selectedCurrency?.code}</span>
             </span>
           </div>
-          <div className="flex justify-between items-center pb-4 border-b border-white/5">
-            <span className="text-muted-foreground text-sm font-medium">You receive</span>
+          <div className="flex justify-between items-center pb-4">
+            <span className="text-muted-foreground text-sm font-medium">Receive</span>
             <span className="text-xl font-black text-emerald-400 tabular-nums">
               {Number(tokenAmount).toLocaleString(undefined, { maximumFractionDigits: 6 })} <span className="text-emerald-500/60 text-sm font-bold ml-1">{selectedToken?.symbol}</span>
-            </span>
-          </div>
-          <div className="flex justify-between items-center pt-1">
-            <span className="text-muted-foreground text-xs font-medium">Exchange Rate</span>
-            <span className="text-white/80 font-bold text-xs tabular-nums">
-              1 {selectedToken?.symbol} = {selectedCurrency?.symbol}{quote?.rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}
             </span>
           </div>
         </div>
@@ -113,7 +110,7 @@ export function OrderInitializationCard({
             <div className="p-2 bg-primary/10 rounded-xl border border-primary/20 group-hover/wallet:scale-110 transition-transform">
               <Wallet className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Receiving Wallet</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Receiving Address</span>
           </div>
           <div className="bg-black/50 p-3.5 rounded-xl border border-white/5">
             <p className="text-xs text-muted-foreground break-all font-mono leading-relaxed">
@@ -178,11 +175,6 @@ export function OrderInitializationCard({
               </>
             )}
           </button>
-          
-          <div className="flex items-center justify-center gap-2 opacity-40">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Secured via PayCrest Protocol</span>
-          </div>
         </div>
       </div>
     </motion.div>
