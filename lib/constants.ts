@@ -64,10 +64,6 @@ export const useCaseNoExp = [
 		text: "Transfer stablecoins to cash in any bank account",
 	},
 	{
-		icon: "/images/turn-defi-to-cash.svg",
-		text: "Turn your DEFI yields into cash easily",
-	},
-	{
 		icon: "/images/escape-p2p.svg",
 		text: "Escape P2P and liquidate your cash in no time",
 	},
