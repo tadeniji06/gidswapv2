@@ -164,14 +164,13 @@ export function QuoteCard() {
 					The exchange service is provided by FixedFloat. Creating an
 					order confirms your agreement with the{" "}
 					<a
-						href='https://ff.io/support'
+						href='https://ff.io/terms-of-service'
 						target='_blank'
 						rel='noopener noreferrer'
 						className='text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 underline-offset-2'
 					>
 						FixedFloat rules
 					</a>
-					.
 				</div>
 
 				<Button
