@@ -12,11 +12,13 @@ export default function StepThree({ data, onChange, onBack, onNext }: any) {
   const handleSubmit = async () => {
   try {
     setSubmitting(true);
+    const referralCode = data.code?.trim();
 
     const res = await axios.post(url, {
       fullName: data.fullName,
       email: data.email,
       password: data.password,
+      ...(referralCode ? { referralCode } : {}),
     });
 
     if (res.data.success) {

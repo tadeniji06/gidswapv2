@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/src/components/ui/button";
 import {
 	Card,
@@ -14,6 +15,9 @@ import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { useUserStore } from "@/lib/user-store";
 import { KycManager } from "@/_components/settings/kyc/kyc-manager";
 import { SavedAccountsSection } from "@/_components/settings/saved-accounts-section";
+import { affiliateService } from "@/lib/services/affiliate";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	User,
 	Mail,
@@ -24,6 +28,8 @@ import {
 	X,
 	AlertCircle,
 	Loader2,
+	Copy,
+	Users,
 } from "lucide-react";
 
 type EditingField = "name" | "email" | "password" | null;
@@ -57,6 +63,28 @@ export default function AccountPage() {
 		newPassword: "",
 		confirmPassword: "",
 	});
+
+	const { data: affiliateStats, isLoading: isAffiliateLoading } =
+		useQuery({
+			queryKey: ["affiliate-stats"],
+			queryFn: affiliateService.getStats,
+		});
+
+	const referralLink = useMemo(() => {
+		const code = affiliateStats?.referralCode;
+		if (!code) return "";
+		return `https://gidswap.com/?ref=${code}`;
+	}, [affiliateStats?.referralCode]);
+
+	const copyReferralLink = async () => {
+		if (!referralLink) return;
+		try {
+			await navigator.clipboard.writeText(referralLink);
+			toast.success("Referral link copied");
+		} catch {
+			toast.error("Could not copy referral link");
+		}
+	};
 
 	// Load user on mount
 	useEffect(() => {
@@ -322,6 +350,73 @@ export default function AccountPage() {
 							</p>
 						</div>
 					</div>
+				</CardContent>
+			</Card>
+
+			<Card className='bg-card border-border'>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2 text-card-foreground'>
+						<Users className='w-5 h-5 text-primary' /> Affiliate
+						Program
+					</CardTitle>
+				</CardHeader>
+				<CardContent className='space-y-4'>
+					{isAffiliateLoading ? (
+						<div className='flex items-center gap-2 text-sm text-muted-foreground'>
+							<Loader2 className='w-4 h-4 animate-spin' />
+							Loading affiliate stats...
+						</div>
+					) : (
+						<>
+							<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+								<div>
+									<Label className='text-sm font-medium text-card-foreground'>
+										Total Referrals
+									</Label>
+									<p className='text-lg font-semibold mt-1'>
+										{affiliateStats?.totalReferrals ?? 0}
+									</p>
+								</div>
+								<div>
+									<Label className='text-sm font-medium text-card-foreground'>
+										Referral Volume
+									</Label>
+									<p className='text-lg font-semibold mt-1'>
+										{affiliateStats?.totalReferralVolume ?? 0}
+									</p>
+								</div>
+								<div>
+									<Label className='text-sm font-medium text-card-foreground'>
+										Rewards Balance
+									</Label>
+									<p className='text-lg font-semibold mt-1'>
+										{affiliateStats?.referralRewardsBalance ??
+											0}
+									</p>
+								</div>
+							</div>
+
+							<div className='space-y-2'>
+								<Label className='text-sm font-medium text-card-foreground'>
+									Your Referral Link
+								</Label>
+								<div className='flex gap-2'>
+									<Input
+										readOnly
+										value={referralLink || "No referral code yet"}
+									/>
+									<Button
+										type='button'
+										variant='outline'
+										onClick={copyReferralLink}
+										disabled={!referralLink}
+									>
+										<Copy className='w-4 h-4' />
+									</Button>
+								</div>
+							</div>
+						</>
+					)}
 				</CardContent>
 			</Card>
 		</div>

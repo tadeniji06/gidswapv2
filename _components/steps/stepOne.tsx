@@ -8,7 +8,7 @@ import { Label } from "@/src/components/ui/label";
 import { Button } from "@/src/components/ui/button";
 import { useAuthStore } from "@/store/Authstore";
 import { setCookie } from "@/lib/cookies";
-import { Loader2, Mail, User } from "lucide-react";
+import { Loader2, Mail, Ticket, User } from "lucide-react";
 
 export default function StepOne({ data, onNext, onChange }: any) {
   const [errors, setErrors] = useState({ fullName: "", email: "" });
@@ -125,6 +125,25 @@ export default function StepOne({ data, onNext, onChange }: any) {
             {errors.email}
           </p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Referral Code (Optional)
+        </label>
+        <div className="relative">
+          <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            id="referralCode"
+            type="text"
+            placeholder="Enter referral code"
+            value={data.code}
+            onChange={(e) =>
+              onChange({ code: e.target.value.trim().toUpperCase() })
+            }
+            className="pl-10 h-12 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          />
+        </div>
       </div>
 
       {/* Password */}
