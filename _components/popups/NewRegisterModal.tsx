@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/Authstore";
 import { setCookie } from "@/lib/cookies";
 import { FcGoogle } from "react-icons/fc";
@@ -18,7 +17,6 @@ import { toast } from "sonner";
 
 export function RegistrationModal() {
 	const router = useRouter();
-	const searchParams = useSearchParams();
 	const handleGoogleLogin = () => {
 		window.location.href = `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/google`;
 	};
@@ -52,26 +50,24 @@ export function RegistrationModal() {
 	});
 
 	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const params = new URLSearchParams(window.location.search);
 		const queryReferralCode =
-			searchParams.get("ref") ||
-			searchParams.get("referral") ||
-			searchParams.get("referralCode") ||
+			params.get("ref") ||
+			params.get("referral") ||
+			params.get("referralCode") ||
 			"";
 		const persistedReferralCode =
-			typeof window !== "undefined"
-				? window.localStorage.getItem("referralCode") || ""
-				: "";
+			window.localStorage.getItem("referralCode") || "";
 		const referralCode = queryReferralCode || persistedReferralCode;
 		if (!referralCode) return;
 
-		if (typeof window !== "undefined") {
-			window.localStorage.setItem("referralCode", referralCode);
-		}
+		window.localStorage.setItem("referralCode", referralCode);
 
 		setFormData((prev) =>
 			prev.code === referralCode ? prev : { ...prev, code: referralCode },
 		);
-	}, [searchParams]);
+	}, []);
 
 	const handleFormChange = (newData: Partial<typeof formData>) => {
 		setFormData((prev) => ({ ...prev, ...newData }));
