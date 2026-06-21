@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, BookUser, ShieldCheck, Sparkles, Zap } from "lucide-react"
 import { useOnrampStore } from "@/lib/onramp-store"
@@ -39,10 +39,11 @@ export function OnrampFlow() {
   const { sessionData, reset } = useOnrampStore()
   const [step, setStep] = useState<OnrampStep>("quote")
 
-  // Auto-switch to status view if there is a session active
-  if (sessionData && step !== "status") {
-    setStep("status")
-  }
+  useEffect(() => {
+    if (sessionData && step !== "status") {
+      setStep("status")
+    }
+  }, [sessionData, step])
 
   const handleReset = () => {
     reset()

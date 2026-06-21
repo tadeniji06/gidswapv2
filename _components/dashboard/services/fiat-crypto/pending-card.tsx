@@ -13,10 +13,8 @@ import {
 	RefreshCw,
 	XCircle,
 	PartyPopper,
-	Sparkles,
 	ArrowRight,
-	ExternalLink,
-	ChevronRight,
+	X,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store";
@@ -83,6 +81,7 @@ export function PendingPaymentCard({
 		useFiatCryptoStore();
 	const [timeLeft, setTimeLeft] = useState<string>("");
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
+	const [successAcknowledged, setSuccessAcknowledged] = useState(false);
 	const [confettiActive, setConfettiActive] = useState(false);
 	const [amountCopied, setAmountCopied] = useState(false);
 
@@ -112,12 +111,27 @@ export function PendingPaymentCard({
 	});
 
 	useEffect(() => {
-		if (isCompleted) {
+		if (isCompleted && !successAcknowledged) {
 			setShowSuccessModal(true);
 			setConfettiActive(true);
 			setTimeout(() => setConfettiActive(false), 4000);
 		}
-	}, [isCompleted]);
+	}, [isCompleted, successAcknowledged]);
+
+	const handleSuccessOpenChange = (open: boolean) => {
+		setShowSuccessModal(open);
+		if (!open) setSuccessAcknowledged(true);
+	};
+
+	const closeSuccessModal = () => {
+		setSuccessAcknowledged(true);
+		setShowSuccessModal(false);
+	};
+
+	const finishSuccessFlow = () => {
+		closeSuccessModal();
+		onNewTransaction();
+	};
 
 	useEffect(() => {
 		if (!paymentOrder.validUntil) return;
@@ -374,9 +388,12 @@ export function PendingPaymentCard({
 			{/* ── Success Modal ──────────────────────────────────── */}
 			<Dialog
 				open={showSuccessModal}
-				onOpenChange={setShowSuccessModal}
+				onOpenChange={handleSuccessOpenChange}
 			>
-				<DialogContent className='sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none'>
+				<DialogContent
+					showCloseButton={false}
+					className='z-[100] w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90dvh] overflow-y-auto border border-white/10 bg-[#080a0f] p-0 shadow-2xl rounded-2xl'
+				>
 					<motion.div
 						initial={{ opacity: 0, scale: 0.85, y: 30 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -385,10 +402,18 @@ export function PendingPaymentCard({
 							stiffness: 300,
 							damping: 25,
 						}}
-						className='glass-panel border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(52,211,153,0.2)]'
+						className='relative overflow-hidden'
 					>
+						<button
+							type='button'
+							onClick={closeSuccessModal}
+							className='absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 backdrop-blur transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/70'
+							aria-label='Close success dialog'
+						>
+							<X className='h-4 w-4' />
+						</button>
 						{/* Top gradient */}
-						<div className='relative bg-gradient-to-b from-emerald-500/25 via-emerald-500/10 to-transparent pt-12 pb-8 px-8 text-center overflow-hidden'>
+						<div className='relative bg-gradient-to-b from-emerald-500/25 via-emerald-500/10 to-transparent px-6 pb-7 pt-12 text-center sm:px-8 overflow-hidden'>
 							{/* Confetti dots */}
 							{confettiActive && (
 								<div className='absolute inset-0 pointer-events-none overflow-hidden'>
@@ -434,8 +459,8 @@ export function PendingPaymentCard({
 								<PartyPopper className='w-12 h-12 text-emerald-400' />
 							</motion.div>
 
-							<DialogTitle className='text-3xl font-black tracking-tighter mb-2 text-white'>
-								You're in! 🎉
+							<DialogTitle className='text-2xl sm:text-3xl font-black tracking-tight mb-2 text-white'>
+								Crypto Delivered
 							</DialogTitle>
 							<p className='text-muted-foreground text-sm font-medium leading-relaxed px-4'>
 								We've confirmed your{" "}
@@ -455,7 +480,7 @@ export function PendingPaymentCard({
 						</div>
 
 						{/* Receipt-style breakdown */}
-						<div className='px-8 pb-8 space-y-4'>
+						<div className='px-5 pb-6 sm:px-8 sm:pb-8 space-y-4'>
 							<div className='bg-black/50 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden'>
 								{[
 									{
@@ -500,11 +525,8 @@ export function PendingPaymentCard({
 
 							{/* CTA */}
 							<button
-								className='w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_30px_rgba(100,150,255,0.4)] flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform'
-								onClick={() => {
-									setShowSuccessModal(false);
-									onNewTransaction();
-								}}
+								className='w-full futuristic-button bg-primary text-white py-4 sm:py-5 rounded-2xl font-black text-xs sm:text-sm tracking-widest uppercase shadow-[0_0_30px_rgba(100,150,255,0.4)] flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform'
+								onClick={finishSuccessFlow}
 							>
 								<ArrowRight className='w-4 h-4' />
 								Return to Dashboard

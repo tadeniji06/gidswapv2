@@ -1,12 +1,17 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useOnrampStore } from "@/lib/onramp-store"
 import { Button } from "@/src/components/ui/button"
-import { Loader2, Copy, CheckCircle2, ShieldCheck, ExternalLink, AlertCircle, XCircle } from "lucide-react"
+import { Loader2, Copy, CheckCircle2, ShieldCheck, XCircle, X, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 import { QRCodeSVG } from "qrcode.react"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/src/components/ui/dialog"
 
 interface StatusCardProps {
   onReset: () => void
@@ -14,6 +19,8 @@ interface StatusCardProps {
 
 export function OnrampStatusCard({ onReset }: StatusCardProps) {
   const { status, sessionData, pollStatus, continueToFiat } = useOnrampStore()
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successAcknowledged, setSuccessAcknowledged] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,6 +30,22 @@ export function OnrampStatusCard({ onReset }: StatusCardProps) {
     }, 5000)
     return () => clearInterval(interval)
   }, [status, pollStatus])
+
+  useEffect(() => {
+    if (status === "completed" && !successAcknowledged) {
+      setShowSuccessModal(true)
+    }
+  }, [status, successAcknowledged])
+
+  const closeSuccessModal = () => {
+    setSuccessAcknowledged(true)
+    setShowSuccessModal(false)
+  }
+
+  const finishSuccessFlow = () => {
+    closeSuccessModal()
+    onReset()
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -214,38 +237,110 @@ export function OnrampStatusCard({ onReset }: StatusCardProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="glass-panel neon-border shadow-2xl rounded-3xl relative overflow-hidden"
-    >
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-      
-      <div className="p-6 md:p-8">
-        {/* Status display header */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-              {sessionData?.statusLabel || "Processing"}
-            </span>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="glass-panel neon-border shadow-2xl rounded-3xl relative overflow-hidden"
+      >
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        
+        <div className="p-6 md:p-8">
+          {/* Status display header */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                {sessionData?.statusLabel || "Processing"}
+              </span>
+            </div>
+          </div>
+
+          {renderContent()}
+
+          {/* Footer Details */}
+          <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+              <span>Session ID</span>
+              <span className="font-mono">{sessionData?.sessionId}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 opacity-30">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span className="text-[8px] font-black uppercase tracking-widest">Protected by SecureSwap Protocol</span>
+            </div>
           </div>
         </div>
+      </motion.div>
 
-        {renderContent()}
+      <Dialog open={showSuccessModal} onOpenChange={(open) => {
+        setShowSuccessModal(open)
+        if (!open) setSuccessAcknowledged(true)
+      }}>
+        <DialogContent
+          showCloseButton={false}
+          className="z-[100] w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90dvh] overflow-y-auto border border-white/10 bg-[#080a0f] p-0 shadow-2xl rounded-2xl"
+        >
+          <div className="relative overflow-hidden">
+            <button
+              type="button"
+              onClick={closeSuccessModal}
+              className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 backdrop-blur transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+              aria-label="Close success dialog"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-        {/* Footer Details */}
-        <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-            <span>Session ID</span>
-            <span className="font-mono">{sessionData?.sessionId}</span>
+            <div className="relative bg-gradient-to-b from-emerald-500/25 via-emerald-500/10 to-transparent px-6 pb-7 pt-12 text-center sm:px-8">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 shadow-[0_0_40px_rgba(16,185,129,0.22)]">
+                <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+              </div>
+              <DialogTitle className="mb-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                Payout Completed
+              </DialogTitle>
+              <p className="mx-auto max-w-xs text-sm font-medium leading-relaxed text-muted-foreground">
+                Your naira payout has been completed and the session is ready to close.
+              </p>
+            </div>
+
+            <div className="space-y-4 px-5 pb-6 sm:px-8 sm:pb-8">
+              <div className="overflow-hidden rounded-2xl border border-white/5 bg-black/50">
+                <div className="flex items-center justify-between px-5 py-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Status
+                  </span>
+                  <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-400">
+                    Completed
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/5 px-5 py-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Estimated Payout
+                  </span>
+                  <span className="font-black text-white">
+                    ₦{sessionData?.estimatedNGN?.toLocaleString() || "0"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/5 px-5 py-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Session
+                  </span>
+                  <span className="max-w-[140px] truncate font-mono text-xs text-white/50">
+                    {sessionData?.sessionId}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                onClick={finishSuccessFlow}
+                className="w-full futuristic-button bg-primary text-white py-4 sm:py-5 rounded-2xl font-black text-xs sm:text-sm tracking-widest uppercase shadow-[0_0_30px_rgba(100,150,255,0.4)] flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform"
+              >
+                <ArrowRight className="h-4 w-4" />
+                Finish Session
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-2 opacity-30">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span className="text-[8px] font-black uppercase tracking-widest">Protected by SecureSwap Protocol</span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
