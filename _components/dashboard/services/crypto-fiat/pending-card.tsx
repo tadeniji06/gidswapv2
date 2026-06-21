@@ -143,11 +143,13 @@ export function PendingPaymentCard({
 		queryKey: ["payment-status", paymentData?.id],
 		queryFn: async () => {
 			const res = await fetch(
-				`${API_URL}/api/payCrest/trade/status/${paymentData.id}`,
+				`${API_URL}/api/payCrest/trade/status/${paymentData.id}?_=${Date.now()}`,
 				{
+					cache: "no-store",
 					headers: {
 						Authorization: `Bearer ${authToken}`,
 						"Content-Type": "application/json",
+						"Cache-Control": "no-cache",
 					},
 				},
 			);
@@ -167,6 +169,7 @@ export function PendingPaymentCard({
 					"cancelled",
 					"expired",
 					"failed",
+					"refunded",
 				].includes(s)
 			)
 				return false;
@@ -235,6 +238,15 @@ export function PendingPaymentCard({
 					text: "Processing Deposit",
 					sub: "Confirming blockchain transaction...",
 				};
+			case "refunded":
+				return {
+					color: "text-amber-300",
+					bg: "bg-amber-400/10",
+					border: "border-amber-400/20",
+					icon: <RefreshCw className='w-5 h-5' />,
+					text: "Payment Refunded",
+					sub: "Your deposit was returned. No payout was made.",
+				};
 			case "failed":
 			case "expired":
 			case "cancelled":
@@ -283,6 +295,13 @@ export function PendingPaymentCard({
 	};
 
 	const statusUI = getStatusUI();
+	const terminalStatuses = [
+		"cancelled",
+		"expired",
+		"failed",
+		"refunded",
+	];
+	const isTerminal = terminalStatuses.includes(currentStatus);
 	const isExpiring =
 		timeLeft !== "Expired" &&
 		timeLeft !== "" &&
@@ -445,6 +464,16 @@ export function PendingPaymentCard({
 									{paymentData.reference}
 								</span>
 							</p>
+
+							{isTerminal && (
+								<Button
+									onClick={onTimeout}
+									className='w-full glass-panel border-white/10 text-white hover:bg-white/10 py-6 rounded-2xl font-black tracking-widest uppercase text-sm'
+									variant='outline'
+								>
+									Start New Transaction
+								</Button>
+							)}
 						</div>
 					</div>
 				</div>

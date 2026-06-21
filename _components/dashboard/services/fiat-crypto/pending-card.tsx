@@ -84,6 +84,12 @@ export function PendingPaymentCard({
 	const [successAcknowledged, setSuccessAcknowledged] = useState(false);
 	const [confettiActive, setConfettiActive] = useState(false);
 	const [amountCopied, setAmountCopied] = useState(false);
+	const terminalStates = [
+		"cancelled",
+		"refunded",
+		"expired",
+		"failed",
+	];
 
 	if (!paymentOrder || !paymentOrder.providerAccount) {
 		return (
@@ -106,7 +112,10 @@ export function PendingPaymentCard({
 	const { data: isCompleted } = useQuery({
 		queryKey: ["pollPayment", paymentOrder.id],
 		queryFn: () => pollPaymentStatus(paymentOrder.id),
-		refetchInterval: (query) => (query.state.data ? false : 3000),
+		refetchInterval: (query) =>
+			query.state.data || terminalStates.includes(paymentOrder.status)
+				? false
+				: 3000,
 		refetchIntervalInBackground: true,
 	});
 
@@ -142,12 +151,6 @@ export function PendingPaymentCard({
 		return () => clearInterval(interval);
 	}, [paymentOrder.validUntil]);
 
-	const terminalStates = [
-		"cancelled",
-		"refunded",
-		"expired",
-		"failed",
-	];
 	const isTerminal = terminalStates.includes(paymentOrder.status);
 
 	type StatusUI = {
@@ -179,6 +182,15 @@ export function PendingPaymentCard({
 					icon: <Loader2 className='w-5 h-5 animate-spin' />,
 					text: "Processing Deposit",
 					sub: "Minting tokens to your wallet...",
+				};
+			case "refunded":
+				return {
+					color: "text-amber-300",
+					bg: "bg-amber-400/10",
+					border: "border-amber-400/20",
+					icon: <RefreshCw className='w-5 h-5' />,
+					text: "Payment Refunded",
+					sub: "Your naira payment was returned. No crypto was sent.",
 				};
 			case "failed":
 			case "expired":

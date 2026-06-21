@@ -386,8 +386,13 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 			const authToken = Cookies.get("token");
 			const api_url = process.env.NEXT_PUBLIC_PROD_API || "";
 			const response = await axios.get(
-				`${api_url}/api/payCrest/trade/status/${orderId}`,
-				{ headers: { Authorization: `Bearer ${authToken}` } },
+				`${api_url}/api/payCrest/trade/status/${orderId}?_=${Date.now()}`,
+				{
+					headers: {
+						Authorization: `Bearer ${authToken}`,
+						"Cache-Control": "no-cache",
+					},
+				},
 			);
 
 			const resData = response.data;
