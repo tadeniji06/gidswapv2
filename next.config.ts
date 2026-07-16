@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
 	experimental: {
 		allowedDevOrigins: ["http://192.168.0.103:3000", "http://localhost:3000"],
 	},
+	// Strip all console.log (but keep console.warn and console.error) in production builds
+	compiler: {
+		removeConsole: process.env.NODE_ENV === "production"
+			? { exclude: ["warn", "error"] }
+			: false,
+	},
 };
 
 export default nextConfig;

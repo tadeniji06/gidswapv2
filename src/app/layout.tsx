@@ -9,6 +9,7 @@ import { RegistrationModal } from "@/_components/popups/NewRegisterModal";
 import { LoginModal } from "@/_components/popups/LoginModal";
 import { ForgotPasswordModal } from "@/_components/popups/ForgotPasswordModal";
 import OneSignalInit from "@/src/components/OneSignalInit";
+import ConsoleSuppressor from "@/src/components/ConsoleSuppressor";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
 					enableSystem
 					disableTransitionOnChange
 				>
+					<ConsoleSuppressor />
 					<OneSignalInit />
 					<Header />
 					<main>{children}</main>
