@@ -69,7 +69,7 @@ export function OrderInitializationCard({
     if (!validateForm()) return
     if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
     // Enforce 2FA verification before proceeding if required
-    if (tfaStatus?.needsReverification) {
+    if (tfaStatus?.needsReverification !== false) {
       setTfaModalOpen(true)
     } else {
       try {

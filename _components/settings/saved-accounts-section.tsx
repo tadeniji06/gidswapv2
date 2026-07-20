@@ -63,7 +63,7 @@ export function SavedAccountsSection() {
   };
 
   const saveEdit = async (id: string) => {
-    if (tfaStatus?.needsReverification) {
+    if (tfaStatus?.needsReverification !== false) {
       setTfaAction("edit");
       setTfaPendingData({ id });
       setTfaModalOpen(true);
@@ -75,7 +75,7 @@ export function SavedAccountsSection() {
   };
 
   const handleDelete = async (id: string, label: string) => {
-    if (tfaStatus?.needsReverification) {
+    if (tfaStatus?.needsReverification !== false) {
       setTfaAction("delete");
       setTfaPendingData({ id, label });
       setTfaModalOpen(true);
