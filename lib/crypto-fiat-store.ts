@@ -96,6 +96,7 @@ interface CryptoFiatState {
 		memo: string,
 		returnAddress: string,
 		bankData: any,
+		tfaToken: string
 	) => Promise<boolean>;
 	generateReference: () => string;
 }
@@ -364,6 +365,7 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 		memo: string,
 		returnAddress: string,
 		bankData: any,
+		tfaToken: string
 	) => {
 		const { selectedToken, selectedCurrency, tokenAmount, quote } =
 			get();
@@ -397,6 +399,7 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 				},
 				reference,
 				returnAddress,
+				tfaToken,
 			};
 
 			const authToken = Cookies.get("token");

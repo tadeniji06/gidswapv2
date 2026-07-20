@@ -10,6 +10,7 @@ import { useCryptoFiatStore } from "@/lib/crypto-fiat-store"
 import { useSavedAccountsStore } from "@/lib/saved-accounts-store"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
+import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal"
 
 interface OrderInitializationCardProps {
   onBack?: () => void
@@ -30,6 +31,7 @@ export function OrderInitializationCard({
   const [errors, setErrors] = useState<{ memo?: string; returnAddress?: string }>({})
   const [saveThisAccount, setSaveThisAccount] = useState(false)
   const [saveLabel, setSaveLabel] = useState("My Account")
+  const [tfaModalOpen, setTfaModalOpen] = useState(false)
 
   const { saveAccount, isSaving, accounts } = useSavedAccountsStore()
   const { selectedToken, selectedCurrency, tokenAmount, quote, isInitializingOrder, initializeOrder } = useCryptoFiatStore()
@@ -62,16 +64,20 @@ export function OrderInitializationCard({
   const handleSubmit = async () => {
     if (!validateForm()) return
     if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
+    setTfaModalOpen(true)
+  }
 
+  const handleTfaVerify = async (token: string) => {
     const payload = { institution: bankCode, accountIdentifier: accountNumber, accountName }
-    const success = await initializeOrder(memo, returnAddress, payload)
-    if (!success) return
+    const success = await initializeOrder(memo, returnAddress, payload, token)
+    if (!success) throw new Error("Order failed")
 
     if (saveThisAccount && !alreadySaved && bankCode && accountNumber && accountName && bankName) {
-      const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined })
+      const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined, tfaToken: token })
       if (saved) toast.success(`Account "${saveLabel}" saved!`)
     }
 
+    setTfaModalOpen(false)
     if (onOrderComplete) onOrderComplete()
     else if (onNext) onNext()
   }
@@ -232,6 +238,15 @@ export function OrderInitializationCard({
           )}
         </button>
       </div>
+
+      <TfaVerificationModal
+        isOpen={tfaModalOpen}
+        setIsOpen={setTfaModalOpen}
+        onVerify={handleTfaVerify}
+        isVerifying={isInitializingOrder || isSaving}
+        title="Confirm Order"
+        description="Please enter your 2FA code to confirm and initialize your order."
+      />
     </motion.div>
   )
 }

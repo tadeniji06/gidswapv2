@@ -14,6 +14,7 @@ import { Label } from "@/src/components/ui/label";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { useUserStore } from "@/lib/user-store";
 import { KycManager } from "@/_components/settings/kyc/kyc-manager";
+import { TfaManager } from "@/_components/settings/tfa/tfa-manager";
 import { SavedAccountsSection } from "@/_components/settings/saved-accounts-section";
 import { affiliateService } from "@/lib/services/affiliate";
 import { useQuery } from "@tanstack/react-query";
@@ -188,6 +189,14 @@ export default function AccountPage() {
 					Identity Verification
 				</h2>
 				<KycManager />
+			</div>
+
+			{/* 2FA SECTION */}
+			<div className='mb-8'>
+				<h2 className='text-xl font-semibold mb-4 text-foreground/80'>
+					Security Settings
+				</h2>
+				<TfaManager />
 			</div>
 
 			{/* SAVED ACCOUNTS SECTION */}

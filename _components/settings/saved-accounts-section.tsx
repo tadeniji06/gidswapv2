@@ -19,6 +19,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { toast } from "sonner";
+import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal";
 
 export function SavedAccountsSection() {
   const {
@@ -35,6 +36,11 @@ export function SavedAccountsSection() {
   const [editLabel, setEditLabel] = useState("");
   const [editAddress, setEditAddress] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  // 2FA state
+  const [tfaModalOpen, setTfaModalOpen] = useState(false);
+  const [tfaAction, setTfaAction] = useState<"edit" | "delete" | null>(null);
+  const [tfaPendingData, setTfaPendingData] = useState<{ id: string, label?: string } | null>(null);
 
   useEffect(() => {
     fetchAccounts();
@@ -52,33 +58,54 @@ export function SavedAccountsSection() {
     setEditAddress("");
   };
 
-  const saveEdit = async (id: string) => {
-    const ok = await updateAccount(id, {
-      label: editLabel || "My Account",
-      returnAddress: editAddress || undefined,
-    });
-    if (ok) {
-      toast.success("Account updated");
-      cancelEdit();
-    } else {
-      toast.error("Failed to update account");
+  const saveEdit = (id: string) => {
+    setTfaAction("edit");
+    setTfaPendingData({ id });
+    setTfaModalOpen(true);
+  };
+
+  const handleDelete = (id: string, label: string) => {
+    setTfaAction("delete");
+    setTfaPendingData({ id, label });
+    setTfaModalOpen(true);
+  };
+
+  const handleTfaVerify = async (token: string) => {
+    if (!tfaAction || !tfaPendingData) return;
+    
+    try {
+      if (tfaAction === "edit") {
+        const ok = await updateAccount(tfaPendingData.id, {
+          label: editLabel || "My Account",
+          returnAddress: editAddress || undefined,
+          tfaToken: token,
+        });
+        if (ok) {
+          toast.success("Account updated");
+          cancelEdit();
+          setTfaModalOpen(false);
+        } else {
+          toast.error("Failed to update account (Invalid 2FA?)");
+          throw new Error("Failed");
+        }
+      } else if (tfaAction === "delete") {
+        setDeletingId(tfaPendingData.id);
+        const ok = await deleteAccount(tfaPendingData.id, token);
+        setDeletingId(null);
+        if (ok) {
+          toast.success(`"${tfaPendingData.label}" removed`);
+          setTfaModalOpen(false);
+        } else {
+          toast.error("Failed to remove account (Invalid 2FA?)");
+          throw new Error("Failed");
+        }
+      }
+    } finally {
+      // modal handles its own token clearing on success
     }
   };
 
   const handleSetDefault = async (id: string) => {
-    const ok = await setDefault(id);
-    if (ok) toast.success("Default account updated");
-  };
-
-  const handleDelete = async (id: string, label: string) => {
-    setDeletingId(id);
-    const ok = await deleteAccount(id);
-    setDeletingId(null);
-    if (ok) toast.success(`"${label}" removed`);
-    else toast.error("Failed to remove account");
-  };
-
-  if (isLoading && accounts.length === 0) {
     return (
       <div className="flex items-center justify-center py-10">
         <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
@@ -261,6 +288,15 @@ export function SavedAccountsSection() {
           );
         })
       )}
+
+      <TfaVerificationModal
+        isOpen={tfaModalOpen}
+        setIsOpen={setTfaModalOpen}
+        onVerify={handleTfaVerify}
+        isVerifying={isSaving}
+        title="2FA Required"
+        description="Please enter your 2FA code to confirm modifying your saved accounts."
+      />
     </div>
   );
 }

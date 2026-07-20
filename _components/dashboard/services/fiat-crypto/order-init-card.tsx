@@ -10,6 +10,7 @@ import { Button } from "@/src/components/ui/button"
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
+import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal"
 
 export function OrderInitializationCard({
   onSuccess,
@@ -30,6 +31,7 @@ export function OrderInitializationCard({
   } = useFiatCryptoStore()
 
   const [bankData, setBankData] = useState<any>(null)
+  const [tfaModalOpen, setTfaModalOpen] = useState(false)
 
   useEffect(() => {
     const cookieData = Cookies.get("verifiedBank")
@@ -42,14 +44,21 @@ export function OrderInitializationCard({
     }
   }, [])
 
-  const handleInitialize = async () => {
+  const handleInitialize = () => {
     if (!bankData) {
       toast.error("Refund bank data is missing")
       return
     }
-    const success = await initializeOrder(bankData)
+    setTfaModalOpen(true)
+  }
+
+  const handleTfaVerify = async (token: string) => {
+    const success = await initializeOrder(bankData, token)
     if (success) {
+      setTfaModalOpen(false)
       onSuccess()
+    } else {
+      throw new Error("Order failed")
     }
   }
 
@@ -177,6 +186,15 @@ export function OrderInitializationCard({
           </button>
         </div>
       </div>
+
+      <TfaVerificationModal
+        isOpen={tfaModalOpen}
+        setIsOpen={setTfaModalOpen}
+        onVerify={handleTfaVerify}
+        isVerifying={isInitializingOrder}
+        title="Confirm Order"
+        description="Please enter your 2FA code to confirm and initialize your order."
+      />
     </motion.div>
   )
 }

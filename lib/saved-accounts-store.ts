@@ -32,12 +32,13 @@ interface SavedAccountsState {
     accountName: string;
     returnAddress?: string;
     isDefault?: boolean;
+    tfaToken?: string;
   }) => Promise<SavedAccount | null>;
   updateAccount: (
     id: string,
-    data: Partial<{ label: string; returnAddress: string; isDefault: boolean }>
+    data: Partial<{ label: string; returnAddress: string; isDefault: boolean; tfaToken: string }>
   ) => Promise<boolean>;
-  deleteAccount: (id: string) => Promise<boolean>;
+  deleteAccount: (id: string, tfaToken?: string) => Promise<boolean>;
   setDefault: (id: string) => Promise<boolean>;
 }
 
@@ -113,10 +114,11 @@ export const useSavedAccountsStore = create<SavedAccountsState>((set, get) => ({
     }
   },
 
-  deleteAccount: async (id) => {
+  deleteAccount: async (id, tfaToken) => {
     try {
       await axios.delete(`${apiUrl()}/api/saved-accounts/${id}`, {
         headers: authHeaders(),
+        data: { tfaToken },
       });
       set((state) => ({
         accounts: state.accounts.filter((a) => a._id !== id),

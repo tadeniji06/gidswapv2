@@ -61,7 +61,7 @@ export interface FiatCryptoState {
 	fetchCurrencies: () => Promise<void>;
 	fetchQuote: (network: string, tokenSymbol: string, amount: string, fiatCode: string) => Promise<void>;
 	
-	initializeOrder: (refundBankData: any) => Promise<boolean>;
+	initializeOrder: (refundBankData: any, tfaToken: string) => Promise<boolean>;
 	pollPaymentStatus: (orderId: string) => Promise<boolean>;
 	resetService: () => void;
 }
@@ -307,7 +307,7 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 		}
 	},
 
-	initializeOrder: async (bankData: any) => {
+	initializeOrder: async (bankData: any, tfaToken: string) => {
 		const { selectedToken, selectedCurrency, fiatAmount, destinationAddress } = get();
 		
 		if (!selectedToken || !selectedCurrency || !fiatAmount || !destinationAddress || !bankData) {
@@ -339,7 +339,8 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 						network: selectedToken.network.toLowerCase().replace(/\s+/g, '-')
 					}
 				},
-				reference
+				reference,
+				tfaToken,
 			};
 
 			const authToken = Cookies.get("token");
