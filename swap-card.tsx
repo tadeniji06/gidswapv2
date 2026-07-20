@@ -246,7 +246,7 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
   useEffect(() => {
     const handler = setTimeout(() => {
       fetchQuote();
-    }, 2500); // Wait 2.5 seconds after user stops typing
+    }, 6000); // Wait 6 seconds after user stops typing
     return () => clearTimeout(handler);
   }, [sellAmount, sellCurrency, receiveCurrency, fetchQuote]);
 

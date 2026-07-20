@@ -240,7 +240,7 @@ const handleLocalSellChange = (val: string) => {
     if (sellCurrency && receiveCurrency) {
       fetchQuote()
     }
-  }, 600)
+  }, 6000) // Wait 6 seconds after user stops typing
 }
 
 
