@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 
 export interface TfaStatus {
 	isTwoFactorEnabled: boolean;
+	needsReverification?: boolean;
 }
 
 export interface TfaSetupResponse {

@@ -20,10 +20,11 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { toast } from "sonner";
 import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tfaService } from "@/lib/services/tfa";
 
 export function SavedAccountsSection() {
+  const queryClient = useQueryClient();
   const {
     accounts,
     isLoading,
@@ -62,15 +63,27 @@ export function SavedAccountsSection() {
   };
 
   const saveEdit = async (id: string) => {
-    setTfaAction("edit");
-    setTfaPendingData({ id });
-    setTfaModalOpen(true);
+    if (tfaStatus?.needsReverification) {
+      setTfaAction("edit");
+      setTfaPendingData({ id });
+      setTfaModalOpen(true);
+    } else {
+      try {
+        await handleTfaVerifyDirect("edit", { id }, "");
+      } catch(e) {}
+    }
   };
 
   const handleDelete = async (id: string, label: string) => {
-    setTfaAction("delete");
-    setTfaPendingData({ id, label });
-    setTfaModalOpen(true);
+    if (tfaStatus?.needsReverification) {
+      setTfaAction("delete");
+      setTfaPendingData({ id, label });
+      setTfaModalOpen(true);
+    } else {
+      try {
+        await handleTfaVerifyDirect("delete", { id, label }, "");
+      } catch(e) {}
+    }
   };
 
   // Internal helper used by both the TFA modal and the direct (no-2FA) path
@@ -86,6 +99,9 @@ export function SavedAccountsSection() {
           toast.success("Account updated");
           cancelEdit();
           setTfaModalOpen(false);
+          if (token) {
+            queryClient.invalidateQueries({ queryKey: ["tfa-status"] });
+          }
         } else {
           toast.error("Failed to update account");
           throw new Error("Failed");
@@ -97,6 +113,9 @@ export function SavedAccountsSection() {
         if (ok) {
           toast.success(`"${pending.label}" removed`);
           setTfaModalOpen(false);
+          if (token) {
+            queryClient.invalidateQueries({ queryKey: ["tfa-status"] });
+          }
         } else {
           toast.error("Failed to remove account");
           throw new Error("Failed");

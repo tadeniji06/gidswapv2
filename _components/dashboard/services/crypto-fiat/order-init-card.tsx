@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import { useCryptoFiatStore } from "@/lib/crypto-fiat-store"
 import { useSavedAccountsStore } from "@/lib/saved-accounts-store"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { tfaService } from "@/lib/services/tfa"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
@@ -28,6 +28,7 @@ const MEMO_SUGGESTIONS = ["Personal","Transfer","Bills"]
 export function OrderInitializationCard({
   onBack, onNext, onOrderComplete, onChangAccount,
 }: OrderInitializationCardProps) {
+  const queryClient = useQueryClient()
   const [memo, setMemo] = useState("")
   const [returnAddress, setReturnAddress] = useState("")
   const [errors, setErrors] = useState<{ memo?: string; returnAddress?: string }>({})
@@ -67,8 +68,14 @@ export function OrderInitializationCard({
   const handleSubmit = async () => {
     if (!validateForm()) return
     if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
-    // Enforce 2FA verification before proceeding
-    setTfaModalOpen(true)
+    // Enforce 2FA verification before proceeding if required
+    if (tfaStatus?.needsReverification) {
+      setTfaModalOpen(true)
+    } else {
+      try {
+        await handleTfaVerify("")
+      } catch(e) {}
+    }
   }
 
   const handleTfaVerify = async (token: string) => {
@@ -80,6 +87,8 @@ export function OrderInitializationCard({
       const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined, tfaToken: token })
       if (saved) toast.success(`Account "${saveLabel}" saved!`)
     }
+
+    if (token) queryClient.invalidateQueries({ queryKey: ["tfa-status"] })
 
     setTfaModalOpen(false)
     if (onOrderComplete) onOrderComplete()
