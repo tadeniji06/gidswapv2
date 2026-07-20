@@ -168,11 +168,10 @@ export function LoginModal() {
             </button>
           </div>
 
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 futuristic-button bg-blue-600 hover:bg-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center gap-2">

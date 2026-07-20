@@ -182,7 +182,7 @@ export function RegistrationModal() {
 				{step < 3 && (
 					<div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2'>
 						<motion.div
-							className='bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full'
+							className='bg-primary h-2 rounded-full'
 							initial={{ width: "0%" }}
 							animate={{ width: `${(step / 2) * 100}%` }}
 							transition={{ duration: 0.3 }}

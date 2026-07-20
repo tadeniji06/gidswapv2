@@ -49,13 +49,9 @@ export function ResponsiveModal({
   };
 
   const modalVariants = {
-    hidden: isMobile
-      ? { y: "100%", opacity: 0 }
-      : { scale: 0.8, opacity: 0, y: 20 },
-    visible: isMobile ? { y: 0, opacity: 1 } : { scale: 1, opacity: 1, y: 0 },
-    exit: isMobile
-      ? { y: "100%", opacity: 0 }
-      : { scale: 0.8, opacity: 0, y: 20 },
+    hidden: { scale: 0.95, opacity: 0 },
+    visible: { scale: 1, opacity: 1 },
+    exit: { scale: 0.95, opacity: 0 },
   };
 
   return (
@@ -74,11 +70,7 @@ export function ResponsiveModal({
           />
 
           {/* Modal Container */}
-          <div
-            className={`relative w-full h-full flex ${
-              isMobile ? "items-end" : "items-center justify-center"
-            }`}
-          >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
             <motion.div
               variants={modalVariants}
               initial="hidden"
@@ -90,17 +82,7 @@ export function ResponsiveModal({
                 stiffness: 300,
                 duration: 0.3,
               }}
-              className={`
-                relative w-full max-w-md mx-auto
-                bg-white dark:bg-gray-900
-                border border-gray-200 dark:border-gray-700
-                shadow-2xl
-                ${
-                  isMobile
-                    ? "rounded-t-3xl min-h-[60vh] max-h-[90vh] overflow-y-auto"
-                    : "rounded-2xl max-h-[90vh] overflow-y-auto m-4"
-                }
-              `}
+              className="relative w-full max-w-md mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
               <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
@@ -122,12 +104,7 @@ export function ResponsiveModal({
               {/* Content */}
               <div className="px-6 py-6">{children}</div>
 
-              {/* Mobile handle indicator */}
-              {isMobile && (
-                <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
-                  <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
-                </div>
-              )}
+
             </motion.div>
           </div>
         </div>

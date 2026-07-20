@@ -151,7 +151,7 @@ export default function StepOne({ data, onChange, onNext }: any) {
 			<Button
 				onClick={handleNext}
 				disabled={sending}
-				className='w-full h-12 futuristic-button bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
+				className='w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
 			>
 				{sending ? (
 					<div className='flex items-center gap-2'>
