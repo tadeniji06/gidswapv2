@@ -8,6 +8,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
+import { useQuery } from "@tanstack/react-query"
+import { tfaService } from "@/lib/services/tfa"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
 import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal"
@@ -32,6 +34,7 @@ export function OrderInitializationCard({
 
   const [bankData, setBankData] = useState<any>(null)
   const [tfaModalOpen, setTfaModalOpen] = useState(false)
+  const { data: tfaStatus } = useQuery({ queryKey: ["tfa-status"], queryFn: tfaService.getStatus })
 
   useEffect(() => {
     const cookieData = Cookies.get("verifiedBank")
@@ -44,12 +47,17 @@ export function OrderInitializationCard({
     }
   }, [])
 
-  const handleInitialize = () => {
+  const handleInitialize = async () => {
     if (!bankData) {
       toast.error("Refund bank data is missing")
       return
     }
-    setTfaModalOpen(true)
+    // Only show 2FA modal if user has it enabled
+    if (tfaStatus?.isTwoFactorEnabled) {
+      setTfaModalOpen(true)
+    } else {
+      await handleTfaVerify("")
+    }
   }
 
   const handleTfaVerify = async (token: string) => {

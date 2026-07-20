@@ -8,7 +8,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
-import { Shield, ShieldAlert, Loader2, CheckCircle } from "lucide-react";
+import { Shield, ShieldAlert, Loader2, CheckCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -150,6 +150,24 @@ export function TfaManager() {
 													width={200}
 													height={200}
 												/>
+											</div>
+											<div className="w-full space-y-1">
+												<p className="text-xs text-center text-muted-foreground font-medium">
+													Can't scan? Enter this key manually:
+												</p>
+												<button
+													type="button"
+													onClick={() => {
+														navigator.clipboard.writeText(setupData.secret);
+														toast.success("Setup key copied!");
+													}}
+													className="w-full flex items-center justify-between gap-2 bg-muted hover:bg-muted/80 border border-border rounded-lg px-3 py-2 transition-colors group"
+												>
+													<span className="font-mono text-xs text-foreground tracking-widest break-all text-left">
+														{setupData.secret}
+													</span>
+													<Copy className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+												</button>
 											</div>
 											<div className="w-full space-y-2">
 												<Input

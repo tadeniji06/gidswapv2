@@ -20,6 +20,8 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { toast } from "sonner";
 import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal";
+import { useQuery } from "@tanstack/react-query";
+import { tfaService } from "@/lib/services/tfa";
 
 export function SavedAccountsSection() {
   const {
@@ -41,6 +43,7 @@ export function SavedAccountsSection() {
   const [tfaModalOpen, setTfaModalOpen] = useState(false);
   const [tfaAction, setTfaAction] = useState<"edit" | "delete" | null>(null);
   const [tfaPendingData, setTfaPendingData] = useState<{ id: string, label?: string } | null>(null);
+  const { data: tfaStatus } = useQuery({ queryKey: ["tfa-status"], queryFn: tfaService.getStatus });
 
   useEffect(() => {
     fetchAccounts();
@@ -58,60 +61,69 @@ export function SavedAccountsSection() {
     setEditAddress("");
   };
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     setTfaAction("edit");
     setTfaPendingData({ id });
-    setTfaModalOpen(true);
+    if (tfaStatus?.isTwoFactorEnabled) {
+      setTfaModalOpen(true);
+    } else {
+      await handleTfaVerifyDirect("edit", { id }, "");
+    }
   };
 
-  const handleDelete = (id: string, label: string) => {
+  const handleDelete = async (id: string, label: string) => {
     setTfaAction("delete");
     setTfaPendingData({ id, label });
-    setTfaModalOpen(true);
+    if (tfaStatus?.isTwoFactorEnabled) {
+      setTfaModalOpen(true);
+    } else {
+      await handleTfaVerifyDirect("delete", { id, label }, "");
+    }
   };
 
-  const handleTfaVerify = async (token: string) => {
-    if (!tfaAction || !tfaPendingData) return;
-    
+  // Internal helper used by both the TFA modal and the direct (no-2FA) path
+  const handleTfaVerifyDirect = async (action: "edit" | "delete", pending: { id: string, label?: string }, token: string) => {
     try {
-      if (tfaAction === "edit") {
-        const ok = await updateAccount(tfaPendingData.id, {
+      if (action === "edit") {
+        const ok = await updateAccount(pending.id, {
           label: editLabel || "My Account",
           returnAddress: editAddress || undefined,
-          tfaToken: token,
+          tfaToken: token || undefined,
         });
         if (ok) {
           toast.success("Account updated");
           cancelEdit();
           setTfaModalOpen(false);
         } else {
-          toast.error("Failed to update account (Invalid 2FA?)");
+          toast.error("Failed to update account");
           throw new Error("Failed");
         }
-      } else if (tfaAction === "delete") {
-        setDeletingId(tfaPendingData.id);
-        const ok = await deleteAccount(tfaPendingData.id, token);
+      } else if (action === "delete") {
+        setDeletingId(pending.id);
+        const ok = await deleteAccount(pending.id, token || undefined);
         setDeletingId(null);
         if (ok) {
-          toast.success(`"${tfaPendingData.label}" removed`);
+          toast.success(`"${pending.label}" removed`);
           setTfaModalOpen(false);
         } else {
-          toast.error("Failed to remove account (Invalid 2FA?)");
+          toast.error("Failed to remove account");
           throw new Error("Failed");
         }
       }
     } finally {
-      // modal handles its own token clearing on success
+      // modal handles token clearing on success
     }
   };
 
+  const handleTfaVerify = async (token: string) => {
+    if (!tfaAction || !tfaPendingData) return;
+    await handleTfaVerifyDirect(tfaAction, tfaPendingData, token);
+  };
+
   const handleSetDefault = async (id: string) => {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-      </div>
-    );
-  }
+    const ok = await setDefault(id);
+    if (ok) toast.success("Default account updated");
+  };
 
   return (
     <div className="space-y-3">
