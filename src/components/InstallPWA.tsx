@@ -23,11 +23,6 @@ export function InstallPWA() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     setIsIos(/iphone|ipad|ipod/.test(userAgent));
 
-    // Show prompt after a short delay regardless of event (so iOS gets it too)
-    const timer = setTimeout(() => {
-      setShowPrompt(true);
-    }, 3000);
-
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
@@ -39,7 +34,6 @@ export function InstallPWA() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
