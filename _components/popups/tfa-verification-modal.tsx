@@ -13,6 +13,7 @@ interface TfaVerificationModalProps {
 	isVerifying: boolean;
 	title?: string;
 	description?: string;
+	children?: React.ReactNode;
 }
 
 export function TfaVerificationModal({
@@ -22,6 +23,7 @@ export function TfaVerificationModal({
 	isVerifying,
 	title = "2FA Verification Required",
 	description = "Please enter the 6-digit code from your authenticator app to proceed.",
+	children,
 }: TfaVerificationModalProps) {
 	const [token, setToken] = useState("");
 
@@ -38,10 +40,10 @@ export function TfaVerificationModal({
 
 	return (
 		<ResponsiveModal
-			isOpen={isOpen}
-			setIsOpen={(open) => {
-				if (!open) setToken("");
-				setIsOpen(open);
+			open={isOpen}
+			onClose={() => {
+				setToken("");
+				setIsOpen(false);
 			}}
 			title={title}
 			className="max-w-md"
@@ -56,6 +58,12 @@ export function TfaVerificationModal({
 					</p>
 				</div>
 				
+				{children && (
+					<div className="w-full">
+						{children}
+					</div>
+				)}
+
 				<div className="space-y-4">
 					<Input
 						value={token}

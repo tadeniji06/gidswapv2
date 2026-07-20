@@ -180,9 +180,11 @@ export const useSwapStore = create<SwapState>((set, get) => ({
               currencies[1],
           })
         }
+      } else {
+        console.error("API error fetching currencies:", response.data.message)
       }
-    } catch (error) {
-      console.error("Failed to fetch currencies:", error)
+    } catch (error: any) {
+      console.error("Error fetching currencies:", error.response?.data || error.message)
     } finally {
       set({ isLoadingCurrencies: false })
     }

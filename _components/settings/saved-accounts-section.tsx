@@ -298,9 +298,27 @@ export function SavedAccountsSection() {
         setIsOpen={setTfaModalOpen}
         onVerify={handleTfaVerify}
         isVerifying={isSaving}
-        title="2FA Required"
-        description="Please enter your 2FA code to confirm modifying your saved accounts."
-      />
+        title={tfaAction === "edit" ? "Confirm Edit" : "Confirm Deletion"}
+        description={tfaAction === "edit" 
+          ? "Please confirm you want to edit this account. Any mistake may lead to permanent loss of funds."
+          : `Please confirm you want to delete this account.`
+        }
+      >
+        <div className="bg-muted p-3 rounded-lg space-y-2 text-sm text-left">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Action:</span>
+            <span className={`font-bold ${tfaAction === "delete" ? "text-destructive" : "text-primary"}`}>
+              {tfaAction === "delete" ? "Delete Account" : "Edit Account"}
+            </span>
+          </div>
+          {tfaPendingData?.label && (
+            <div className="flex justify-between border-t pt-2 mt-2">
+              <span className="text-muted-foreground">Account Name:</span>
+              <span className="font-medium text-right">{tfaPendingData.label}</span>
+            </div>
+          )}
+        </div>
+      </TfaVerificationModal>
     </div>
   );
 }
