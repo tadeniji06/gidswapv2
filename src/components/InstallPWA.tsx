@@ -47,28 +47,33 @@ export function InstallPWA() {
   if (!showPrompt || isDismissed) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="relative bg-[#2a2d3a] border border-blue-500/30 shadow-2xl rounded-2xl p-4 w-72 flex flex-col items-start gap-3">
-        <button
-          onClick={() => setIsDismissed(true)}
-          className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
-          aria-label="Close install prompt"
-        >
-          <X className="w-4 h-4" />
-        </button>
-        <div className="flex items-center gap-2 text-blue-400 font-semibold mb-1">
-          <Download className="w-5 h-5" />
-          <span>Install Gidswap</span>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="relative bg-[#1e2029] border border-blue-500/20 shadow-2xl rounded-2xl p-6 w-full max-w-sm flex flex-col items-center text-center gap-4 animate-in zoom-in-95 duration-300">
+        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-2">
+          <Download className="w-8 h-8 text-blue-500" />
         </div>
-        <p className="text-sm text-gray-300">
-          Install our app for faster access, offline support, and a better experience!
+        
+        <h2 className="text-xl font-bold text-white">Install Gidswap</h2>
+        
+        <p className="text-sm text-gray-300 mb-2">
+          Install our web app on your device for faster access, offline support, and a seamless native experience!
         </p>
-        <button
-          onClick={handleInstallClick}
-          className="mt-1 w-full text-center bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-        >
-          Install App
-        </button>
+
+        <div className="w-full flex flex-col gap-3 mt-2">
+          <button
+            onClick={handleInstallClick}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all active:scale-[0.98]"
+          >
+            Install App
+          </button>
+          
+          <button
+            onClick={() => setIsDismissed(true)}
+            className="w-full bg-transparent hover:bg-white/5 text-gray-400 hover:text-white font-medium py-3 px-4 rounded-xl transition-all"
+          >
+            Not Interested
+          </button>
+        </div>
       </div>
     </div>
   );
