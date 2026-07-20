@@ -52,12 +52,8 @@ export function OrderInitializationCard({
       toast.error("Refund bank data is missing")
       return
     }
-    // Only show 2FA modal if user has it enabled
-    if (tfaStatus?.isTwoFactorEnabled) {
-      setTfaModalOpen(true)
-    } else {
-      await handleTfaVerify("")
-    }
+    // Enforce 2FA verification before proceeding
+    setTfaModalOpen(true)
   }
 
   const handleTfaVerify = async (token: string) => {

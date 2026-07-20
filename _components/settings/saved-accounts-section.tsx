@@ -64,21 +64,13 @@ export function SavedAccountsSection() {
   const saveEdit = async (id: string) => {
     setTfaAction("edit");
     setTfaPendingData({ id });
-    if (tfaStatus?.isTwoFactorEnabled) {
-      setTfaModalOpen(true);
-    } else {
-      await handleTfaVerifyDirect("edit", { id }, "");
-    }
+    setTfaModalOpen(true);
   };
 
   const handleDelete = async (id: string, label: string) => {
     setTfaAction("delete");
     setTfaPendingData({ id, label });
-    if (tfaStatus?.isTwoFactorEnabled) {
-      setTfaModalOpen(true);
-    } else {
-      await handleTfaVerifyDirect("delete", { id, label }, "");
-    }
+    setTfaModalOpen(true);
   };
 
   // Internal helper used by both the TFA modal and the direct (no-2FA) path

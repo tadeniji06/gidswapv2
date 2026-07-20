@@ -67,12 +67,8 @@ export function OrderInitializationCard({
   const handleSubmit = async () => {
     if (!validateForm()) return
     if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
-    // Only show 2FA modal if the user has 2FA enabled
-    if (tfaStatus?.isTwoFactorEnabled) {
-      setTfaModalOpen(true)
-    } else {
-      await handleTfaVerify("")
-    }
+    // Enforce 2FA verification before proceeding
+    setTfaModalOpen(true)
   }
 
   const handleTfaVerify = async (token: string) => {
