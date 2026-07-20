@@ -246,9 +246,14 @@ export const useSwapStore = create<SwapState>((set, get) => ({
           newSellUsdAmount = quoteData.from.usd.toFixed(2)
         }
 
+        // Only update sellAmount if the user was typing in USD. 
+        // If they were typing in crypto (sellAmount), we shouldn't overwrite it
+        // because it ruins their typing experience if they type fast.
+        const shouldUpdateSellAmount = sellUsdAmount && Number.parseFloat(sellUsdAmount) > 0;
+
         set({
           quote: quoteData,
-          sellAmount: newSellAmount ?? "",
+          ...(shouldUpdateSellAmount ? { sellAmount: newSellAmount ?? "" } : {}),
           sellUsdAmount: newSellUsdAmount ?? "",
           receiveAmount: quoteData.to.amount.toString(),
           receiveUsdAmount: quoteData.to.usd.toFixed(2),

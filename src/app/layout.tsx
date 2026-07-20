@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
@@ -10,6 +10,7 @@ import { LoginModal } from "@/_components/popups/LoginModal";
 import { ForgotPasswordModal } from "@/_components/popups/ForgotPasswordModal";
 import OneSignalInit from "@/src/components/OneSignalInit";
 import ConsoleSuppressor from "@/src/components/ConsoleSuppressor";
+import { InstallPWA } from "@/src/components/InstallPWA";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
 					disableTransitionOnChange
 				>
 					<ConsoleSuppressor />
+					<InstallPWA />
 					<OneSignalInit />
 					<Header />
 					<main>{children}</main>
