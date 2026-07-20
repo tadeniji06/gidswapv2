@@ -24,6 +24,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
 	title: "Gidswap",
 	description: "Your crypto paddy",
+	manifest: "/manifest.json",
+	themeColor: "#171717",
+	appleWebApp: {
+		capable: true,
+		statusBarStyle: "default",
+		title: "Gidswap",
+	},
 };
 
 export default function RootLayout({

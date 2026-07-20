@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation";
 
 import { OnboardingModal } from "@/_components/popups/OnboardingModal";
+import { KycFloatingWidget } from "@/src/components/KycFloatingWidget";
 
 export default async function ProtectedLayout({children,}: {children: React.ReactNode}) {
     const cookieStore = await cookies()
@@ -22,6 +23,7 @@ export default async function ProtectedLayout({children,}: {children: React.Reac
     <main>
       <QueryProvider>
          <OnboardingModal />
+         <KycFloatingWidget />
          {children}
       </QueryProvider>
      

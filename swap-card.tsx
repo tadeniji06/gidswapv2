@@ -244,7 +244,10 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
     !hasValidationError;
 
   useEffect(() => {
-    fetchQuote();
+    const handler = setTimeout(() => {
+      fetchQuote();
+    }, 500);
+    return () => clearTimeout(handler);
   }, [sellAmount, sellCurrency, receiveCurrency, fetchQuote]);
 
   const handleSellCurrencySelect = (currency: Currency) => {
