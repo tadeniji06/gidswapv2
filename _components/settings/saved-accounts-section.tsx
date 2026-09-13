@@ -19,12 +19,8 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { toast } from "sonner";
-import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { tfaService } from "@/lib/services/tfa";
 
 export function SavedAccountsSection() {
-  const queryClient = useQueryClient();
   const {
     accounts,
     isLoading,
@@ -39,12 +35,7 @@ export function SavedAccountsSection() {
   const [editLabel, setEditLabel] = useState("");
   const [editAddress, setEditAddress] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
-  // 2FA state
-  const [tfaModalOpen, setTfaModalOpen] = useState(false);
-  const [tfaAction, setTfaAction] = useState<"edit" | "delete" | null>(null);
-  const [tfaPendingData, setTfaPendingData] = useState<{ id: string, label?: string } | null>(null);
-  const { data: tfaStatus } = useQuery({ queryKey: ["tfa-status"], queryFn: tfaService.getStatus });
+
 
   useEffect(() => {
     fetchAccounts();
@@ -63,72 +54,37 @@ export function SavedAccountsSection() {
   };
 
   const saveEdit = async (id: string) => {
-    if (tfaStatus?.needsReverification !== false) {
-      setTfaAction("edit");
-      setTfaPendingData({ id });
-      setTfaModalOpen(true);
-    } else {
-      try {
-        await handleTfaVerifyDirect("edit", { id }, "");
-      } catch(e) {}
+    try {
+      const ok = await updateAccount(id, {
+        label: editLabel || "My Account",
+        returnAddress: editAddress || undefined,
+        tfaToken: "",
+      });
+      if (ok) {
+        toast.success("Account updated");
+        cancelEdit();
+      } else {
+        toast.error("Failed to update account");
+      }
+    } catch(e) {
+      toast.error("Failed to update account");
     }
   };
 
   const handleDelete = async (id: string, label: string) => {
-    if (tfaStatus?.needsReverification !== false) {
-      setTfaAction("delete");
-      setTfaPendingData({ id, label });
-      setTfaModalOpen(true);
-    } else {
-      try {
-        await handleTfaVerifyDirect("delete", { id, label }, "");
-      } catch(e) {}
-    }
-  };
-
-  // Internal helper used by both the TFA modal and the direct (no-2FA) path
-  const handleTfaVerifyDirect = async (action: "edit" | "delete", pending: { id: string, label?: string }, token: string) => {
     try {
-      if (action === "edit") {
-        const ok = await updateAccount(pending.id, {
-          label: editLabel || "My Account",
-          returnAddress: editAddress || undefined,
-          tfaToken: token || undefined,
-        });
-        if (ok) {
-          toast.success("Account updated");
-          cancelEdit();
-          setTfaModalOpen(false);
-          if (token) {
-            queryClient.invalidateQueries({ queryKey: ["tfa-status"] });
-          }
-        } else {
-          toast.error("Failed to update account");
-          throw new Error("Failed");
-        }
-      } else if (action === "delete") {
-        setDeletingId(pending.id);
-        const ok = await deleteAccount(pending.id, token || undefined);
-        setDeletingId(null);
-        if (ok) {
-          toast.success(`"${pending.label}" removed`);
-          setTfaModalOpen(false);
-          if (token) {
-            queryClient.invalidateQueries({ queryKey: ["tfa-status"] });
-          }
-        } else {
-          toast.error("Failed to remove account");
-          throw new Error("Failed");
-        }
+      setDeletingId(id);
+      const ok = await deleteAccount(id, "");
+      setDeletingId(null);
+      if (ok) {
+        toast.success(`"${label}" removed`);
+      } else {
+        toast.error("Failed to remove account");
       }
-    } finally {
-      // modal handles token clearing on success
+    } catch(e) {
+      setDeletingId(null);
+      toast.error("Failed to remove account");
     }
-  };
-
-  const handleTfaVerify = async (token: string) => {
-    if (!tfaAction || !tfaPendingData) return;
-    await handleTfaVerifyDirect(tfaAction, tfaPendingData, token);
   };
 
   const handleSetDefault = async (id: string) => {
@@ -312,32 +268,6 @@ export function SavedAccountsSection() {
         })
       )}
 
-      <TfaVerificationModal
-        isOpen={tfaModalOpen}
-        setIsOpen={setTfaModalOpen}
-        onVerify={handleTfaVerify}
-        isVerifying={isSaving}
-        title={tfaAction === "edit" ? "Confirm Edit" : "Confirm Deletion"}
-        description={tfaAction === "edit" 
-          ? "Please confirm you want to edit this account. Any mistake may lead to permanent loss of funds."
-          : `Please confirm you want to delete this account.`
-        }
-      >
-        <div className="bg-muted p-3 rounded-lg space-y-2 text-sm text-left">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Action:</span>
-            <span className={`font-bold ${tfaAction === "delete" ? "text-destructive" : "text-primary"}`}>
-              {tfaAction === "delete" ? "Delete Account" : "Edit Account"}
-            </span>
-          </div>
-          {tfaPendingData?.label && (
-            <div className="flex justify-between border-t pt-2 mt-2">
-              <span className="text-muted-foreground">Account Name:</span>
-              <span className="font-medium text-right">{tfaPendingData.label}</span>
-            </div>
-          )}
-        </div>
-      </TfaVerificationModal>
     </div>
   );
 }

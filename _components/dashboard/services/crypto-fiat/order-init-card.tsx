@@ -8,11 +8,8 @@ import {
 } from "lucide-react"
 import { useCryptoFiatStore } from "@/lib/crypto-fiat-store"
 import { useSavedAccountsStore } from "@/lib/saved-accounts-store"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { tfaService } from "@/lib/services/tfa"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
-import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal"
 
 interface OrderInitializationCardProps {
   onBack?: () => void
@@ -28,17 +25,14 @@ const MEMO_SUGGESTIONS = ["Personal","Transfer","Bills"]
 export function OrderInitializationCard({
   onBack, onNext, onOrderComplete, onChangAccount,
 }: OrderInitializationCardProps) {
-  const queryClient = useQueryClient()
   const [memo, setMemo] = useState("")
   const [returnAddress, setReturnAddress] = useState("")
   const [errors, setErrors] = useState<{ memo?: string; returnAddress?: string }>({})
   const [saveThisAccount, setSaveThisAccount] = useState(false)
   const [saveLabel, setSaveLabel] = useState("My Account")
-  const [tfaModalOpen, setTfaModalOpen] = useState(false)
 
   const { saveAccount, isSaving, accounts } = useSavedAccountsStore()
   const { selectedToken, selectedCurrency, tokenAmount, quote, isInitializingOrder, initializeOrder } = useCryptoFiatStore()
-  const { data: tfaStatus } = useQuery({ queryKey: ["tfa-status"], queryFn: tfaService.getStatus })
 
   const verifiedBank = Cookies.get("verifiedBank")
   const bankData = verifiedBank ? JSON.parse(verifiedBank) : null
@@ -68,29 +62,16 @@ export function OrderInitializationCard({
   const handleSubmit = async () => {
     if (!validateForm()) return
     if (!bankData) { toast.error("Missing bank details — go back and select an account"); return }
-    // Enforce 2FA verification before proceeding if required
-    if (tfaStatus?.needsReverification !== false) {
-      setTfaModalOpen(true)
-    } else {
-      try {
-        await handleTfaVerify("")
-      } catch(e) {}
-    }
-  }
 
-  const handleTfaVerify = async (token: string) => {
     const payload = { institution: bankCode, accountIdentifier: accountNumber, accountName }
-    const success = await initializeOrder(memo, returnAddress, payload, token)
-    if (!success) throw new Error("Order failed")
+    const success = await initializeOrder(memo, returnAddress, payload, "")
+    if (!success) return
 
     if (saveThisAccount && !alreadySaved && bankCode && accountNumber && accountName && bankName) {
-      const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined, tfaToken: token })
+      const saved = await saveAccount({ label: saveLabel || "My Account", bankName, bankCode, accountNumber, accountName, returnAddress: returnAddress || undefined, tfaToken: "" })
       if (saved) toast.success(`Account "${saveLabel}" saved!`)
     }
 
-    if (token) queryClient.invalidateQueries({ queryKey: ["tfa-status"] })
-
-    setTfaModalOpen(false)
     if (onOrderComplete) onOrderComplete()
     else if (onNext) onNext()
   }

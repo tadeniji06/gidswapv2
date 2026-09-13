@@ -8,11 +8,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { tfaService } from "@/lib/services/tfa"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
-import { TfaVerificationModal } from "@/_components/popups/tfa-verification-modal"
 
 export function OrderInitializationCard({
   onSuccess,
@@ -33,10 +30,6 @@ export function OrderInitializationCard({
   } = useFiatCryptoStore()
 
   const [bankData, setBankData] = useState<any>(null)
-  const [tfaModalOpen, setTfaModalOpen] = useState(false)
-  const { data: tfaStatus } = useQuery({ queryKey: ["tfa-status"], queryFn: tfaService.getStatus })
-
-  const queryClient = useQueryClient()
 
   useEffect(() => {
     const cookieData = Cookies.get("verifiedBank")
@@ -54,21 +47,9 @@ export function OrderInitializationCard({
       toast.error("Refund bank data is missing")
       return
     }
-    // Enforce 2FA verification before proceeding if required
-    if (tfaStatus?.needsReverification !== false) {
-      setTfaModalOpen(true)
-    } else {
-      try {
-        await handleTfaVerify("")
-      } catch(e) {}
-    }
-  }
-
-  const handleTfaVerify = async (token: string) => {
-    const success = await initializeOrder(bankData, token)
+    
+    const success = await initializeOrder(bankData, "")
     if (success) {
-      if (token) queryClient.invalidateQueries({ queryKey: ["tfa-status"] })
-      setTfaModalOpen(false)
       onSuccess()
     } else {
       throw new Error("Order failed")
