@@ -181,33 +181,7 @@ export function OrderInitializationCard({
         </div>
       </div>
 
-      <TfaVerificationModal
-        isOpen={tfaModalOpen}
-        setIsOpen={setTfaModalOpen}
-        onVerify={handleTfaVerify}
-        isVerifying={isInitializingOrder}
-        title="Confirm Order"
-        description="Please confirm your details below. Any mistake may lead to permanent loss of funds."
-      >
-        <div className="bg-muted p-3 rounded-lg space-y-2 text-sm text-left">
-          <div className="flex justify-between border-b pb-2">
-            <span className="text-muted-foreground shrink-0">Receiving Wallet:</span>
-            <span className="font-mono text-xs break-all text-right ml-4">{destinationAddress}</span>
-          </div>
-          <div className="flex justify-between border-b pb-2 pt-1">
-            <span className="text-muted-foreground">Refund Bank:</span>
-            <span className="font-mono text-right">{bankData?.bankName}</span>
-          </div>
-          <div className="flex justify-between border-b pb-2 pt-1">
-            <span className="text-muted-foreground">Account No:</span>
-            <span className="font-mono text-right">{bankData?.accountNumber}</span>
-          </div>
-          <div className="flex justify-between pt-1">
-            <span className="text-muted-foreground">Account Name:</span>
-            <span className="font-medium text-right">{bankData?.accountName}</span>
-          </div>
-        </div>
-      </TfaVerificationModal>
+
     </motion.div>
   )
 }
