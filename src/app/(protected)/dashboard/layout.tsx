@@ -6,8 +6,6 @@ import { useState } from "react";
 import { MobileBottomNav } from "@/_components/dashboard/navigation/mobile-bottom-nav";
 import { ChatWidget } from "@/_components/dashboard/ui/chat-widget";
 import { navLinks } from "@/lib/constants";
-import { QueryClientProvider, } from "@tanstack/react-query";
-import { TfaEnforcementOverlay } from "@/_components/settings/tfa/tfa-enforcement-overlay";
 export default function DashboardLayout({
   children,
 }: {
@@ -31,11 +29,6 @@ export default function DashboardLayout({
         activeLink={activeLink}
         onLinkClick={setActiveLink}
       />
-
-      {/* Mandatory 2FA Setup Overlay */}
-      <TfaEnforcementOverlay />
-
-      {/* Chat Widget */}
       <ChatWidget />
     </div>
   );
