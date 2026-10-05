@@ -2,7 +2,7 @@
 import { Button } from "@/src/components/ui/button";
 import { useEffect, useRef } from "react";
 
-import { ArrowUpDown, ChevronDown, Info } from "lucide-react";
+import { ArrowDownUp, ChevronDown, Info, Settings } from "lucide-react";
 import { useState } from "react";
 import { useSwapStore } from "./lib/swap-store";
 
@@ -59,17 +59,10 @@ function CurrencyDropdown({
     };
   }, [isOpen, onToggle]);
 
-  const filteredCurrencies = currencies.filter(
-    (curr) =>
-      curr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      curr.coin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      curr.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="relative" ref={dropdownRef}>
-      <Button
-        className="bg-[#3a3d4a] hover:bg-[#4a4d5a] text-white rounded-full px-4 py-2 flex items-center gap-2"
+      <button
+        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl px-3 py-2 flex items-center gap-2 transition-all duration-200 backdrop-blur-md"
         onClick={onToggle}
       >
         {currency ? (
@@ -77,80 +70,64 @@ function CurrencyDropdown({
             <img
               src={currency.logo || "/placeholder.svg"}
               alt={currency.coin}
-              className="w-5 h-5 rounded-full"
+              className="w-6 h-6 rounded-full"
             />
-            <span className="text-sm">{currency.coin}</span>
+            <span className="text-base font-semibold">{currency.coin}</span>
           </>
         ) : (
-          <span className="text-sm">Select</span>
+          <span className="text-sm font-medium">Select token</span>
         )}
-        <ChevronDown className="w-4 h-4" />
-      </Button>
-
-      {/*{isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-72 sm:w-64 max-w-[calc(100vw-2rem)] bg-[#2a2d3a] rounded-xl border border-[#3a3d4a] shadow-lg z-50 max-h-60 overflow-hidden">
-          <div className="p-3 border-b border-[#3a3d4a]">
-            <input
-              type="text"
-              placeholder="Search currencies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#3a3d4a] text-white placeholder-gray-400 rounded-lg px-3 py-2 text-sm border-none outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
-          </div>
-
-          <div className="max-h-48 overflow-y-auto">
-            {filteredCurrencies.length > 0 ? (
-              filteredCurrencies.map((curr) => (
-                <button
-                  key={curr.code}
-                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#3a3d4a] text-left"
-                  onClick={() => {
-                    onSelect?.(curr)
-                    onToggle()
-                    setSearchTerm("") // Clear search when currency is selected
-                  }}
-                >
-                  <img src={curr.logo || "/placeholder.svg"} alt={curr.coin} className="w-6 h-6 rounded-full" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white font-medium truncate">{curr.coin}</div>
-                    <div className="text-gray-400 text-sm truncate">{curr.name}</div>
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-gray-400 text-sm">No currencies found for "{searchTerm}"</div>
-            )}
-          </div>
-        </div>
-      )} */}
+        <ChevronDown className="w-4 h-4 text-gray-400" />
+      </button>
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 mx-4 bg-[#2a2d3a] rounded-xl border border-[#3a3d4a] shadow-lg z-50 max-h-60 overflow-y-auto min-w-0 transform-gpu"
-          style={{ willChange: "contents" }}
+          className="absolute top-full right-0 mt-2 w-[280px] bg-[#13151A]/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden transform-gpu animate-fade-in"
+          style={{ willChange: "transform, opacity" }}
         >
-          {currencies.map((curr) => (
-            <button
-              key={curr.code}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#3a3d4a] text-left"
-            >
-              <img
-                src={curr.logo || "/placeholder.svg"}
-                alt={curr.coin}
-                className="w-6 h-6 rounded-full flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-white font-medium truncate">
-                  {curr.coin}
-                </div>
-                <div className="text-gray-400 text-sm truncate">
-                  {curr.name}
-                </div>
-              </div>
-            </button>
-          ))}
+          <div className="p-3 border-b border-white/5">
+            <input
+              type="text"
+              placeholder="Search by name or symbol"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/5 text-white placeholder-gray-500 rounded-xl px-4 py-3 text-sm border border-transparent focus:border-primary/50 outline-none transition-colors"
+              autoFocus
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto custom-scrollbar">
+            {currencies
+              .filter(
+                (curr) =>
+                  curr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  curr.coin.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((curr) => (
+                <button
+                  key={curr.code}
+                  onClick={() => {
+                    onSelect?.(curr);
+                    onToggle();
+                    setSearchTerm("");
+                  }}
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left"
+                >
+                  <img
+                    src={curr.logo || "/placeholder.svg"}
+                    alt={curr.coin}
+                    className="w-8 h-8 rounded-full flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white font-medium truncate">
+                      {curr.name}
+                    </div>
+                    <div className="text-gray-400 text-xs font-medium uppercase tracking-wider truncate">
+                      {curr.coin}
+                    </div>
+                  </div>
+                </button>
+              ))}
+          </div>
         </div>
       )}
     </div>
@@ -179,9 +156,21 @@ function SwapSection({
   onDropdownToggle: () => void;
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-gray-400 text-sm capitalize">{type}</span>
+    <div className="bg-[#1A1C24]/50 hover:bg-[#1A1C24]/80 transition-colors border border-white/5 rounded-3xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-gray-400 text-sm font-medium">
+          {type === "sell" ? "You pay" : "You receive"}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-4">
+        <input
+          type="text"
+          value={amount ?? ""}
+          onChange={(e) => onAmountChange?.(e.target.value)}
+          readOnly={type === "receive"}
+          placeholder="0"
+          className="w-full bg-transparent text-4xl font-medium tracking-tight text-white placeholder-white/20 border-none outline-none overflow-hidden"
+        />
         <CurrencyDropdown
           currency={currency}
           currencies={currencies}
@@ -190,22 +179,11 @@ function SwapSection({
           onToggle={onDropdownToggle}
         />
       </div>
-      <input
-        type="text"
-        value={amount ?? ""}
-        onChange={(e) => onAmountChange?.(e.target.value)}
-        readOnly={type === "receive"}
-        placeholder="0.00"
-        className="w-full bg-transparent text-2xl md:text-3xl font-bold mb-2 text-white placeholder-gray-500 border-none outline-none"
-      />
-      {usdValue && (
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-black">$</span>
-          </div>
-          <span className="text-blue-400 font-semibold">{usdValue}</span>
-        </div>
-      )}
+      <div className="mt-2 h-5 flex items-center">
+        {usdValue && (
+          <span className="text-gray-500 text-sm font-medium">{usdValue}</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -246,7 +224,7 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
   useEffect(() => {
     const handler = setTimeout(() => {
       fetchQuote();
-    }, 6000); // Wait 6 seconds after user stops typing
+    }, 1000);
     return () => clearTimeout(handler);
   }, [sellAmount, sellCurrency, receiveCurrency, fetchQuote]);
 
@@ -264,6 +242,13 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
       const alt = currencies.find((c) => c.coin !== currency.coin);
       setSellCurrency(alt || null);
     }
+  };
+
+  const switchCurrencies = () => {
+    const tempCurr = sellCurrency;
+    setSellCurrency(receiveCurrency);
+    setReceiveCurrency(tempCurr);
+    setSellAmount(receiveAmount);
   };
 
   const handleSwap = async () => {
@@ -285,24 +270,36 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
 
   if (isLoadingCurrencies) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-[#2a2d3a] rounded-2xl p-6 text-center">
-          <span className="text-gray-400">Loading currencies...</span>
+      <div className="w-full max-w-[480px] mx-auto">
+        <div className="glass-panel rounded-[2rem] p-8 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <span className="text-gray-400 font-medium animate-pulse">Loading tokens...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-[#2a2d3a] rounded-2xl p-6 mb-6">
-        <div className="mb-4">
+    <div className="w-full max-w-[480px] mx-auto relative group">
+      {/* Decorative background glow */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-purple-500/30 to-blue-500/30 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000"></div>
+      
+      <div className="relative glass-panel rounded-[2rem] p-2 overflow-visible">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-white font-medium text-lg">Swap</h2>
+          <button className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-2 space-y-1 relative">
           <SwapSection
             type="sell"
             amount={sellAmount}
             currency={sellCurrency}
             currencies={currencies}
-            usdValue={quote ? `$${quote.from.usd.toFixed(2)}` : undefined}
+            usdValue={quote ? `~$${quote.from.usd.toFixed(2)}` : undefined}
             onAmountChange={setSellAmount}
             onCurrencySelect={handleSellCurrencySelect}
             dropdownOpen={sellDropdownOpen}
@@ -311,39 +308,23 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
               setReceiveDropdownOpen(false);
             }}
           />
-          {hasValidationError && (
-            <div className="mt-2 text-sm text-red-400">
-              {isAmountTooLow && (
-                <span>
-                  Amount too low. Minimum: {quote.from.min} {quote.from.coin}
-                </span>
-              )}
-              {isAmountTooHigh && (
-                <span>
-                  Amount too high. Maximum: {quote.from.max} {quote.from.coin}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
 
-        <div className="flex justify-center my-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="bg-[#3a3d4a] hover:bg-[#4a4d5a] rounded-full p-2"
-          >
-            <ArrowUpDown className="w-5 h-5 text-gray-400" />
-          </Button>
-        </div>
+          {/* Switch Button */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <button
+              onClick={switchCurrencies}
+              className="bg-[#13151A] border-4 border-[#1A1C24]/50 hover:border-[#1A1C24] text-white p-2 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 group/btn"
+            >
+              <ArrowDownUp className="w-5 h-5 text-gray-400 group-hover/btn:text-white transition-colors" />
+            </button>
+          </div>
 
-        <div>
           <SwapSection
             type="receive"
             amount={receiveAmount}
             currency={receiveCurrency}
             currencies={currencies}
-            usdValue={quote ? `$${quote.to.usd.toFixed(2)}` : undefined}
+            usdValue={quote ? `~$${quote.to.usd.toFixed(2)}` : undefined}
             onAmountChange={setReceiveAmount}
             onCurrencySelect={handleReceiveCurrencySelect}
             dropdownOpen={receiveDropdownOpen}
@@ -353,43 +334,45 @@ export function SwapCard({ onSwap, isLoading }: SwapCardProps) {
             }}
           />
         </div>
-      </div>
 
-      {quote && (
-        <div className="bg-[#2a2d3a] rounded-xl p-4 mb-4 text-sm text-gray-300">
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold text-blue-700/90">Minimum</span>
-            <span className="text-white">
-              {quote.from.min} {quote.from.coin}
-            </span>
+        {hasValidationError && (
+          <div className="px-4 py-2 mt-1">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl p-3 flex items-start gap-2">
+              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div>
+                {isAmountTooLow && (
+                  <p>Minimum amount is {quote.from.min} {quote.from.coin}</p>
+                )}
+                {isAmountTooHigh && (
+                  <p>Maximum amount is {quote.from.max} {quote.from.coin}</p>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold text-blue-700/90">Maximum</span>
-            <span className="text-white">
-              {quote.from.max} {quote.from.coin}
-            </span>
+        )}
+
+        {quote && !hasValidationError && (
+          <div className="px-5 py-3 mx-2 mt-2 mb-3 bg-white/5 rounded-xl text-sm font-medium">
+            <div className="flex justify-between items-center text-gray-400">
+              <span>Exchange Rate</span>
+              <span className="text-white">
+                1 {quote.from.coin} = {quote.from.rate.toFixed(4)} {quote.to.coin}
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold text-blue-700/90">Network</span>
-            <span className="text-white">{quote.to.network}</span>
-          </div>
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold text-blue-700/90">Rate</span>
-            <span className="text-white">
-              1 {quote.from.coin} ≈ {quote.from.rate.toFixed(2)} {quote.to.coin}
-            </span>
-          </div>
-          <div className="flex justify-between"></div>
+        )}
+
+        <div className="p-2 pt-0 mt-2">
+          <Button
+            className="w-full futuristic-button bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-2xl shadow-[0_0_20px_-5px_var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            onClick={handleSwap}
+            disabled={!isFormValid || isLoading}
+          >
+            {isLoading ? "Processing..." : !sellAmount ? "Enter an amount" : !isFormValid ? "Invalid swap" : "Review Swap"}
+          </Button>
         </div>
-      )}
-
-      <Button
-        className="w-full bg-blue-900 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={handleSwap}
-        disabled={!isFormValid || isLoading}
-      >
-        {isLoading ? "Processing..." : "Swap"}
-      </Button>
+      </div>
     </div>
   );
 }
+

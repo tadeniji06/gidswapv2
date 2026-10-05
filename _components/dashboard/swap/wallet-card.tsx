@@ -45,12 +45,12 @@ export function WalletAddressCard({ swapData, onBack, onProceed }: WalletAddress
   if (!swapData || !swapData.to || !swapData.from) {
     return (
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-[#2a2d3a] rounded-2xl p-6 text-center">
-          <p className="text-gray-400 mb-4">Invalid swap data. Please try again.</p>
+        <div className="bg-card border border-border rounded-2xl p-6 text-center shadow-sm">
+          <p className="text-muted-foreground mb-4 font-medium">Invalid swap data. Please try again.</p>
           <Button
             variant="outline"
             onClick={onBack}
-            className="border-[#3a3d4a] text-gray-400 hover:text-white hover:bg-[#3a3d4a] bg-transparent"
+            className="w-full"
           >
             Back to Swap
           </Button>
@@ -82,49 +82,49 @@ export function WalletAddressCard({ swapData, onBack, onProceed }: WalletAddress
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-[#2a2d3a] rounded-2xl p-6 mb-6">
+      <div className="bg-card border border-border rounded-2xl shadow-sm p-6 mb-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-white mb-2">Complete Your Swap</h2>
-          <p className="text-gray-400 text-sm">Enter your {swapData.to.name} wallet address to receive your funds</p>
+          <h2 className="text-xl font-semibold text-foreground mb-1">Complete Your Swap</h2>
+          <p className="text-muted-foreground text-sm">Enter your {swapData.to.name} wallet address to receive your funds</p>
         </div>
 
         {/* Swap Details */}
-        <div className="bg-[#1a1d29] rounded-xl p-4 mb-6">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-400 text-sm">You're sending</span>
+        <div className="bg-muted/30 border border-border rounded-xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-muted-foreground text-sm">You're sending</span>
             <div className="text-right">
-              <div className="text-white font-semibold">
+              <div className="text-foreground font-semibold">
                 {swapData.from.amount} {swapData.from.coin}
               </div>
-              <div className="text-gray-400 text-xs">{swapData.from.network}</div>
+              <div className="text-muted-foreground text-xs font-medium">{swapData.from.network}</div>
             </div>
           </div>
 
           <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-400 text-sm">You'll receive</span>
+            <span className="text-muted-foreground text-sm">You'll receive</span>
             <div className="text-right">
-              <div className="text-white font-semibold">
+              <div className="text-foreground font-semibold">
                 {swapData.to.amount} {swapData.to.coin}
               </div>
-              <div className="text-gray-400 text-xs">{swapData.to.network}</div>
+              <div className="text-muted-foreground text-xs font-medium">{swapData.to.network}</div>
             </div>
           </div>
 
-          <div className="border-t border-[#3a3d4a] pt-3">
-            <div className="flex items-center justify-between mb-2">
+          <div className="border-t border-border pt-4 mt-1 space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-400 text-sm">Time remaining</span>
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground text-sm">Time remaining</span>
               </div>
-              <span className="text-blue-400 font-semibold">{formatTime(swapData.time.left)}</span>
+              <span className="text-foreground font-medium tabular-nums">{formatTime(swapData.time.left)}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                <span className="text-gray-400 text-sm">Processing time</span>
+                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground text-sm">Processing time</span>
               </div>
-              <span className="text-green-400 font-semibold">
+              <span className="text-foreground font-medium">
                 {swapData.from.reqConfirmations}-{swapData.from.maxConfirmations} confirmations
               </span>
             </div>
@@ -132,35 +132,35 @@ export function WalletAddressCard({ swapData, onBack, onProceed }: WalletAddress
         </div>
 
         {/* Wallet Address Input */}
-        <div className="mb-6">
-          <label className="block text-gray-400 text-sm mb-2">{swapData.to.name} Wallet Address</label>
+        <div className="mb-6 space-y-2">
+          <label className="block text-muted-foreground text-sm font-medium">{swapData.to.name} Wallet Address</label>
           <div className="relative">
             <input
               type="text"
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
               placeholder={`Enter your ${swapData.to.coin} address`}
-              className="w-full bg-[#1a1d29] border border-[#3a3d4a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-400 focus:outline-none"
+              className="w-full bg-background border border-input rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors"
             />
           </div>
-          <p className="text-gray-500 text-xs mt-2">Make sure this address supports {swapData.to.network} network</p>
+          <p className="text-muted-foreground text-xs mt-2">Make sure this address supports {swapData.to.network} network</p>
         </div>
 
         {/* Deposit Address */}
-        <div className="bg-[#1a1d29] rounded-xl p-4 mb-6">
+        <div className="bg-background border border-border rounded-xl p-4 mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-400 text-sm">Send {swapData.from.coin} to:</span>
+            <span className="text-muted-foreground text-sm font-medium">Send {swapData.from.coin} to:</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => copyToClipboard(swapData.from.address)}
-              className="text-blue-400 hover:text-blue-300 p-1"
+              className="text-primary hover:text-primary/80 hover:bg-muted p-1 h-auto"
             >
               <Copy className="w-4 h-4" />
             </Button>
           </div>
-          <div className="bg-[#2a2d3a] rounded-lg p-3">
-            <code className="text-white text-sm break-all font-mono">{swapData.from.address}</code>
+          <div className="bg-muted p-3 rounded-lg border border-border/50">
+            <code className="text-foreground text-sm break-all font-mono">{swapData.from.address}</code>
           </div>
         </div>
 
@@ -169,14 +169,14 @@ export function WalletAddressCard({ swapData, onBack, onProceed }: WalletAddress
           <Button
             variant="outline"
             onClick={onBack}
-            className="flex-1 border-[#3a3d4a] text-gray-400 hover:text-white hover:bg-[#3a3d4a] bg-transparent"
+            className="flex-1"
           >
             Back
           </Button>
           <Button
             onClick={handleProceed}
             disabled={!walletAddress.trim() || isLoading}
-            className="flex-1 bg-blue-900 hover:bg-blue-500 text-white font-semibold disabled:opacity-50"
+            className="flex-1 fintech-button-primary"
           >
             {isLoading ? "Processing..." : "Proceed"}
           </Button>

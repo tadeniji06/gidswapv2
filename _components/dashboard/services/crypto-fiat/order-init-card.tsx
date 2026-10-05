@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Loader2, ArrowLeft, PlusCircle, ShieldCheck,
-  Building2, Wallet, FileText, Sparkles, ArrowRight
+  Loader2, ArrowLeft, PlusCircle, Building2, Wallet, FileText, ArrowRight
 } from "lucide-react"
 import { useCryptoFiatStore } from "@/lib/crypto-fiat-store"
 import { useSavedAccountsStore } from "@/lib/saved-accounts-store"
 import Cookies from "js-cookie"
 import { toast } from "sonner"
+import { Button } from "@/src/components/ui/button"
 
 interface OrderInitializationCardProps {
   onBack?: () => void
@@ -19,8 +19,7 @@ interface OrderInitializationCardProps {
 }
 
 const LP_FEE_PERCENT = 0.01
-
-const MEMO_SUGGESTIONS = ["Personal","Transfer","Bills"]
+const MEMO_SUGGESTIONS = ["Personal", "Transfer", "Bills"]
 
 export function OrderInitializationCard({
   onBack, onNext, onOrderComplete, onChangAccount,
@@ -78,60 +77,54 @@ export function OrderInitializationCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="glass-panel neon-border shadow-2xl rounded-3xl relative overflow-hidden"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-card border border-border rounded-2xl shadow-sm p-1"
     >
-      {/* Ambient glows */}
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 p-6 md:p-8 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black tracking-tight text-white">Finalize Order</h3>
-            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Almost there — review & confirm</p>
+            <h3 className="text-xl font-semibold tracking-tight text-foreground">Finalize Order</h3>
+            <p className="text-muted-foreground text-sm mt-1">Review & confirm your details</p>
           </div>
           {onBack && (
-            <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-2 rounded-xl font-bold">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted">
+              <ArrowLeft className="h-5 w-5" />
             </button>
           )}
         </div>
 
         {/* Order Summary */}
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <Sparkles className="w-3 h-3 text-primary" /> Order Summary
-          </p>
+        <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Order Summary</p>
           {[
             { label: "Sending", value: `${tokenAmount} ${selectedToken?.symbol}`, highlight: false },
-            { label: "Provider Fee (0.5%)", value: `-${selectedCurrency?.symbol}${lpFee.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: false },
+            { label: "Provider Fee (1%)", value: `-${selectedCurrency?.symbol}${lpFee.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: false },
             { label: "You receive", value: `${selectedCurrency?.symbol}${netTotal.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, highlight: true },
           ].map(({ label, value, highlight }) => (
-            <div key={label} className={`flex justify-between items-center ${highlight ? "pt-3 border-t border-white/5" : ""}`}>
-              <span className="text-muted-foreground text-sm font-medium">{label}</span>
-              <span className={`font-black text-sm tabular-nums ${highlight ? "text-emerald-400 text-base" : "text-white"}`}>{value}</span>
+            <div key={label} className={`flex justify-between items-center ${highlight ? "pt-3 border-t border-border mt-3" : ""}`}>
+              <span className="text-muted-foreground text-sm">{label}</span>
+              <span className={`font-medium ${highlight ? "text-foreground font-semibold" : "text-foreground"}`}>{value}</span>
             </div>
           ))}
         </div>
 
         {/* Bank Account */}
         {bankData && (
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div className="bg-background border border-border rounded-xl p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                <Building2 className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground">
+                <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-white font-bold text-sm">{bankName}</p>
-                <p className="text-muted-foreground text-xs font-mono mt-0.5">{accountNumber} · {accountName}</p>
+                <p className="text-foreground font-medium text-sm">{bankName}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{accountNumber} · {accountName}</p>
               </div>
             </div>
             {onChangAccount && (
-              <button onClick={onChangAccount} className="text-xs text-primary hover:text-primary/80 font-black uppercase tracking-widest bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all">
+              <button onClick={onChangAccount} className="text-xs font-medium text-primary hover:underline">
                 Change
               </button>
             )}
@@ -139,73 +132,73 @@ export function OrderInitializationCard({
         )}
 
         {/* Memo */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-            <FileText className="w-3.5 h-3.5 text-primary" /> Description *
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <FileText className="w-4 h-4 text-muted-foreground" /> Description *
           </label>
           <input
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             placeholder="Select reason for this transaction"
-            className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-sm font-medium placeholder:text-muted-foreground/40 outline-none transition-all duration-200
-              ${errors.memo ? "border-red-500/60 focus:ring-red-500/10" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"}`}
+            className={`w-full bg-background border rounded-lg px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 outline-none transition-colors
+              ${errors.memo ? "border-red-300 focus:ring-1 focus:ring-red-500 focus:border-red-500" : "border-input hover:border-border focus:border-primary focus:ring-1 focus:ring-primary"}`}
           />
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             {MEMO_SUGGESTIONS.map((s) => (
               <button
                 key={s} type="button" onClick={() => setMemo(s)}
-                className={`px-3 py-1.5 text-xs rounded-xl font-bold transition-all duration-200 ${
+                className={`px-3 py-1.5 text-xs rounded-full font-medium transition-colors ${
                   memo === s
-                    ? "bg-primary/30 border-primary/50 text-white border"
-                    : "bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-muted-foreground hover:text-white"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
                 {s}
               </button>
             ))}
           </div>
-          {errors.memo && <p className="text-xs text-red-400 font-bold">{errors.memo}</p>}
+          {errors.memo && <p className="text-xs text-red-600 dark:text-red-400 font-medium">{errors.memo}</p>}
         </div>
 
         {/* Refund Address */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-            <Wallet className="w-3.5 h-3.5 text-primary" /> Refund Wallet Address *
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Wallet className="w-4 h-4 text-muted-foreground" /> Refund Wallet Address *
           </label>
           <input
             value={returnAddress}
             onChange={(e) => setReturnAddress(e.target.value)}
             placeholder="0x..."
-            className={`w-full bg-black/30 border rounded-2xl px-4 py-3.5 text-white text-sm font-mono placeholder:text-muted-foreground/40 placeholder:font-sans outline-none transition-all duration-200
-              ${errors.returnAddress ? "border-red-500/60 focus:ring-red-500/10" : "border-white/10 hover:border-white/20 focus:border-primary/60 focus:ring-4 focus:ring-primary/10"}`}
+            className={`w-full bg-background border rounded-lg px-4 py-3 text-foreground text-sm font-mono placeholder:text-muted-foreground/50 placeholder:font-sans outline-none transition-colors
+              ${errors.returnAddress ? "border-red-300 focus:ring-1 focus:ring-red-500 focus:border-red-500" : "border-input hover:border-border focus:border-primary focus:ring-1 focus:ring-primary"}`}
           />
           {errors.returnAddress
-            ? <p className="text-xs text-red-400 font-bold">{errors.returnAddress}</p>
-            : <p className="text-xs text-muted-foreground font-medium">Crypto is sent here if anything goes wrong. Never use an exchange address.</p>
+            ? <p className="text-xs text-red-600 dark:text-red-400 font-medium">{errors.returnAddress}</p>
+            : <p className="text-xs text-muted-foreground">Crypto is returned here if anything goes wrong. Never use an exchange address.</p>
           }
         </div>
 
         {/* Save account */}
         {!alreadySaved && bankData && (
-          <div className={`rounded-2xl border border-dashed p-4 space-y-3 transition-all ${saveThisAccount ? "border-primary/40 bg-primary/5" : "border-white/10"}`}>
+          <div className={`rounded-xl border p-4 space-y-3 transition-colors ${saveThisAccount ? "border-primary bg-primary/5" : "border-border bg-background"}`}>
             <button
               type="button" onClick={() => setSaveThisAccount(!saveThisAccount)}
-              className="flex items-center gap-2.5 text-sm font-bold text-muted-foreground hover:text-white transition-colors w-full"
+              className="flex items-center gap-3 text-sm font-medium text-foreground w-full"
             >
-              <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${saveThisAccount ? "border-primary bg-primary" : "border-white/20"}`}>
-                {saveThisAccount && <PlusCircle className="w-3 h-3 text-white" />}
+              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${saveThisAccount ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background"}`}>
+                {saveThisAccount && <PlusCircle className="w-3 h-3" />}
               </div>
               Save this account for next time
             </button>
             <AnimatePresence>
               {saveThisAccount && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-widest block mb-2">Nickname (optional)</label>
+                  <label className="text-xs text-muted-foreground font-medium block mb-1">Nickname (optional)</label>
                   <input
                     value={saveLabel}
                     onChange={(e) => setSaveLabel(e.target.value)}
                     placeholder="e.g. GTB Personal"
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-all"
+                    className="w-full bg-background border border-input rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                   />
                 </motion.div>
               )}
@@ -214,26 +207,26 @@ export function OrderInitializationCard({
         )}
 
         {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={isInitializingOrder || isSaving || !memo.trim() || !returnAddress.trim()}
-          className="w-full futuristic-button bg-primary text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase shadow-[0_0_25px_rgba(100,150,255,0.25)] disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
-        >
-          {isInitializingOrder || isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {isInitializingOrder ? "Initializing Order..." : "Saving Account..."}
-            </>
-          ) : (
-            <>
-              Initialize Order
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
-        </button>
+        <div className="pt-2">
+          <Button
+            onClick={handleSubmit}
+            disabled={isInitializingOrder || isSaving || !memo.trim() || !returnAddress.trim()}
+            className="w-full fintech-button-primary py-6 text-lg"
+          >
+            {isInitializingOrder || isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {isInitializingOrder ? "Initializing..." : "Saving..."}
+              </>
+            ) : (
+              <>
+                Initialize Order
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-
-
     </motion.div>
   )
 }

@@ -44,6 +44,7 @@ export interface OrderData {
 	recipient: OrderRecipient;
 	reference: string;
 	returnAddress: string;
+	tfaToken?: string;
 }
 
 export interface PaymentOrder {

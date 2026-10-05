@@ -1,5 +1,4 @@
 "use client";
-// import { Button } from "@/src/components/ui/button";
 import Image from "next/image";
 import { Sun, Moon, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -26,10 +25,10 @@ export function MobileNav() {
 		<nav
 			className='
         md:hidden sticky top-0 z-50 
-        glass-panel
+        bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80
         flex items-center justify-between
         px-4 py-3
-        border-b border-white/5
+        border-b border-border
         shadow-sm
       '
 		>
@@ -63,10 +62,10 @@ export function MobileNav() {
 					}
 					className='
             w-9 h-9 rounded-full flex items-center justify-center
-            bg-gray-100 dark:bg-neutral-800
-            text-gray-600 dark:text-gray-300
-            hover:bg-gray-200 dark:hover:bg-neutral-700
-            transition
+            bg-muted
+            text-muted-foreground
+            hover:text-foreground hover:bg-muted/80
+            transition-colors
           '
 				>
 					{!mounted ? (
@@ -83,10 +82,10 @@ export function MobileNav() {
 					onClick={handleLogout}
 					className='
             w-9 h-9 rounded-full flex items-center justify-center
-            bg-gray-100 dark:bg-neutral-800
-            text-gray-600 dark:text-gray-300
-            hover:text-red-500 hover:bg-gray-200 dark:hover:bg-neutral-700
-            transition
+            bg-muted
+            text-muted-foreground
+            hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10
+            transition-colors
           '
 				>
 					<LogOut className='w-5 h-5' />

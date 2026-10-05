@@ -15,6 +15,7 @@ import RewardHistory from "@/_components/rewards/RewardHistory";
 import WithdrawalModal from "@/_components/rewards/WithdrawalModal";
 import FloatingGift from "@/_components/rewards/FloatingGift";
 import { motion } from "framer-motion";
+import { Button } from "@/src/components/ui/button";
 
 export default function RewardsPage() {
 	const [isWithdrawModalOpen, setIsWithdrawModalOpen] =
@@ -38,22 +39,23 @@ export default function RewardsPage() {
 
 	if (error) {
 		return (
-			<div className='flex h-[80vh] items-center justify-center text-red-400'>
+			<div className='flex h-[80vh] items-center justify-center text-red-600 dark:text-red-400'>
 				<div className='text-center'>
-					<p>Failed to load rewards data.</p>
-					<button
+					<p className="font-medium">Failed to load rewards data.</p>
+					<Button
+						variant="outline"
 						onClick={() => window.location.reload()}
-						className='mt-2 text-sm underline opacity-70'
+						className='mt-4'
 					>
 						Retry
-					</button>
+					</Button>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className='min-h-screen space-y-12 p-4 pb-20 md:p-10'>
+		<div className='space-y-12 p-4 md:p-8 max-w-7xl mx-auto'>
 			{/* Hero / Header Section */}
 			<div className='flex flex-col-reverse justify-between gap-8 md:flex-row md:items-center'>
 				<div className='space-y-4'>
@@ -62,10 +64,10 @@ export default function RewardsPage() {
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ duration: 0.5 }}
 					>
-						<h1 className='text-4xl font-light tracking-tight text-white font-poppins'>
+						<h1 className='text-4xl font-semibold tracking-tight text-foreground'>
 							Rewards Program
 						</h1>
-						<p className='mt-2 text-lg text-zinc-400 font-light max-w-md'>
+						<p className='mt-2 text-lg text-muted-foreground font-medium max-w-md'>
 							Earn points on every swap and convert them directly to
 							cash. Simple as that.
 						</p>
@@ -76,18 +78,19 @@ export default function RewardsPage() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2 }}
 					>
-						<button
+						<Button
+							size="lg"
 							onClick={() => setIsWithdrawModalOpen(true)}
 							disabled={!summary?.canWithdraw}
-							className='group flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100'
+							className='group rounded-xl font-semibold mt-4 text-base px-8'
 						>
-							<Coins className='h-4 w-4 text-zinc-600 group-hover:text-black transition-colors' />
+							<Coins className='h-5 w-5 mr-2' />
 							{summary?.canWithdraw
 								? "Withdraw Rewards"
 								: "Keep Earning to Withdraw"}
-						</button>
+						</Button>
 						{!summary?.canWithdraw && (
-							<p className='mt-2 text-xs text-zinc-600 pl-4'>
+							<p className='mt-2 text-sm text-muted-foreground font-medium ml-2'>
 								Min withdrawal: 5,000 pts
 							</p>
 						)}
@@ -105,7 +108,7 @@ export default function RewardsPage() {
 			</div>
 
 			{/* Stats Grid - Minimalist */}
-			<div className='grid gap-4 md:grid-cols-3'>
+			<div className='grid gap-6 md:grid-cols-3'>
 				<RewardStatCard
 					title='Available Balance'
 					value={
@@ -115,7 +118,7 @@ export default function RewardsPage() {
 					}
 					icon={Wallet}
 					description='Redeemable Points'
-					gradient='text-blue-400'
+					gradient='text-blue-600 dark:text-blue-400'
 					delay={0.1}
 				/>
 				<RewardStatCard
@@ -127,7 +130,7 @@ export default function RewardsPage() {
 					}
 					icon={TrendingUp}
 					description='Total Accumulated'
-					gradient='text-emerald-400'
+					gradient='text-emerald-600 dark:text-emerald-400'
 					delay={0.2}
 				/>
 				<RewardStatCard
@@ -139,7 +142,7 @@ export default function RewardsPage() {
 					}
 					icon={ArrowUpRight}
 					description='Successfully Paid Out'
-					gradient='text-purple-400'
+					gradient='text-purple-600 dark:text-purple-400'
 					delay={0.3}
 				/>
 			</div>
@@ -148,7 +151,7 @@ export default function RewardsPage() {
 			<div className='grid gap-12 lg:grid-cols-3'>
 				{/* Recent Activity Section */}
 				<div className='lg:col-span-2 space-y-6'>
-					<h3 className='text-xl font-light text-white font-poppins border-b border-zinc-800 pb-4'>
+					<h3 className='text-xl font-semibold text-foreground border-b border-border pb-4'>
 						Transaction History
 					</h3>
 					<RewardHistory
@@ -159,37 +162,37 @@ export default function RewardsPage() {
 
 				{/* Info/Rules Section - Minimalist */}
 				<div className='space-y-6'>
-					<div className='rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6'>
-						<h3 className='mb-4 text-base font-medium text-zinc-300 font-poppins uppercase tracking-wider'>
+					<div className='rounded-2xl border border-border bg-card shadow-sm p-6'>
+						<h3 className='mb-5 text-sm font-bold text-foreground uppercase tracking-wider'>
 							How it works
 						</h3>
-						<ul className='space-y-4 text-sm text-zinc-500'>
-							<li className='flex items-start gap-3'>
-								<span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] text-zinc-300'>
+						<ul className='space-y-5 text-sm text-muted-foreground font-medium'>
+							<li className='flex items-start gap-4'>
+								<span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-primary text-xs font-bold'>
 									1
 								</span>
-								<span>
-									Earn <span className='text-zinc-300'>1 Point</span>{" "}
-									for every <span className='text-zinc-300'>$1</span>{" "}
+								<span className="leading-relaxed">
+									Earn <span className='text-foreground font-semibold'>1 Point</span>{" "}
+									for every <span className='text-foreground font-semibold'>$1</span>{" "}
 									worth of crypto swapped.
 								</span>
 							</li>
-							<li className='flex items-start gap-3'>
-								<span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] text-zinc-300'>
+							<li className='flex items-start gap-4'>
+								<span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-primary text-xs font-bold'>
 									2
 								</span>
-								<span>
+								<span className="leading-relaxed">
 									Points are verified and credited immediately after
 									successful transaction.
 								</span>
 							</li>
-							<li className='flex items-start gap-3'>
-								<span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] text-zinc-300'>
+							<li className='flex items-start gap-4'>
+								<span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-primary text-xs font-bold'>
 									3
 								</span>
-								<span>
+								<span className="leading-relaxed">
 									Reach{" "}
-									<span className='text-zinc-300'>5,000 Points</span>{" "}
+									<span className='text-foreground font-semibold'>5,000 Points</span>{" "}
 									to request a direct bank withdrawal.
 								</span>
 							</li>

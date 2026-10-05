@@ -22,7 +22,7 @@ export function CryptoSwapFlow() {
 	}, [fetchCurrencies]);
 
 	return (
-		<div className='w-full max-w-md'>
+		<div className='w-full max-w-md mx-auto'>
 			{swapStep === "swap" ? (
 				<>
 					<SwapHeader

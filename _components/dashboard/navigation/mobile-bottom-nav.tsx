@@ -28,9 +28,9 @@ export function MobileBottomNav({
 }: MobileBottomNavProps) {
 	return (
 		<nav
-			className={`md:hidden p-3 fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 shadow-lg z-50 ${className}`}
+			className={`md:hidden p-2 fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border z-50 ${className}`}
 		>
-			<div className='flex items-center justify-between py-2 px-4'>
+			<div className='flex items-center justify-between'>
 				{navLinks.map((link) => {
 					const Icon = link.icon;
 					const isActive = activeLink === link.name;
@@ -41,45 +41,28 @@ export function MobileBottomNav({
 								variant='ghost'
 								onClick={() => onLinkClick(link.name)}
 								className={`
-                  w-full flex flex-col items-center gap-1 py-3 text-xs transition-all rounded-none
-
-                  /* REMOVE ALL GHOST BACKGROUNDS */
+                  w-full flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors rounded-none h-auto
                   bg-transparent hover:bg-transparent active:bg-transparent focus:bg-transparent
                   data-[state=active]:bg-transparent data-[state=open]:bg-transparent
                   data-[state=on]:bg-transparent
-
-                  /* REMOVE TAP HIGHLIGHT (the real culprit on mobile) */
                   [-webkit-tap-highlight-color:transparent]
-
-                  /* REMOVE OUTLINES / RINGS */
                   outline-none shadow-none
                   focus-visible:ring-0 focus-visible:ring-offset-0
-
                   ${
 										isActive
-											? "text-blue-600 dark:text-blue-400 font-medium"
-											: "text-gray-600 dark:text-gray-300"
+											? "text-primary"
+											: "text-muted-foreground"
 									}
-                  hover:text-blue-600 dark:hover:text-blue-400
                 `}
 							>
 								<Icon
-									className={`w-7 h-8 transition-colors ${
+									className={`w-6 h-6 transition-colors ${
 										isActive
-											? "text-blue-600 dark:text-blue-400"
-											: "text-gray-500 dark:text-gray-300"
+											? "text-primary"
+											: "text-muted-foreground"
 									}`}
 								/>
-
 								<span>{link.name}</span>
-
-								<div
-									className={`h-0.5 w-8 mt-1 rounded-full transition-all ${
-										isActive
-											? "bg-blue-600 dark:bg-blue-400"
-											: "bg-transparent"
-									}`}
-								/>
 							</Button>
 						</Link>
 					);

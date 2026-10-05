@@ -235,51 +235,46 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 			const api_url = process.env.NEXT_PUBLIC_PROD_API || "";
 			const safeNetwork = network.toLowerCase().replace(/\s+/g, '-');
 			
-			// Volume-Matched Quoting Logic:
-			// PayCrest Rates API treats 'amount' as Crypto units by default.
-			// To get an accurate rate without hitting min/max liquidity limits, 
-			// we estimate the crypto value of the user's fiat input.
 			const selectedCurrency = get().currencies.find(c => c.code === fiatCode);
 			const marketRate = selectedCurrency?.marketRate || 1500;
 			const estimatedCryptoValue = Number(amount) / marketRate;
 			
-			// We use the estimated crypto value as the 'amount' for the rate fetch.
-			// We cap it to a minimum of 1 for stability with smaller fiat amounts.
 			const quoteAmount = Math.max(1, Math.round(estimatedCryptoValue * 100) / 100);
 
+			const axiosConfig = {
+				headers: { Authorization: `Bearer ${authToken}` },
+				validateStatus: (status: number) => status < 500 // Prevent throwing on 404
+			};
+
 			let response;
-			try {
-				// level 1: Matched amount + Buy side
-				const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${quoteAmount}/${fiatCode}?side=buy`;
-				response = await axios.get(url, {
-					headers: { Authorization: `Bearer ${authToken}` },
-				});
-			} catch (firstError: any) {
-				try {
-					// Level 2: Unit amount ($1) + Buy side
-					console.warn(`No provider for matched amount ${quoteAmount}. Retrying with unit rate...`);
-					const unitUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}?side=buy`;
-					response = await axios.get(unitUrl, {
-						headers: { Authorization: `Bearer ${authToken}` },
-					});
-				} catch (secondError: any) {
-					// Level 3: Unit amount ($1) WITHOUT Side (some providers might be misconfigured)
+			// level 1: Matched amount + Buy side
+			const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${quoteAmount}/${fiatCode}?side=buy`;
+			response = await axios.get(url, axiosConfig);
+
+			if (response.status === 404 || !response.data?.data) {
+				// Level 2: Unit amount ($1) + Buy side
+				console.warn(`No provider for matched amount ${quoteAmount}. Retrying with unit rate...`);
+				const unitUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}?side=buy`;
+				response = await axios.get(unitUrl, axiosConfig);
+
+				if (response.status === 404 || !response.data?.data) {
+					// Level 3: Unit amount ($1) WITHOUT Side
 					console.warn(`No provider for unit rate with side=buy. Retrying without side filter...`);
 					const simpleUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}`;
-					response = await axios.get(simpleUrl, {
-						headers: { Authorization: `Bearer ${authToken}` },
-					});
+					response = await axios.get(simpleUrl, axiosConfig);
 				}
+			}
+
+			if (response.status === 404 || !response.data?.data) {
+				throw new Error(response.data?.message || "No liquidity provider found for this pair.");
 			}
 
 			const payload = response.data.data;
 			let rate = 0;
 			
-			// Extract rate from various potential PayCrest response structures
 			if (payload && payload.buy) {
 				rate = Number.parseFloat(payload.buy.rate);
 			} else if (payload && payload.sell && !payload.buy) {
-				// If only sell is available, use it as a reference (better than failing)
 				rate = Number.parseFloat(payload.sell.rate);
 			} else if (payload && payload.rate) {
 				rate = Number.parseFloat(payload.rate);
@@ -298,8 +293,6 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 				set({ quote: null, tokenAmount: "", quoteError: "Could not calculate valid rate" });
 			}
 		} catch (error: any) {
-			console.error("Failed to fetch quote:", error);
-			// Display the actual error message from PayCrest if available
 			const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rate. Please try another pair or amount.";
 			set({ quote: null, tokenAmount: "", quoteError: errorMessage });
 		} finally {

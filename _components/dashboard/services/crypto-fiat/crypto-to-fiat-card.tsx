@@ -1,31 +1,30 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowDown, ChevronDown, Search, Info, Zap, Loader2, X } from "lucide-react";
+import { ArrowDown, ChevronDown, Search, Info, Loader2, ChevronRight } from "lucide-react";
 import { useCryptoFiatStore, type Token, type FiatCurrency } from "@/lib/crypto-fiat-store";
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
 
-// ─── Network badge ────────────────────────────────────────────────────────────
-const NETWORK_META: Record<string, { short: string; color: string }> = {
-  "bnb-smart-chain": { short: "BNB",  color: "from-yellow-400 to-yellow-600" },
-  ethereum:          { short: "ETH",  color: "from-blue-400 to-indigo-500" },
-  polygon:           { short: "POL",  color: "from-purple-400 to-purple-700" },
-  "arbitrum-one":    { short: "ARB",  color: "from-sky-400 to-blue-600" },
-  base:              { short: "BASE", color: "from-blue-300 to-blue-500" },
-  tron:              { short: "TRX",  color: "from-red-400 to-red-600" },
+const NETWORK_LABELS: Record<string, { short: string; color: string }> = {
+  "bnb-smart-chain": { short: "BNB",  color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-500/10" },
+  ethereum:          { short: "ETH",  color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-500/10" },
+  polygon:           { short: "POL",  color: "text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-500/10" },
+  "arbitrum-one":    { short: "ARB",  color: "text-sky-600 bg-sky-100 dark:text-sky-400 dark:bg-sky-500/10" },
+  base:              { short: "BASE", color: "text-blue-500 bg-blue-50 dark:text-blue-300 dark:bg-blue-500/10" },
+  tron:              { short: "TRX",  color: "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-500/10" },
 };
 
 function NetworkBadge({ network }: { network: string }) {
-  const n = NETWORK_META[network.toLowerCase()] ?? { short: network.toUpperCase().slice(0, 4), color: "from-gray-400 to-gray-600" };
+  const n = NETWORK_LABELS[network.toLowerCase()] ?? { short: network.toUpperCase().slice(0, 4), color: "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-500/10" };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest bg-gradient-to-r ${n.color} text-white`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest ${n.color}`}>
       {n.short}
     </span>
   );
 }
 
-// ─── Token Selector (Modal based for professional UX) ────────────────────────
 function TokenSelector({ token, tokens, onSelect }: {
   token: Token | null; tokens: Token[]; onSelect: (t: Token) => void;
 }) {
@@ -39,93 +38,71 @@ function TokenSelector({ token, tokens, onSelect }: {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-primary/40 rounded-2xl px-4 py-2.5 transition-all shadow-lg active:scale-95 group">
+        <button className="flex items-center gap-2 bg-background hover:bg-muted/50 border border-border rounded-full px-3 py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary">
           {token ? (
             <>
-              <img src={token.logo || "/placeholder.svg"} alt={token.symbol} className="w-6 h-6 rounded-full ring-2 ring-white/20" />
-              <div className="text-left">
-                <div className="text-white text-sm font-black leading-none">{token.symbol}</div>
-                <NetworkBadge network={token.network} />
-              </div>
+              <img src={token.logo || "/placeholder.svg"} alt={token.symbol} className="w-5 h-5 rounded-full" />
+              <span className="text-foreground text-sm font-semibold">{token.symbol}</span>
             </>
           ) : <span className="text-muted-foreground text-sm font-medium">Select token</span>}
-          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
         </button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[420px] bg-[#0d0e12] border-white/10 p-0 overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] outline-none">
-        <DialogHeader className="p-6 pb-2 border-b border-white/5">
-          <DialogTitle className="text-xl font-black text-white flex items-center justify-between">
+      <DialogContent className="sm:max-w-[420px] bg-card border-border p-0 overflow-hidden rounded-2xl shadow-lg">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="text-lg font-semibold text-foreground">
             Select Token
           </DialogTitle>
-          <div className="relative mt-4">
+          <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              type="text" placeholder="Search by token name or network..." value={search}
+              type="text" placeholder="Search token..." value={search}
               onChange={(e) => setSearch(e.target.value)} autoFocus
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-inner"
+              className="w-full bg-background border border-input rounded-xl pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
             />
           </div>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1">
+        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar p-2">
           {filtered.length > 0 ? filtered.map((t) => {
             const isSel = token?.symbol === t.symbol && token?.network === t.network;
             return (
               <button key={`${t.symbol}-${t.network}`}
                 onClick={() => { onSelect(t); setIsOpen(false); setSearch(""); }}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 hover:bg-white/5 rounded-2xl transition-all text-left group ${isSel ? "bg-primary/20 border border-primary/20" : "border border-transparent"}`}
+                className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-muted/50 rounded-xl transition-colors text-left ${isSel ? "bg-primary/5" : ""}`}
               >
-                <div className="relative">
-                  <img src={t.logo || "/placeholder.svg"} alt={t.symbol} className="w-10 h-10 rounded-full ring-2 ring-white/5 shadow-xl group-hover:scale-105 transition-transform" />
-                  {isSel && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full border-2 border-[#0d0e12]" />}
-                </div>
+                <img src={t.logo || "/placeholder.svg"} alt={t.symbol} className="w-8 h-8 rounded-full flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-white font-black text-base tracking-tight">{t.symbol}</div>
+                  <div className="text-foreground font-medium text-sm">{t.symbol}</div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <NetworkBadge network={t.network} />
-                    <span className="text-xs text-muted-foreground capitalize font-bold tracking-tight">{t.network.replace(/-/g, " ")}</span>
+                    <span className="text-xs text-muted-foreground capitalize font-medium">{t.network.replace(/-/g, " ")}</span>
                   </div>
                 </div>
-                {isSel && (
-                  <div className="flex flex-col items-end gap-1">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <span className="text-[10px] text-primary font-black uppercase tracking-tighter">Active</span>
-                  </div>
-                )}
+                <NetworkBadge network={t.network} />
               </button>
             );
           }) : (
-            <div className="py-12 text-center">
-              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-muted-foreground/20" />
-              </div>
-              <p className="text-muted-foreground text-sm font-medium">No tokens found for "{search}"</p>
+            <div className="py-8 text-center text-muted-foreground text-sm">
+              No results for "{search}"
             </div>
           )}
-        </div>
-        
-        <div className="p-4 bg-white/5 border-t border-white/5">
-          <p className="text-[10px] text-center text-muted-foreground font-bold uppercase tracking-widest">
-            Don't see your token? Check the network selection
-          </p>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── Currency chip (usually just NGN — no dropdown needed) ────────────────────
 function CurrencyChip({ currency }: { currency: FiatCurrency }) {
   return (
-    <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl px-3 py-2">
-      <span className="text-emerald-400 text-sm font-black">{currency.symbol}</span>
-      <span className="text-white text-sm font-black">{currency.code}</span>
+    <div className="bg-background border border-border px-3 py-1.5 rounded-full flex items-center">
+      <span className="text-foreground text-sm font-semibold">
+        {currency.symbol} {currency.code}
+      </span>
     </div>
   );
 }
 
-// ─── Main swap card ───────────────────────────────────────────────────────────
 export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => void }) {
   const {
     tokens, currencies, isLoadingTokens, isLoadingCurrencies,
@@ -134,7 +111,7 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
     fetchTokens, fetchCurrencies, setSelectedToken, setSelectedCurrency, setTokenAmount, fetchQuote,
   } = useCryptoFiatStore();
 
-  // Removed tokenOpen state as we use Modal now
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => { fetchTokens(); fetchCurrencies(); }, [fetchTokens, fetchCurrencies]);
   useEffect(() => { if (currencies.length === 1 && !selectedCurrency) setSelectedCurrency(currencies[0]); }, [currencies, selectedCurrency, setSelectedCurrency]);
@@ -145,7 +122,7 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    if (/^\d*\.?\d{0,2}$/.test(val) || val === "") setTokenAmount(val);
+    if (/^\d*\.?\d*$/.test(val) || val === "") setTokenAmount(val);
   };
 
   const lpFee = quote ? quote.total * 0.01 : 0;
@@ -154,122 +131,104 @@ export function CryptoFiatSwapCard({ onSwapComplete }: { onSwapComplete?: () => 
 
   if (isLoadingTokens || isLoadingCurrencies) {
     return (
-      <div className="glass-panel rounded-3xl p-12 text-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-        <p className="text-muted-foreground font-medium text-sm">Loading swap options...</p>
+      <div className="p-8 flex flex-col items-center justify-center min-h-[300px]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground font-medium text-sm">Loading options...</p>
       </div>
     );
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="glass-panel neon-border rounded-3xl relative shadow-2xl overflow-hidden"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.3 }}
+      className="bg-card border border-border rounded-2xl shadow-sm p-1"
     >
-      {/* Ambient glows */}
-      <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 p-6 md:p-8 space-y-3">
-        {/* Header */}
-        {/* <div className="mb-6">
-          <h3 className="text-xl font-black tracking-tight text-white">Off-Ramp</h3>
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mt-1">Crypto → Fiat</p>
-        </div> */}
-
+      <div className="p-4 space-y-2">
         {/* Send (crypto) */}
-        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 focus-within:border-primary/50 transition-all duration-300 shadow-inner">
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">You send</label>
-            <TokenSelector
-              token={selectedToken} tokens={tokens} onSelect={setSelectedToken}
-            />
+        <div className="bg-muted/30 p-4 rounded-xl border border-transparent focus-within:border-primary/40 focus-within:bg-background transition-colors">
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-muted-foreground text-sm font-medium">You Pay</label>
+            <TokenSelector token={selectedToken} tokens={tokens} onSelect={setSelectedToken} />
           </div>
           <input
             type="number" inputMode="decimal" value={tokenAmount}
             onChange={handleAmountChange} placeholder="0.00"
-            className="w-full bg-transparent text-4xl font-black text-white outline-none h-12 tracking-tight placeholder:text-white/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-full bg-transparent text-3xl font-semibold tracking-tight text-foreground placeholder:text-muted-foreground/50 border-none outline-none overflow-hidden"
           />
         </div>
 
-        {/* Arrow */}
-        <div className="flex justify-center py-1">
-          <div className="bg-background/80 backdrop-blur-xl p-2.5 rounded-full border border-white/10 shadow-lg">
-            <ArrowDown className="w-4 h-4 text-emerald-400" />
+        {/* Arrow separator */}
+        <div className="flex justify-center -my-3 relative z-10">
+          <div className="bg-card border border-border p-1.5 rounded-full shadow-sm text-muted-foreground">
+            <ArrowDown className="w-4 h-4" />
           </div>
         </div>
 
         {/* Receive (fiat) */}
-        <div className="bg-black/30 backdrop-blur-md p-5 rounded-2xl border border-white/5 shadow-inner">
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-muted-foreground text-xs font-black tracking-widest uppercase">You receive</label>
+        <div className="bg-muted/30 p-4 rounded-xl border border-transparent transition-colors">
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-muted-foreground text-sm font-medium">You Receive</label>
             {selectedCurrency ? <CurrencyChip currency={selectedCurrency} /> : null}
           </div>
           <input
-            type="text" readOnly value={fiatAmount || ""} placeholder="0.00"
-            className="w-full bg-transparent text-4xl font-black text-emerald-400 outline-none h-12 tracking-tight placeholder:text-white/15"
+            type="text" readOnly value={fiatAmount || "0.00"} placeholder="0.00"
+            className={`w-full bg-transparent text-3xl font-semibold tracking-tight border-none outline-none overflow-hidden ${
+              isLoadingQuote ? "text-transparent" : "text-foreground"
+            }`}
           />
-          {isLoadingQuote && (
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex gap-1">
-                {[0, 1, 2].map(i => <div key={i} className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.12}s` }} />)}
-              </div>
-              <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Calculating...</span>
-            </div>
-          )}
+          <div className="h-5 flex items-center mt-1">
+            {isLoadingQuote && (
+              <span className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" /> Calculating rate...
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Quote breakdown */}
-        <AnimatePresence>
-          {quote && !isLoadingQuote && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden"
+        {quote && !isLoadingQuote && (
+          <div className="mt-4 px-2">
+            <button 
+              onClick={() => setShowDetails(!showDetails)}
+              className="w-full flex items-center justify-between text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
             >
-              <div className="p-4 space-y-2.5">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground font-medium">Rate</span>
-                  <span className="text-white font-bold tabular-nums">
-                    1 {selectedToken?.symbol} = {selectedCurrency?.symbol}{quote.rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}
-                  </span>
+              <span className="font-medium">1 {selectedToken?.symbol} = {selectedCurrency?.symbol}{quote.rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}</span>
+              <div className="flex items-center gap-1">
+                <span>Fee: {selectedCurrency?.symbol}{lpFee.toFixed(2)}</span>
+                <ChevronRight className={`w-4 h-4 transition-transform ${showDetails ? "rotate-90" : ""}`} />
+              </div>
+            </button>
+            
+            {showDetails && (
+              <div className="mt-2 p-3 bg-muted/30 rounded-xl space-y-2 text-sm border border-border">
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Network</span>
+                  <span className="text-foreground uppercase text-xs font-semibold">{selectedToken?.network.replace(/-/g, " ")}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <span className="font-medium">Provider Fee</span>
-                    <div className="relative group">
-                      <Info className="w-3.5 h-3.5 cursor-help" />
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-black/90 border border-white/10 rounded-xl px-3 py-2 text-xs w-52 z-50 text-white shadow-xl">
-                        0.5% <span className="text-primary">Provider</span> fee is deducted from your total.
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-muted-foreground font-medium tabular-nums">
-                    -{selectedCurrency?.symbol}{lpFee.toFixed(2)}
-                  </span>
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Total Payout</span>
+                  <span className="text-foreground font-semibold">{selectedCurrency?.symbol}{netTotal.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm border-t border-white/5 pt-2.5">
-                  <span className="text-white font-black uppercase tracking-widest text-xs">Total Payout</span>
-                  <span className="text-emerald-400 font-black text-lg tabular-nums">
-                    {selectedCurrency?.symbol}{netTotal.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Estimated Time</span>
+                  <span className="text-foreground">~5 minutes</span>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </div>
+        )}
 
-        {/* CTA */}
-        <button
-          onClick={() => { if (isFormValid) onSwapComplete?.(); }}
-          disabled={!isFormValid || isLoadingQuote}
-          className="w-full futuristic-button bg-primary text-white py-5 text-base font-black rounded-2xl shadow-[0_0_20px_rgba(100,150,255,0.2)] disabled:opacity-40 disabled:shadow-none tracking-widest uppercase transition-all"
-        >
-          {isLoadingQuote ? "Getting Quote..." : "Continue to Payout →"}
-        </button>
+        <div className="pt-4 pb-2 px-2">
+          <Button
+            onClick={() => { if (isFormValid) onSwapComplete?.(); }}
+            disabled={!isFormValid || isLoadingQuote}
+            className="w-full fintech-button-primary py-6 text-lg"
+          >
+            {isLoadingQuote ? "Calculating..." : "Continue to Payout"}
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
