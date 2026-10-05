@@ -55,15 +55,30 @@ const services = [
     bgColor: "bg-purple-50 dark:bg-purple-500/10"
 	},
 ];
+import { useUserStore } from "@/lib/user-store";
+
+const cryptoSlangs = [
+  "Ready to snipe some dips today? 🎯",
+  "What are we trading today? 🚀",
+  "Time to stack some $BTC?! ⚡",
+  "Hope your bags are pumping today! 📈",
+  "Markets never sleep. Let's get it! 💸",
+  "Waiting for that bull market rally? 🐂",
+  "Diamond hands activated! 💎🙌",
+];
 
 export default function Dashboard() {
 	const { fetchCurrencies } = useSwapStore();
+	const { user, fetchUser } = useUserStore();
 	const router = useRouter();
 	const [selectedService, setSelectedService] = useState<ServiceType>(null);
 	const [kycStatus, setKycStatus] = useState<string | null>(null);
+	const [slang, setSlang] = useState(cryptoSlangs[0]);
 
 	useEffect(() => {
 		fetchCurrencies();
+		fetchUser();
+		setSlang(cryptoSlangs[Math.floor(Math.random() * cryptoSlangs.length)]);
 		kycService
 			.getStatus()
 			.then((status) => {
@@ -88,19 +103,25 @@ export default function Dashboard() {
       {/* Portfolio Overview */}
       <div className="mb-10 p-6 sm:p-8 fintech-card flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Total Balance</h2>
+          <h2 className="text-sm font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+            Gidswap Assistant
+          </h2>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">$0.00</span>
-            <span className="text-lg text-muted-foreground font-medium">USD</span>
+            <span className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+              gm, {user?.fullName?.split(" ")[0] || "Trader"} 👋
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-            <Wallet className="w-4 h-4" /> 0.00 BTC • 0.00 ETH • 0.00 USDT
+          <p className="text-base text-muted-foreground mt-3 flex items-center gap-2 font-medium">
+            {slang}
           </p>
         </div>
-        <div className="flex flex-col sm:items-end">
-           <span className="text-sm font-medium text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full mb-2">
-            +0.00% Today
-           </span>
+        <div className="flex flex-col sm:items-end hidden sm:flex opacity-20">
+           {/* Decorative watermark/icon */}
+           <Wallet className="w-24 h-24" />
         </div>
       </div>
 
