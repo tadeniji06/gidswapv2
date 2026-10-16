@@ -7,9 +7,12 @@ import {
 	ArrowDownToLine,
 	ArrowUpFromLine,
 	AlertTriangle,
-  Wallet
+	Wallet,
+	MessageSquare,
+	AlertCircle
 } from "lucide-react";
 import { useSwapStore } from "@/lib/swap-store";
+import { useUserStore } from "@/lib/user-store";
 import { kycService } from "@/lib/services/kyc";
 import { useRouter } from "next/navigation";
 import {
@@ -21,7 +24,6 @@ import { Button } from "@/src/components/ui/button";
 
 import { CryptoSwapFlow } from "@/_components/dashboard/services/crypto-swap-flow";
 import CryptoFiatFlow from "@/_components/dashboard/services/crypto-fiat-flow";
-import { FiatCryptoFlow } from "@/_components/dashboard/services/fiat-crypto-flow";
 
 type ServiceType =
 	| "crypto-crypto"
@@ -55,16 +57,38 @@ const services = [
     bgColor: "bg-purple-50 dark:bg-purple-500/10"
 	},
 ];
-import { useUserStore } from "@/lib/user-store";
 
 const cryptoSlangs = [
-  "Ready to snipe some dips today? 🎯",
-  "What are we trading today? 🚀",
-  "Time to stack some $BTC?! ⚡",
-  "Hope your bags are pumping today! 📈",
-  "Markets never sleep. Let's get it! 💸",
-  "Waiting for that bull market rally? 🐂",
-  "Diamond hands activated! 💎🙌",
+  "gm, crypto paddy. Another day to make it.",
+  "Few understand this.",
+  "We're all gonna make it.",
+  "Probably nothing.",
+  "Still early, still building.",
+  "Another day in the trenches.",
+  "Down bad but still bullish.",
+  "The bull run is coming.",
+  "Trust me bro.",
+  "When in doubt, zoom out.",
+  "Buy high, sell low.",
+  "The dip keeps dipping.",
+  "Wagmi until proven otherwise.",
+  "I bought the top again.",
+  "Touch grass, check charts.",
+  "Stay humble, stack sats.",
+  "This time is different.",
+  "One more trade and I'm done.",
+  "We are so early.",
+  "It's not a loss until you sell.",
+  "Built different, chart dependent.",
+  "Less noise, more execution.",
+  "The trenches made us.",
+  "Keep building, keep believing.",
+  "Hype fades, products remain.",
+  "Make moves, not excuses.",
+  "No panic, just patience.",
+  "Stack knowledge like sats.",
+  "Real ones keep building.",
+  "Fast swap. No wahala.",
 ];
 
 export default function Dashboard() {
@@ -93,7 +117,37 @@ export default function Dashboard() {
 		switch (selectedService) {
 			case "crypto-crypto": return <CryptoSwapFlow />;
 			case "crypto-fiat": return <CryptoFiatFlow />;
-			case "fiat-crypto": return <FiatCryptoFlow />;
+			case "fiat-crypto": 
+				return (
+					<div className="w-full max-w-md mx-auto fintech-card p-6 sm:p-8 text-center space-y-5">
+						<div className="w-14 h-14 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto">
+							<AlertCircle className="w-7 h-7" />
+						</div>
+						<div className="space-y-2">
+							<h3 className="text-xl font-bold text-foreground">
+								Onramp Offers Unavailable
+							</h3>
+							<p className="text-sm text-muted-foreground leading-relaxed">
+								Onramp offers are currently unavailable through the automated flow. You can process your onramp order directly with support via WhatsApp.
+							</p>
+						</div>
+
+						<div className="pt-2">
+							<a
+								href="https://wa.me/2349038958941?text=Hello%20Gidswap,%20I%20would%20like%20to%20buy%20crypto%20(onramp)."
+								target="_blank"
+								rel="noopener noreferrer"
+								className="w-full inline-flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-5 rounded-xl transition-colors shadow-sm"
+							>
+								<MessageSquare className="w-5 h-5" />
+								<span>Contact Support on WhatsApp</span>
+							</a>
+							<p className="text-xs text-muted-foreground mt-3">
+								WhatsApp Number: <span className="font-mono text-foreground font-semibold">09038958941</span>
+							</p>
+						</div>
+					</div>
+				);
 			default: return null;
 		}
 	};
@@ -103,19 +157,12 @@ export default function Dashboard() {
       {/* Portfolio Overview */}
       <div className="mb-10 p-6 sm:p-8 fintech-card flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-sm font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-            </span>
-            Gidswap Assistant
-          </h2>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+            <span className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
               gm, {user?.fullName?.split(" ")[0] || "Trader"} 👋
             </span>
           </div>
-          <p className="text-base text-muted-foreground mt-3 flex items-center gap-2 font-medium">
+          <p className="text-base sm:text-lg text-muted-foreground mt-3 flex items-center gap-2 font-medium">
             {slang}
           </p>
         </div>
