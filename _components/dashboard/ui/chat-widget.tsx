@@ -119,7 +119,7 @@ export function ChatWidget() {
 							</Link>
 
 							<Link
-								href='https://x.com/gidswap_'
+								href='https://x.com/cryptopaddyng'
 								className='
                   p-2 rounded-full bg-gray-100 dark:bg-neutral-800 
                   hover:bg-gray-200 dark:hover:bg-neutral-700 transition

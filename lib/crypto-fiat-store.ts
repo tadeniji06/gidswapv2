@@ -267,10 +267,33 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 				.toLowerCase()
 				.replace(/\s+/g, "-");
 
-			const response = await axios.get(
-				`${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${amount}/${currency}?side=sell`,
-				{ headers: { Authorization: `Bearer ${authToken}` } },
-			);
+			const axiosConfig = {
+				headers: { Authorization: `Bearer ${authToken}` },
+				validateStatus: (status: number) => status < 500, // Prevent uncaught throwing on 404
+			};
+
+			let response;
+			// Level 1: Matched amount + sell side
+			const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${amount}/${currency}?side=sell`;
+			response = await axios.get(url, axiosConfig);
+
+			if (response.status === 404 || !response.data?.data) {
+				// Level 2: Unit rate (1 token) + sell side
+				const unitUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${currency}?side=sell`;
+				response = await axios.get(unitUrl, axiosConfig);
+
+				if (response.status === 404 || !response.data?.data) {
+					// Level 3: Unit rate without side query
+					const simpleUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${currency}`;
+					response = await axios.get(simpleUrl, axiosConfig);
+				}
+			}
+
+			if (response.status === 404 || !response.data?.data) {
+				set({ quote: null, fiatAmount: "0.00" });
+				return;
+			}
+
 			const quoteData = response.data;
 
 			if (quoteData.status === "success" && quoteData.data) {
@@ -282,6 +305,8 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 					ratePerUnit = Number.parseFloat(payload.sell.rate);
 				} else if (payload.rate) {
 					ratePerUnit = Number.parseFloat(payload.rate);
+				} else if (payload.buy && payload.buy.rate) {
+					ratePerUnit = Number.parseFloat(payload.buy.rate);
 				} else if (typeof payload === "string" || typeof payload === "number") {
 					// Fallback for legacy support if backend returned a string
 					ratePerUnit = Number.parseFloat(payload as unknown as string);

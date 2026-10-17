@@ -65,9 +65,11 @@ function formatTimeLeft(endTimeStr: string) {
 function CopyField({
 	label,
 	value,
+	truncateMiddleOnMobile = false,
 }: {
 	label: string;
 	value: string;
+	truncateMiddleOnMobile?: boolean;
 }) {
 	const [copied, setCopied] = useState(false);
 
@@ -75,6 +77,13 @@ function CopyField({
 		navigator.clipboard.writeText(value);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
+	};
+
+	const formatMobileValue = (val: string) => {
+		if (truncateMiddleOnMobile && val.length > 18) {
+			return `${val.slice(0, 10)}...${val.slice(-8)}`;
+		}
+		return val;
 	};
 
 	return (
@@ -86,9 +95,20 @@ function CopyField({
 				<p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1'>
 					{label}
 				</p>
-				<p className='text-sm font-mono text-foreground truncate'>
-					{value}
-				</p>
+				{truncateMiddleOnMobile && value.length > 18 ? (
+					<>
+						<p className='text-sm font-mono text-foreground sm:hidden'>
+							{formatMobileValue(value)}
+						</p>
+						<p className='text-sm font-mono text-foreground truncate hidden sm:block'>
+							{value}
+						</p>
+					</>
+				) : (
+					<p className='text-sm font-mono text-foreground truncate'>
+						{value}
+					</p>
+				)}
 			</div>
 			<button className='flex-shrink-0 ml-3 w-8 h-8 flex items-center justify-center rounded-lg bg-muted group-hover:bg-primary/10 transition-colors'>
 				{copied ? (
@@ -187,6 +207,72 @@ export function PendingPaymentCard({
 			console.error("Error generating receipt image:", err);
 		} finally {
 			setIsSharingImage(false);
+		}
+	};
+
+	const [isSharingDeposit, setIsSharingDeposit] = useState(false);
+	const depositShareCardRef = useRef<HTMLDivElement>(null);
+
+	const handleShareDepositDetails = async (platform: "whatsapp" | "telegram" | "x" | "native") => {
+		if (!depositShareCardRef.current) return;
+		try {
+			setIsSharingDeposit(true);
+			const dataUrl = await toPng(depositShareCardRef.current, {
+				cacheBust: true,
+				pixelRatio: 2,
+				backgroundColor: "#ffffff",
+			});
+
+			const blob = await (await fetch(dataUrl)).blob();
+			const file = new File([blob], `gidswap-deposit-${paymentData.token}.png`, {
+				type: "image/png",
+			});
+
+			const shareText = `Send ${paymentData.amount} ${paymentData.token} (${paymentData.network})\nDeposit Address: ${paymentData.receiveAddress}\n\n⚠️ IMPORTANT: This is a ONE-TIME, non-reusable address that expires in 1 hour. Do not reuse.`;
+
+			if (platform === "native") {
+				if (navigator.canShare && navigator.canShare({ files: [file] })) {
+					await navigator.share({
+						files: [file],
+						title: `Deposit ${paymentData.token} - Gidswap`,
+						text: shareText,
+					});
+					return;
+				}
+			}
+
+			// Direct mobile / web link fallbacks with auto-downloaded QR barcode card
+			const link = document.createElement("a");
+			link.href = dataUrl;
+			link.download = `gidswap-deposit-${paymentData.token}.png`;
+			link.click();
+
+			if (platform === "whatsapp") {
+				window.open(
+					`https://wa.me/?text=${encodeURIComponent(
+						`🪙 *Deposit ${paymentData.amount} ${paymentData.token} on ${paymentData.network}*\n\nAddress:\n\`${paymentData.receiveAddress}\`\n\n⚠️ *NOTE:* This is a *ONE-TIME, non-reusable address* that *expires in 1 hour*. Do NOT send funds to this address more than once.\n\n(QR barcode card downloaded to attach!)`
+					)}`,
+					"_blank"
+				);
+			} else if (platform === "telegram") {
+				window.open(
+					`https://t.me/share/url?url=${encodeURIComponent(paymentData.receiveAddress)}&text=${encodeURIComponent(
+						`🪙 Deposit ${paymentData.amount} ${paymentData.token} (${paymentData.network}) on Gidswap\n\n⚠️ NOTE: This is a ONE-TIME, non-reusable address expiring in 1 hour.`
+					)}`,
+					"_blank"
+				);
+			} else if (platform === "x") {
+				window.open(
+					`https://x.com/intent/tweet?text=${encodeURIComponent(
+						`🪙 Deposit ${paymentData.amount} ${paymentData.token} on ${paymentData.network} via @cryptopaddyng\nAddress: ${paymentData.receiveAddress}\n\n⚠️ One-time non-reusable address (expires in 1h)`
+					)}`,
+					"_blank"
+				);
+			}
+		} catch (err) {
+			console.error("Error sharing deposit details:", err);
+		} finally {
+			setIsSharingDeposit(false);
 		}
 	};
 
@@ -430,14 +516,8 @@ export function PendingPaymentCard({
 						</div>
 					</div>
 
-					{/* Instructions */}
-					<div className='space-y-3'>
-						<div className='flex items-center gap-2 text-primary'>
-							<ShieldCheck className='w-4 h-4' />
-							<span className='text-sm font-medium'>
-								Send to Address
-							</span>
-						</div>
+					{/* Instructions & Shareable Deposit Card */}
+					<div ref={depositShareCardRef} className='space-y-3 bg-card p-4 rounded-2xl border border-border/80'>
 
 						<CopyField
 							label='Network'
@@ -447,10 +527,11 @@ export function PendingPaymentCard({
 						<CopyField
 							label='Deposit Address'
 							value={paymentData.receiveAddress}
+							truncateMiddleOnMobile={true}
 						/>
 
 						<div className='flex flex-col items-center justify-center py-6 bg-muted/20 rounded-xl border border-border'>
-							<div className='p-3 rounded-xl bg-white border border-gray-200'>
+							<div className='p-3 rounded-xl bg-white border border-gray-200 shadow-sm'>
 								<QRCodeCanvas
 									value={paymentData.receiveAddress}
 									size={140}
@@ -460,9 +541,68 @@ export function PendingPaymentCard({
 									includeMargin={false}
 								/>
 							</div>
-							<p className='text-xs font-medium text-muted-foreground mt-4'>
-								Scan QR to pay
+							<p className='text-xs font-medium text-muted-foreground mt-3'>
+								Scan QR code to pay
 							</p>
+						</div>
+
+						<div className='flex items-center justify-between px-1 text-xs text-muted-foreground'>
+							<span className='inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2.5 py-1 rounded-full'>
+								⚠️ One-time address • Expires in 1h (non-reusable)
+							</span>
+						</div>
+
+						{/* Clean Share Address & Barcode row */}
+						<div className='pt-1'>
+							<p className='text-[11px] font-medium text-muted-foreground text-center mb-2'>
+								Need someone else to pay? Share one-time address &amp; QR:
+							</p>
+							<div className='grid grid-cols-3 gap-2'>
+								<button
+									type='button'
+									onClick={() => handleShareDepositDetails("whatsapp")}
+									disabled={isSharingDeposit}
+									className='flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold transition-all shadow-sm disabled:opacity-60 cursor-pointer'
+									title="Share via WhatsApp"
+								>
+									{isSharingDeposit ? (
+										<Loader2 className='w-3.5 h-3.5 animate-spin shrink-0' />
+									) : (
+										<Share2 className='w-3.5 h-3.5 shrink-0' />
+									)}
+									<span className='truncate'>WhatsApp</span>
+								</button>
+
+								<button
+									type='button'
+									onClick={() => handleShareDepositDetails("x")}
+									disabled={isSharingDeposit}
+									className='flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-white text-xs font-semibold transition-all shadow-sm disabled:opacity-60 cursor-pointer'
+									title="Share via X"
+								>
+									{isSharingDeposit ? (
+										<Loader2 className='w-3.5 h-3.5 animate-spin shrink-0' />
+									) : (
+										<Icon icon="ri:twitter-x-fill" className='w-3.5 h-3.5 shrink-0' />
+									)}
+									<span className='truncate'>X</span>
+								</button>
+
+								<button
+									type='button'
+									onClick={() => handleShareDepositDetails("telegram")}
+									disabled={isSharingDeposit}
+									className='flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 active:scale-[0.98] text-xs font-semibold transition-all shadow-sm disabled:opacity-60 cursor-pointer'
+									title="Share via Telegram"
+								>
+									{isSharingDeposit ? (
+										<Loader2 className='w-3.5 h-3.5 animate-spin shrink-0' />
+									) : (
+										<Send className='w-3.5 h-3.5 shrink-0' />
+									)}
+									<span className='truncate'>Telegram</span>
+								</button>
+							</div>
 						</div>
 					</div>
 

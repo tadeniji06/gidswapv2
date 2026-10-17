@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function Community() {
   const socialLinks = [
     {
-      href: "https://x.com/gidswapng",
+      href: "https://x.com/cryptopaddyng",
       icon: BsTwitterX,
       label: "Twitter",
       color: "from-blue-400 to-blue-600",
