@@ -200,11 +200,6 @@ export function PendingPaymentCard({
 	const recipientName = _bank?.accountName;
 	const bankName = _bank?.bankName;
 
-	// Read orderData to retrieve calculated fiat amount in Naira
-	const _orderRaw = Cookies.get("order-data");
-	const _order = _orderRaw ? JSON.parse(_orderRaw) : null;
-	const fiatAmountNaira = _order?.fiatAmount || _order?.receiveAmount || statusData?.fiatAmount;
-
 	const { data: statusData } = useQuery<PendingPaymentData>({
 		queryKey: ["payment-status", paymentData?.id],
 		queryFn: async () => {
@@ -244,6 +239,11 @@ export function PendingPaymentCard({
 		refetchIntervalInBackground: true,
 		initialData: paymentData,
 	});
+
+	// Read orderData to retrieve calculated fiat amount in Naira
+	const _orderRaw = Cookies.get("order-data");
+	const _order = _orderRaw ? JSON.parse(_orderRaw) : null;
+	const fiatAmountNaira = _order?.fiatAmount || _order?.receiveAmount || statusData?.fiatAmount;
 
 	const currentStatus = statusData?.status ?? paymentData.status;
 	const isCompleted =
