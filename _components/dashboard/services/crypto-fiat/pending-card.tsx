@@ -211,20 +211,20 @@ export function PendingPaymentCard({
 	};
 
 	const [isSharingDeposit, setIsSharingDeposit] = useState(false);
-	const depositShareCardRef = useRef<HTMLDivElement>(null);
+	const qrBarcodeRef = useRef<HTMLDivElement>(null);
 
 	const handleShareDepositDetails = async (platform: "whatsapp" | "telegram" | "x" | "native") => {
-		if (!depositShareCardRef.current) return;
+		if (!qrBarcodeRef.current) return;
 		try {
 			setIsSharingDeposit(true);
-			const dataUrl = await toPng(depositShareCardRef.current, {
+			const dataUrl = await toPng(qrBarcodeRef.current, {
 				cacheBust: true,
-				pixelRatio: 2,
+				pixelRatio: 3,
 				backgroundColor: "#ffffff",
 			});
 
 			const blob = await (await fetch(dataUrl)).blob();
-			const file = new File([blob], `gidswap-deposit-${paymentData.token}.png`, {
+			const file = new File([blob], `gidswap-qr-${paymentData.token}.png`, {
 				type: "image/png",
 			});
 
@@ -241,10 +241,10 @@ export function PendingPaymentCard({
 				}
 			}
 
-			// Direct mobile / web link fallbacks with auto-downloaded QR barcode card
+			// Direct mobile / web link fallbacks with auto-downloaded QR barcode
 			const link = document.createElement("a");
 			link.href = dataUrl;
-			link.download = `gidswap-deposit-${paymentData.token}.png`;
+			link.download = `gidswap-qr-${paymentData.token}.png`;
 			link.click();
 
 			if (platform === "whatsapp") {
@@ -516,8 +516,8 @@ export function PendingPaymentCard({
 						</div>
 					</div>
 
-					{/* Instructions & Shareable Deposit Card */}
-					<div ref={depositShareCardRef} className='space-y-3 bg-card p-4 rounded-2xl border border-border/80'>
+					{/* Instructions & Deposit Card */}
+					<div className='space-y-3 bg-card p-4 rounded-2xl border border-border/80'>
 
 						<CopyField
 							label='Network'
@@ -531,14 +531,14 @@ export function PendingPaymentCard({
 						/>
 
 						<div className='flex flex-col items-center justify-center py-6 bg-muted/20 rounded-xl border border-border'>
-							<div className='p-3 rounded-xl bg-white border border-gray-200 shadow-sm'>
+							<div ref={qrBarcodeRef} className='p-4 rounded-2xl bg-white border border-gray-200 shadow-sm inline-block'>
 								<QRCodeCanvas
 									value={paymentData.receiveAddress}
-									size={140}
+									size={180}
 									bgColor='#ffffff'
 									fgColor='#000000'
 									level='H'
-									includeMargin={false}
+									includeMargin={true}
 								/>
 							</div>
 							<p className='text-xs font-medium text-muted-foreground mt-3'>
