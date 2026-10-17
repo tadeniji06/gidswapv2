@@ -70,15 +70,15 @@ function buildShareText(data: ReceiptData): string {
 // Compact PDF Styles  (A4, single page)
 // ─────────────────────────────────────────────────────────────
 const C = {
-  brand: "#4f8ef7",
-  bg: "#0d0f14",
-  surf: "#13161e",
-  surf2: "#1a1d27",
-  border: "#252836",
+  brand: "#3b82f6",
+  bg: "#0a0d17",
+  surf: "#0f1526",
+  surf2: "#141c33",
+  border: "#1e293b",
   white: "#ffffff",
-  muted: "#8892a4",
-  success: "#22c55e",
-  gold: "#f59e0b",
+  muted: "#94a3b8",
+  success: "#3b82f6",
+  gold: "#60a5fa",
 };
 
 const S = StyleSheet.create({
@@ -326,9 +326,9 @@ function SharePanel({ data, onClose }: SharePanelProps) {
   };
 
   const apps = [
-    { id: "whatsapp" as const, label: "WhatsApp", icon: <MessageCircle className="w-5 h-5" />, bg: "bg-[#25D366] hover:bg-[#20bd5a]" },
-    { id: "telegram" as const, label: "Telegram",  icon: <Send className="w-5 h-5" />,           bg: "bg-[#229ED9] hover:bg-[#1a87bb]" },
-    { id: "more"     as const, label: "More Apps", icon: <Share2 className="w-5 h-5" />,          bg: "bg-gray-700 hover:bg-gray-600" },
+    { id: "whatsapp" as const, label: "WhatsApp", icon: <MessageCircle className="w-5 h-5" />, bg: "bg-blue-600 hover:bg-blue-500" },
+    { id: "telegram" as const, label: "Telegram",  icon: <Send className="w-5 h-5" />,           bg: "bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30" },
+    { id: "more"     as const, label: "More Apps", icon: <Share2 className="w-5 h-5" />,          bg: "bg-slate-800 hover:bg-slate-700" },
   ];
 
   const busy = loadingId !== null;
@@ -339,15 +339,15 @@ function SharePanel({ data, onClose }: SharePanelProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-x-0 bottom-0 bg-[#1a1b24] border border-gray-700 rounded-2xl p-4 shadow-2xl z-10 mx-1 mb-1"
+      className="absolute inset-x-0 bottom-0 bg-[#0b101d] border border-blue-500/20 rounded-2xl p-5 shadow-2xl z-20 mx-1 mb-1"
     >
       <div className="flex items-center justify-between mb-1">
-        <p className="text-sm font-semibold text-white">Share PDF Receipt</p>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+        <p className="text-sm font-bold text-white">Share PDF Receipt</p>
+        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
-      <p className="text-xs text-gray-500 mb-4">Shares the actual PDF file — not just text.</p>
+      <p className="text-xs text-slate-400 mb-4">Shares the official PDF receipt directly.</p>
 
       <div className="grid grid-cols-3 gap-2 mb-3">
         {apps.map((app) => {
@@ -357,7 +357,7 @@ function SharePanel({ data, onClose }: SharePanelProps) {
               key={app.id}
               onClick={() => sharePDF(app.id)}
               disabled={busy}
-              className={`flex flex-col items-center gap-1.5 py-3 rounded-xl text-white text-xs font-medium transition-all active:scale-95 disabled:opacity-60 ${app.bg}`}
+              className={`flex flex-col items-center gap-1.5 py-3 rounded-xl text-white text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 ${app.bg}`}
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : app.icon}
               {isLoading ? "Preparing…" : app.label}
@@ -369,18 +369,18 @@ function SharePanel({ data, onClose }: SharePanelProps) {
       <button
         onClick={handleCopyAndDownload}
         disabled={busy}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm text-gray-200 font-medium transition-all active:scale-95 disabled:opacity-60"
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#141c33] hover:bg-[#1a2544] border border-blue-500/20 text-sm text-slate-200 font-medium transition-all active:scale-95 disabled:opacity-60"
       >
         {loadingId === "copy" ? (
           <><Loader2 className="w-4 h-4 animate-spin" /> Downloading…</>
         ) : copied ? (
-          <><Check className="w-4 h-4 text-green-400" /> Copied &amp; PDF saved!</>
+          <><Check className="w-4 h-4 text-blue-400" /> Copied &amp; PDF saved!</>
         ) : (
-          <><Copy className="w-4 h-4" /> Copy summary + download PDF</>
+          <><Copy className="w-4 h-4 text-blue-400" /> Copy summary + download PDF</>
         )}
       </button>
 
-      <p className="text-xs text-gray-600 text-center mt-3">
+      <p className="text-xs text-slate-500 text-center mt-3">
         Desktop: PDF saves automatically — then attach it in the app.
       </p>
     </motion.div>
@@ -401,10 +401,10 @@ export function PDFReceiptButton({ data, className }: PDFReceiptButtonProps) {
     <PDFDownloadLink document={<ReceiptDocument data={data} />} fileName={filename}>
       {({ loading }) => (
         <Button
-          className={className || "w-full bg-[#1a1d27] hover:bg-[#252836] text-white border border-[#252836] hover:border-[#4f8ef7]/40 font-semibold transition-all"}
+          className={className || "w-full py-6 rounded-xl bg-[#141c33] hover:bg-[#1a2544] text-white border border-blue-500/25 hover:border-blue-500/50 font-semibold transition-all shadow-sm"}
           disabled={loading}
         >
-          <FileDown className="w-4 h-4 mr-2 text-[#4f8ef7]" />
+          <FileDown className="w-4 h-4 mr-2 text-blue-400" />
           {loading ? "Preparing…" : "Download Receipt PDF"}
         </Button>
       )}
@@ -431,7 +431,7 @@ export function ShareReceiptButton({ data, className }: ShareReceiptButtonProps)
 
       <Button
         onClick={() => setOpen(!open)}
-        className={className || "w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold transition-all"}
+        className={className || "w-full py-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-md shadow-blue-600/20"}
       >
         <Share2 className="w-4 h-4 mr-2" />
         Share Receipt

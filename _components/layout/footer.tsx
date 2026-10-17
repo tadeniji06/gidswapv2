@@ -1,11 +1,11 @@
 "use client";
 import Image from "next/image";
-import { Moon, Sun, Mail, ArrowUp, ShieldCheck } from "lucide-react";
+import { Moon, Sun, Mail, ArrowUp, ShieldCheck, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import { MdOutlineEmail } from "react-icons/md";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Newsletter from "../sections/Newsletter";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -64,6 +64,7 @@ function ThemeToggle() {
 }
 
 export default function Footer() {
+	const [isDisclosureOpen, setIsDisclosureOpen] = useState(false);
 	const date = new Date().getFullYear();
 	const path = usePathname();
 	const hideFooter = path?.startsWith("/dashboard");
@@ -152,24 +153,59 @@ export default function Footer() {
 					</div>
 				</div>
 
-				{/* Disclaimer Section */}
-				<div className='mb-12 glass-panel p-8 rounded-3xl border-white/5'>
-					<h5 className='text-xs font-black uppercase tracking-widest text-white/40 mb-4 flex items-center gap-2'>
-						<ShieldCheck className='size-4 text-primary' /> Risk
-						Disclosure
-					</h5>
-					<p className='text-[11px] text-muted-foreground leading-relaxed text-justify font-medium opacity-80'>
-						Gidswap is a decentralized interface facilitating
-						cryptocurrency exchanges. Crypto-to-crypto swaps are
-						processed securely through the FixedFloat API. While we
-						prioritize the use of secure protocols and vetted
-						partners, cryptocurrency investments and transactions
-						carry inherent market risks. The term "secure" refers to
-						our implementation of industry-standard encryption and
-						non-custodial workflows, not a guarantee against user
-						error or broader network failures. Gidswap does not act as
-						a custodian of your funds.
-					</p>
+				{/* Disclaimer Accordion Section */}
+				<div className='mb-12 glass-panel rounded-3xl border border-white/5 overflow-hidden transition-colors hover:border-white/10'>
+					<button
+						type='button'
+						onClick={() => setIsDisclosureOpen(!isDisclosureOpen)}
+						className='w-full p-6 sm:p-8 flex items-center justify-between gap-4 text-left cursor-pointer group focus:outline-none'
+						aria-expanded={isDisclosureOpen}
+					>
+						<div className='flex items-center gap-2.5'>
+							<ShieldCheck className='size-4 text-primary shrink-0 transition-transform group-hover:scale-110' />
+							<span className='text-xs font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors'>
+								Risk Disclosure
+							</span>
+						</div>
+						<div className='flex items-center gap-2 text-xs font-semibold text-muted-foreground/60 group-hover:text-muted-foreground transition-colors'>
+							<span className='hidden sm:inline text-[11px] font-medium'>
+								{isDisclosureOpen ? "Hide details" : "Read details"}
+							</span>
+							<motion.div
+								animate={{ rotate: isDisclosureOpen ? 180 : 0 }}
+								transition={{ duration: 0.25, ease: "easeInOut" }}
+							>
+								<ChevronDown className='size-4' />
+							</motion.div>
+						</div>
+					</button>
+
+					<AnimatePresence initial={false}>
+						{isDisclosureOpen && (
+							<motion.div
+								initial={{ height: 0, opacity: 0 }}
+								animate={{ height: "auto", opacity: 1 }}
+								exit={{ height: 0, opacity: 0 }}
+								transition={{ duration: 0.3, ease: "easeInOut" }}
+								className='overflow-hidden'
+							>
+								<div className='px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-white/5'>
+									<p className='text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed text-justify font-normal pt-4'>
+										Gidswap is a decentralized interface facilitating
+										cryptocurrency exchanges. Crypto-to-crypto swaps are
+										processed securely through the FixedFloat API. While we
+										prioritize the use of secure protocols and vetted
+										partners, cryptocurrency investments and transactions
+										carry inherent market risks. The term "secure" refers to
+										our implementation of industry-standard encryption and
+										non-custodial workflows, not a guarantee against user
+										error or broader network failures. Gidswap does not act as
+										a custodian of your funds.
+									</p>
+								</div>
+							</motion.div>
+						)}
+					</AnimatePresence>
 				</div>
 
 				{/* Bottom Bar */}
@@ -183,7 +219,7 @@ export default function Footer() {
 							target='_blank'
 							className='hover:text-white transition-colors'
 						>
-							Infrastructure by FixedFloat
+							...
 						</Link>
 					</div>
 

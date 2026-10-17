@@ -6,6 +6,7 @@ export interface User {
   id: string
   fullName: string
   email: string
+  avatar?: string | null
   ipAddress: string
   userAgent: string
   lastLoginIP: string
@@ -19,8 +20,9 @@ interface UserState {
   isLoading: boolean
   error: string | null
 
-  fetchUser: () => Promise<void>
+  fetchUser: (force?: boolean) => Promise<void>
   updateName: (name: string) => Promise<void>
+  updateAvatar: (avatarUrl: string) => Promise<void>
   updateEmail: (currentPassword: string, email: string) => Promise<void>
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>
   clearError: () => void
@@ -35,14 +37,16 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchUser: async () => {
+  fetchUser: async (force?: boolean) => {
     try {
       set({ isLoading: true, error: null })
 
-      const cachedUser = Cookies.get(USER_COOKIE_KEY)
-      if (cachedUser) {
-        set({ user: JSON.parse(cachedUser), isLoading: false })
-        return
+      if (!force) {
+        const cachedUser = Cookies.get(USER_COOKIE_KEY)
+        if (cachedUser) {
+          set({ user: JSON.parse(cachedUser), isLoading: false })
+          return
+        }
       }
 
       const response = await axios.get(`${api_url}/api/user/profile`, {
@@ -53,10 +57,11 @@ export const useUserStore = create<UserState>((set, get) => ({
 
       const rawUser = response.data.user
 
-      // Normalize to always have fullName
+      // Normalize to always have fullName and avatar
       const user: User = {
         ...rawUser,
         fullName: rawUser.fullName || rawUser.fullname || "",
+        avatar: rawUser.avatar || null,
       }
 
       Cookies.set(USER_COOKIE_KEY, JSON.stringify(user), { expires: 3 })
@@ -89,6 +94,28 @@ export const useUserStore = create<UserState>((set, get) => ({
         error: error.response?.data?.message || "Failed to update name",
         isLoading: false,
       })
+    }
+  },
+
+  updateAvatar: async (avatarUrl: string) => {
+    try {
+      set({ isLoading: true, error: null })
+      let response = await axios.put(
+        `${api_url}/api/user/profile`,
+        { avatar: avatarUrl },
+        { headers: { Authorization: `Bearer ${Cookies.get("token")}` } },
+      )
+
+      const updatedUser = { ...get().user!, avatar: avatarUrl }
+      Cookies.set(USER_COOKIE_KEY, JSON.stringify(updatedUser), { expires: 7 })
+      set({ user: updatedUser, isLoading: false })
+      toast.success("Avatar updated successfully!")
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to update avatar",
+        isLoading: false,
+      })
+      toast.error("Failed to update avatar")
     }
   },
 

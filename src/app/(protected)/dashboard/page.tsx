@@ -7,14 +7,16 @@ import {
 	ArrowDownToLine,
 	ArrowUpFromLine,
 	AlertTriangle,
-	Wallet,
 	MessageSquare,
 	AlertCircle
 } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useSwapStore } from "@/lib/swap-store";
 import { useUserStore } from "@/lib/user-store";
 import { kycService } from "@/lib/services/kyc";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { toast } from "sonner";
 import {
 	Alert,
 	AlertDescription,
@@ -98,8 +100,12 @@ export default function Dashboard() {
 	const [selectedService, setSelectedService] = useState<ServiceType>(null);
 	const [kycStatus, setKycStatus] = useState<string | null>(null);
 	const [slang, setSlang] = useState(cryptoSlangs[0]);
+	const [isDayTime, setIsDayTime] = useState(true);
 
 	useEffect(() => {
+		const hour = new Date().getHours();
+		// Daytime roughly 6:00 AM (6) to 6:00 PM (18)
+		setIsDayTime(hour >= 6 && hour < 18);
 		fetchCurrencies();
 		fetchUser();
 		setSlang(cryptoSlangs[Math.floor(Math.random() * cryptoSlangs.length)]);
@@ -111,7 +117,29 @@ export default function Dashboard() {
 			.catch(() => {
 				setKycStatus("unverified");
 			});
-	}, [fetchCurrencies]);
+
+		// Trigger avatar feature toast on login & check every 1 minute using cookies
+		const checkAndShowAvatarToast = () => {
+			const lastToastTime = Cookies.get("last_avatar_toast");
+			const now = Date.now();
+			const oneMinute = 60 * 1000;
+
+			if (!lastToastTime || now - Number(lastToastTime) >= oneMinute) {
+				toast("✨ Customize Your Profile Avatar!", {
+					description: "Pick an avatar from your Account settings to stand out.",
+					duration: 5000,
+				});
+				Cookies.set("last_avatar_toast", now.toString(), { expires: 7 });
+			}
+		};
+
+		// Show immediately on login / page load
+		checkAndShowAvatarToast();
+
+		// Check every 1 minute
+		const interval = setInterval(checkAndShowAvatarToast, 60 * 1000);
+		return () => clearInterval(interval);
+	}, [fetchCurrencies, fetchUser]);
 
 	const renderServiceFlow = () => {
 		switch (selectedService) {
@@ -166,9 +194,12 @@ export default function Dashboard() {
             {slang}
           </p>
         </div>
-        <div className="flex flex-col sm:items-end hidden sm:flex opacity-20">
-           {/* Decorative watermark/icon */}
-           <Wallet className="w-24 h-24" />
+        <div className="flex flex-col sm:items-end sm:flex opacity-25">
+           {/* Decorative day/night watermark icon */}
+           <Icon
+             icon={isDayTime ? "emojione-monotone:sunrise" : "fluent-mdl2:clear-night"}
+             className="w-24 h-24 text-foreground transition-all duration-500"
+           />
         </div>
       </div>
 

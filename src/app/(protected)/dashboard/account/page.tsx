@@ -19,6 +19,7 @@ import { SavedAccountsSection } from "@/_components/settings/saved-accounts-sect
 import { affiliateService } from "@/lib/services/affiliate";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 import {
 	User,
 	Mail,
@@ -31,7 +32,9 @@ import {
 	Loader2,
 	Copy,
 	Users,
+	Camera,
 } from "lucide-react";
+import { AvatarSelectModal } from "@/_components/popups/AvatarSelectModal";
 
 type EditingField = "name" | "email" | "password" | null;
 
@@ -50,11 +53,13 @@ export default function AccountPage() {
 		error,
 		fetchUser,
 		updateName,
+		updateAvatar,
 		updateEmail,
 		updatePassword,
 		clearError,
 	} = useUserStore();
 
+	const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 	const [editingField, setEditingField] =
 		useState<EditingField>(null);
 	const [formData, setFormData] = useState<FormData>({
@@ -87,9 +92,20 @@ export default function AccountPage() {
 		}
 	};
 
-	// Load user on mount
+	// Load user on mount & show avatar feature toast
 	useEffect(() => {
 		fetchUser();
+
+		// Notify user about the new avatar feature once a minute via cookies
+		const lastToast = Cookies.get("last_avatar_toast");
+		const now = Date.now();
+		if (!lastToast || now - Number(lastToast) >= 60 * 1000) {
+			toast("✨ New: Web3 Profile Avatars!", {
+				description: "Customize your account by choosing an avatar from your profile card.",
+				duration: 5000,
+			});
+			Cookies.set("last_avatar_toast", now.toString(), { expires: 7 });
+		}
 	}, [fetchUser]);
 
 	// Populate formData when user changes
@@ -183,30 +199,7 @@ export default function AccountPage() {
 				</Alert>
 			)}
 
-			{/* KYC SECTION */}
-			<div className='mb-8'>
-				<h2 className='text-xl font-semibold mb-4 text-foreground/80'>
-					Identity Verification
-				</h2>
-				<KycManager />
-			</div>
-
-			{/* SAVED ACCOUNTS SECTION */}
-			<div className='mb-8'>
-				<div className='flex items-center justify-between mb-4'>
-					<div>
-						<h2 className='text-xl font-semibold text-foreground/80'>
-							Saved Bank Accounts
-						</h2>
-						<p className='text-sm text-muted-foreground mt-0.5'>
-							Your saved accounts are pre-filled automatically when you initiate a new transaction.
-						</p>
-					</div>
-				</div>
-				<SavedAccountsSection />
-			</div>
-
-			{/* Profile Card */}
+			{/* Profile Card (At the top of the pile) */}
 			<Card className='bg-card border-border'>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2 text-card-foreground'>
@@ -216,22 +209,72 @@ export default function AccountPage() {
 				</CardHeader>
 				<CardContent className='space-y-6'>
 					{/* Avatar & Basic Info */}
-					<div className='flex items-center gap-4 pb-6 border-b border-border'>
-						<div className='w-16 h-16 bg-primary rounded-full flex items-center justify-center'>
-							<User className='w-8 h-8 text-primary-foreground' />
+					<div className='flex items-center gap-5 pb-6 border-b border-border'>
+						<div className="relative group">
+							<button
+								type="button"
+								onClick={() => setIsAvatarModalOpen(true)}
+								className='relative w-18 h-18 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-border/70 hover:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 bg-muted/40 shadow-sm'
+								title="Click to choose avatar"
+							>
+								{user?.avatar ? (
+									<img
+										src={user.avatar}
+										alt={user.fullName || "User Avatar"}
+										className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-110'
+									/>
+								) : (
+									<div className='w-full h-full bg-primary/10 text-primary flex items-center justify-center'>
+										<User className='w-9 h-9' />
+									</div>
+								)}
+
+								{/* Hover overlay with Camera icon */}
+								<div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white">
+									<Camera className="w-5 h-5 mb-0.5" />
+									<span className="text-[10px] font-bold uppercase tracking-wider">Change</span>
+								</div>
+							</button>
+
+							<button
+								type="button"
+								onClick={() => setIsAvatarModalOpen(true)}
+								className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground border-2 border-card flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+								title="Change avatar"
+							>
+								<Camera className="w-3 h-3" />
+							</button>
 						</div>
+
 						<div className='flex-1'>
-							<h3 className='text-xl font-semibold text-card-foreground'>
-								{user?.fullName || "Loading..."}
-							</h3>
-							<p className='text-muted-foreground'>{user?.email}</p>
+							<div className="flex items-center gap-3">
+								<h3 className='text-xl font-bold text-card-foreground tracking-tight'>
+									{user?.fullName || "Loading..."}
+								</h3>
+								<button
+									type="button"
+									onClick={() => setIsAvatarModalOpen(true)}
+									className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+								>
+									Change Avatar
+								</button>
+							</div>
+							<p className='text-sm text-muted-foreground mt-0.5'>{user?.email}</p>
 						</div>
 					</div>
+
+					<AvatarSelectModal
+						isOpen={isAvatarModalOpen}
+						onClose={() => setIsAvatarModalOpen(false)}
+						currentAvatar={user?.avatar}
+						onSelectAvatar={async (avatarUrl) => {
+							await updateAvatar(avatarUrl);
+						}}
+					/>
 
 					{/* Name Field */}
 					<EditableField
 						label='Full Name'
-						description='Your display name'
 						value={formData.name}
 						editing={editingField === "name"}
 						onEdit={() => handleEdit("name")}
@@ -247,7 +290,6 @@ export default function AccountPage() {
 					{/* Email Field */}
 					<EditableField
 						label='Email Address'
-						description='Your account email'
 						value={formData.email}
 						editing={editingField === "email"}
 						onEdit={() => handleEdit("email")}
@@ -275,7 +317,6 @@ export default function AccountPage() {
 					{/* Password Field */}
 					<EditableField
 						label='Password'
-						description='Change your account password'
 						value='••••••••'
 						editing={editingField === "password"}
 						onEdit={() => handleEdit("password")}
@@ -320,6 +361,29 @@ export default function AccountPage() {
 				</CardContent>
 			</Card>
 
+			{/* KYC SECTION */}
+			<div className='mb-8'>
+				<h2 className='text-xl font-semibold mb-4 text-foreground/80'>
+					Identity Verification
+				</h2>
+				<KycManager />
+			</div>
+
+			{/* SAVED ACCOUNTS SECTION */}
+			<div className='mb-8'>
+				<div className='flex items-center justify-between mb-4'>
+					<div>
+						<h2 className='text-xl font-semibold text-foreground/80'>
+							Saved Bank Accounts
+						</h2>
+						<p className='text-sm text-muted-foreground mt-0.5'>
+							Your saved accounts are pre-filled automatically when you initiate a new transaction.
+						</p>
+					</div>
+				</div>
+				<SavedAccountsSection />
+			</div>
+
 			{/* Account Information */}
 			<Card className='bg-card border-border'>
 				<CardHeader>
@@ -332,7 +396,7 @@ export default function AccountPage() {
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 						<div>
 							<Label className='text-sm font-medium text-card-foreground'>
-								Account Created
+								Creation Date
 							</Label>
 							<p className='text-sm text-muted-foreground mt-1'>
 								{user?.createdAt
@@ -427,7 +491,7 @@ export default function AccountPage() {
 /** Reusable EditableField Component */
 interface EditableFieldProps {
 	label: string;
-	description: string;
+	description?: string;
 	value: string;
 	editing: boolean;
 	onEdit: () => void;
@@ -466,9 +530,11 @@ function EditableField({
 						<Label className='text-sm font-medium text-card-foreground'>
 							{label}
 						</Label>
-						<p className='text-sm text-muted-foreground'>
-							{description}
-						</p>
+						{description && (
+							<p className='text-sm text-muted-foreground'>
+								{description}
+							</p>
+						)}
 					</div>
 				</div>
 				{!editing && (

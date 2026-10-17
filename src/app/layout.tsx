@@ -56,7 +56,17 @@ export default function RootLayout({
 					<RegistrationModal />
 					<LoginModal />
 					<ForgotPasswordModal />
-					<Toaster position='top-right' richColors />
+					<Toaster
+						position='top-right'
+						toastOptions={{
+							className: "!bg-slate-950 !text-white !border !border-blue-500/30 !shadow-xl !shadow-blue-950/40 rounded-xl font-sans",
+							style: {
+								background: "#0b1220",
+								color: "#ffffff",
+								borderColor: "rgba(59, 130, 246, 0.35)",
+							},
+						}}
+					/>
 				</ThemeProvider>
 			</body>
 		</html>

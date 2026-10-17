@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@iconify/react": "^6.0.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -28,6 +29,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "gsap": "^3.13.0",
+    "html-to-image": "^1.11.13",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.534.0",
     "next": "^16.1.1",

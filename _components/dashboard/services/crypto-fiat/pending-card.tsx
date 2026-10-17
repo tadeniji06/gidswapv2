@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import Cookies from "js-cookie";
-import { useState, useEffect, JSX } from "react";
+import { useState, useEffect, useRef, JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { QRCodeCanvas } from "qrcode.react";
 import { Button } from "@/src/components/ui/button";
+import { toPng } from "html-to-image";
 import {
 	Copy,
 	Clock,
@@ -19,7 +20,12 @@ import {
 	ArrowRight,
 	RefreshCw,
 	X,
+	Check,
+	MessageSquare,
+	Send,
+	Share2,
 } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 // PDF receipt + share — dynamically imported (client only, @react-pdf/renderer)
 const PDFReceiptButton = dynamic(
@@ -126,6 +132,63 @@ export function PendingPaymentCard({
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
 	const [successAcknowledged, setSuccessAcknowledged] = useState(false);
 	const [confettiActive, setConfettiActive] = useState(false);
+	const [isSharingImage, setIsSharingImage] = useState(false);
+	const receiptCardRef = useRef<HTMLDivElement>(null);
+
+	const handleShareReceiptImage = async (platform?: "whatsapp" | "telegram" | "native") => {
+		if (!receiptCardRef.current) return;
+		try {
+			setIsSharingImage(true);
+			const dataUrl = await toPng(receiptCardRef.current, {
+				cacheBust: true,
+				pixelRatio: 2,
+				backgroundColor: "#ffffff",
+			});
+
+			const blob = await (await fetch(dataUrl)).blob();
+			const file = new File([blob], `gidswap-receipt-${paymentData.reference || "order"}.png`, {
+				type: "image/png",
+			});
+
+			// If Web Share API supports file sharing (e.g. mobile devices)
+			if (platform === "native" || !platform) {
+				if (navigator.canShare && navigator.canShare({ files: [file] })) {
+					await navigator.share({
+						files: [file],
+						title: "Gidswap Transaction Receipt",
+						text: `Gidswap Receipt for ${paymentData.amount} ${paymentData.token} (${paymentData.reference})`,
+					});
+					return;
+				}
+			}
+
+			// Fallback: Trigger instant download of image and open platform
+			const link = document.createElement("a");
+			link.href = dataUrl;
+			link.download = `gidswap-receipt-${paymentData.reference || "order"}.png`;
+			link.click();
+
+			if (platform === "whatsapp") {
+				window.open(
+					`https://wa.me/?text=${encodeURIComponent(
+						`✅ Gidswap Receipt: ${paymentData.amount} ${paymentData.token} (Ref: ${paymentData.reference})\nImage receipt downloaded to attach!`
+					)}`,
+					"_blank"
+				);
+			} else if (platform === "telegram") {
+				window.open(
+					`https://t.me/share/url?url=${encodeURIComponent("https://gidswap.com")}&text=${encodeURIComponent(
+						`✅ Gidswap Receipt: ${paymentData.amount} ${paymentData.token} (Ref: ${paymentData.reference})`
+					)}`,
+					"_blank"
+				);
+			}
+		} catch (err) {
+			console.error("Error generating receipt image:", err);
+		} finally {
+			setIsSharingImage(false);
+		}
+	};
 
 	const API_URL = process.env.NEXT_PUBLIC_PROD_API;
 	const authToken = Cookies.get("token");
@@ -136,6 +199,11 @@ export function PendingPaymentCard({
 	const recipientAccount = _bank?.accountNumber;
 	const recipientName = _bank?.accountName;
 	const bankName = _bank?.bankName;
+
+	// Read orderData to retrieve calculated fiat amount in Naira
+	const _orderRaw = Cookies.get("order-data");
+	const _order = _orderRaw ? JSON.parse(_orderRaw) : null;
+	const fiatAmountNaira = _order?.fiatAmount || _order?.receiveAmount || statusData?.fiatAmount;
 
 	const { data: statusData } = useQuery<PendingPaymentData>({
 		queryKey: ["payment-status", paymentData?.id],
@@ -448,120 +516,146 @@ export function PendingPaymentCard({
 				</div>
 			</motion.div>
 
-			{/* ── Success Modal ──────────────────────────────────── */}
+			{/* ── Success Modal (Minimalist Blue & White Fintech Confirmation) ── */}
 			<Dialog
 				open={showSuccessModal}
 				onOpenChange={handleSuccessOpenChange}
 			>
 				<DialogContent
 					showCloseButton={false}
-					className='z-[100] w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90dvh] overflow-y-auto border border-border bg-card p-0 shadow-lg rounded-2xl'
+					className='z-[100] w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[92dvh] overflow-y-auto border border-blue-100 bg-white text-slate-900 p-0 shadow-2xl rounded-3xl'
 				>
-					<div className='relative overflow-hidden'>
+					<DialogTitle className="sr-only">
+						Payment Confirmation
+					</DialogTitle>
+					<div className='relative overflow-hidden p-5 sm:p-7 space-y-5'>
+						{/* Top close/cancel button */}
 						<button
 							type='button'
 							onClick={closeSuccessModal}
-							className='absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors'
+							className='absolute right-4 top-4 sm:right-5 sm:top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors cursor-pointer'
+							title="Close"
 						>
 							<X className='h-4 w-4' />
 						</button>
-						<div className='relative bg-emerald-50 dark:bg-emerald-500/10 px-6 pb-6 pt-10 text-center sm:px-8 border-b border-emerald-100 dark:border-emerald-500/20'>
-							<div className='w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-500/40'>
-								<PartyPopper className='w-10 h-10 text-emerald-600 dark:text-emerald-400' />
+
+						{/* Captured Receipt Card for Image Sharing */}
+						<div ref={receiptCardRef} className='space-y-5 pt-1 pb-1 bg-white text-slate-900'>
+							{/* Minimalist Circular Check & Hero */}
+							<div className='flex flex-col items-center text-center'>
+								<div className="mb-3 sm:mb-4 flex items-center justify-center text-blue-600">
+									<Icon icon="f7:checkmark-seal-fill" className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-sm" />
+								</div>
+
+								<h2 className='text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-950'>
+									{Number(paymentData.amount).toFixed(2)} {paymentData.token}
+								</h2>
+								<p className='text-xs sm:text-sm text-slate-500 font-medium mt-1'>
+									Payment confirmed!
+								</p>
 							</div>
 
-							<DialogTitle className='text-xl sm:text-2xl font-semibold mb-2 text-foreground'>
-								Payout Processed
-							</DialogTitle>
-							<p className='text-muted-foreground text-sm font-medium'>
-								We've confirmed your{" "}
-								<span className='text-foreground font-semibold'>
-									{Number(paymentData.amount).toFixed(2)}{" "}
-									{paymentData.token}
-								</span>{" "}
-								deposit and processed your payout.
-							</p>
+							{/* Clean Key-Value Card */}
+							<div className='bg-slate-50/70 rounded-2xl border border-slate-200 divide-y divide-slate-100 p-1 text-xs sm:text-sm'>
+								<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+									<span className='text-slate-500 font-medium'>Status</span>
+									<span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+										Settled
+									</span>
+								</div>
+
+								{fiatAmountNaira && (
+									<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+										<span className='text-slate-500 font-medium'>Payout Amount</span>
+										<span className="text-sm sm:text-base font-bold text-slate-950">
+											₦{Number(fiatAmountNaira).toLocaleString()}
+										</span>
+									</div>
+								)}
+
+								{recipientAccount && (
+									<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+										<span className='text-slate-500 font-medium'>Recipient Account</span>
+										<span className="font-semibold text-slate-900 truncate ml-2">
+											{recipientAccount} {bankName ? `(${bankName})` : ""}
+										</span>
+									</div>
+								)}
+
+								{recipientName && (
+									<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+										<span className='text-slate-500 font-medium'>Account Name</span>
+										<span className="font-medium text-slate-800 truncate ml-2">
+											{recipientName}
+										</span>
+									</div>
+								)}
+
+								<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+									<span className='text-slate-500 font-medium'>Network</span>
+									<span className="font-semibold text-slate-900">
+										{paymentData.network}
+									</span>
+								</div>
+
+								<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+									<span className='text-slate-500 font-medium'>Reference</span>
+									<span className="font-mono text-[11px] sm:text-xs text-blue-600 font-medium truncate ml-2">
+										{paymentData.reference}
+									</span>
+								</div>
+
+								{statusData?.txHash && (
+									<div className="flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5">
+										<span className='text-slate-500 font-medium'>TX Hash</span>
+										<span className="font-mono text-[11px] sm:text-xs text-blue-600 truncate ml-2">
+											{statusData.txHash.slice(0, 10)}...{statusData.txHash.slice(-6)}
+										</span>
+									</div>
+								)}
+							</div>
+
+							{/* Minimalist Note Callout */}
+							<div className="flex items-start gap-2.5 sm:gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-4 text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+								<div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+									i
+								</div>
+								<p>
+									Payout has been settled to your bank account. Depending on interbank settlement speeds, funds reflect within moments.
+								</p>
+							</div>
 						</div>
 
-						<div className='px-6 py-6 sm:px-8 space-y-6'>
-							<div className='bg-muted/30 rounded-xl border border-border divide-y divide-border'>
-								{[
-									{
-										label: "Status",
-										value: "Settled",
-										valueClass:
-											"text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded text-xs font-semibold",
-									},
-									{
-										label: "Amount Sent",
-										value: `${Number(paymentData.amount).toFixed(2)} ${paymentData.token}`,
-										valueClass: "text-foreground font-semibold tabular-nums",
-									},
-									{
-										label: "Reference",
-										value: `${paymentData.reference.slice(0, 14)}...`,
-										valueClass: "font-mono text-sm text-muted-foreground",
-									},
-									...(statusData?.txHash
-										? [
-												{
-													label: "TX Hash",
-													value: `${statusData.txHash.slice(0, 10)}...`,
-													valueClass:
-														"font-mono text-sm text-primary",
-												},
-											]
-										: []),
-								].map(({ label, value, valueClass }) => (
-									<div
-										key={label}
-										className="flex items-center justify-between px-4 py-3"
-									>
-										<span className='text-sm text-muted-foreground'>
-											{label}
-										</span>
-										<span className={valueClass}>{value}</span>
-									</div>
-								))}
-							</div>
-
-							<div className='flex flex-col gap-3'>
-								<PDFReceiptButton
-									data={{
-										orderId: paymentData.id,
-										reference: paymentData.reference,
-										amount: paymentData.amount,
-										token: paymentData.token,
-										network: paymentData.network,
-										status: currentStatus,
-										receiveAddress: paymentData.receiveAddress,
-										date: new Date().toLocaleString(),
-										recipientAccount,
-										recipientName,
-										bankName,
-									}}
-								/>
-								<ShareReceiptButton
-									data={{
-										orderId: paymentData.id,
-										reference: paymentData.reference,
-										amount: paymentData.amount,
-										token: paymentData.token,
-										network: paymentData.network,
-										status: currentStatus,
-										receiveAddress: paymentData.receiveAddress,
-										date: new Date().toLocaleString(),
-										recipientAccount,
-										recipientName,
-										bankName,
-									}}
-								/>
-								<Button
-									onClick={finishSuccessFlow}
-									className='w-full py-6'
+						{/* Action Buttons: Minimalist Social Share (No wasted space) */}
+						<div className="pt-1">
+							<div className="grid grid-cols-2 gap-2 sm:gap-3">
+								<button
+									type="button"
+									onClick={() => handleShareReceiptImage("whatsapp")}
+									disabled={isSharingImage}
+									className="flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm transition-all shadow-sm disabled:opacity-60 cursor-pointer"
 								>
-									Return to Dashboard
-								</Button>
+									{isSharingImage ? (
+										<Loader2 className="w-4 h-4 animate-spin shrink-0" />
+									) : (
+										<Share2 className="w-4 h-4 shrink-0" />
+									)}
+									<span className="truncate">WhatsApp</span>
+								</button>
+
+								<button
+									type="button"
+									onClick={() => handleShareReceiptImage("telegram")}
+									disabled={isSharingImage}
+									className="flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl bg-blue-50 hover:bg-blue-100 active:scale-[0.98] text-blue-600 border border-blue-200 font-semibold text-xs sm:text-sm transition-all shadow-sm disabled:opacity-60 cursor-pointer"
+								>
+									{isSharingImage ? (
+										<Loader2 className="w-4 h-4 animate-spin shrink-0" />
+									) : (
+										<Send className="w-4 h-4 shrink-0" />
+									)}
+									<span className="truncate">Telegram</span>
+								</button>
 							</div>
 						</div>
 					</div>
