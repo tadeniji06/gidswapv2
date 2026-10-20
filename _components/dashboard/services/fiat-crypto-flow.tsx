@@ -183,7 +183,7 @@ function AccountGateway({ accounts, defaultAccount, isLoading, onUseSaved, onUse
         <div className="relative z-10">
           <h3 className="font-black text-white text-lg">No Saved Accounts</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Verify a bank account to receive refunds if a transaction fails.
+            Verify a bank account to receive refunds.
           </p>
         </div>
         <button
