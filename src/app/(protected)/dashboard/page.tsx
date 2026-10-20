@@ -1,31 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
+import axios from "axios";
 import {
 	ArrowLeft,
 	ArrowRightLeft,
 	ArrowDownToLine,
 	ArrowUpFromLine,
 	AlertTriangle,
-	MessageSquare,
-	AlertCircle
+	CalendarDays,
+	ShieldCheck,
 } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { useSwapStore } from "@/lib/swap-store";
 import { useUserStore } from "@/lib/user-store";
 import { kycService } from "@/lib/services/kyc";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import { toast } from "sonner";
 import {
 	Alert,
 	AlertDescription,
 	AlertTitle,
 } from "@/src/components/ui/alert";
 import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "@/src/components/ui/dialog";
+import { toast } from "sonner";
 
 import { CryptoSwapFlow } from "@/_components/dashboard/services/crypto-swap-flow";
 import CryptoFiatFlow from "@/_components/dashboard/services/crypto-fiat-flow";
+import { FiatCryptoFlow } from "@/_components/dashboard/services/fiat-crypto-flow";
 
 type ServiceType =
 	| "crypto-crypto"
@@ -99,6 +108,12 @@ export default function Dashboard() {
 	const router = useRouter();
 	const [selectedService, setSelectedService] = useState<ServiceType>(null);
 	const [kycStatus, setKycStatus] = useState<string | null>(null);
+	const [hasKycDateOfBirth, setHasKycDateOfBirth] = useState(false);
+	const [isOnrampCheckLoading, setIsOnrampCheckLoading] = useState(false);
+	const [isComplianceDialogOpen, setIsComplianceDialogOpen] = useState(false);
+	const [dateOfBirth, setDateOfBirth] = useState("");
+	const [confirmedDateOfBirth, setConfirmedDateOfBirth] = useState(false);
+	const [isSavingDateOfBirth, setIsSavingDateOfBirth] = useState(false);
 	const [slang, setSlang] = useState(cryptoSlangs[0]);
 	const [isDayTime, setIsDayTime] = useState(true);
 
@@ -113,92 +128,93 @@ export default function Dashboard() {
 			.getStatus()
 			.then((status) => {
 				setKycStatus(status.status);
+				setHasKycDateOfBirth(Boolean(status.hasDateOfBirth));
 			})
 			.catch(() => {
 				setKycStatus("unverified");
 			});
 
-		// Trigger avatar feature toast on login & check every 1 minute using cookies
-		const checkAndShowAvatarToast = () => {
-			const lastToastTime = Cookies.get("last_avatar_toast");
-			const now = Date.now();
-			const oneMinute = 60 * 1000;
-
-			if (!lastToastTime || now - Number(lastToastTime) >= oneMinute) {
-				toast("✨ Customize Your Profile Avatar!", {
-					description: "Pick an avatar from your Account settings to stand out.",
-					duration: 5000,
-				});
-				Cookies.set("last_avatar_toast", now.toString(), { expires: 7 });
-			}
-		};
-
-		// Show immediately on login / page load
-		checkAndShowAvatarToast();
-
-		// Check every 1 minute
-		const interval = setInterval(checkAndShowAvatarToast, 60 * 1000);
-		return () => clearInterval(interval);
 	}, [fetchCurrencies, fetchUser]);
+
+	const handleServiceSelect = async (service: ServiceType) => {
+		if (service !== "fiat-crypto") {
+			setSelectedService(service);
+			return;
+		}
+
+		setIsOnrampCheckLoading(true);
+		try {
+			const status = await kycService.getStatus();
+			setKycStatus(status.status);
+			const hasDateOfBirth = Boolean(status.hasDateOfBirth);
+			setHasKycDateOfBirth(hasDateOfBirth);
+			if (status.status === "verified" && hasDateOfBirth) {
+				setSelectedService("fiat-crypto");
+				return;
+			}
+			setIsComplianceDialogOpen(true);
+		} catch {
+			setKycStatus("unverified");
+			setHasKycDateOfBirth(false);
+			setIsComplianceDialogOpen(true);
+		} finally {
+			setIsOnrampCheckLoading(false);
+		}
+	};
+
+	const handleSaveDateOfBirth = async (
+		event: FormEvent<HTMLFormElement>,
+	) => {
+		event.preventDefault();
+		if (!confirmedDateOfBirth) {
+			toast.error("Confirm that your date of birth matches your identity document.");
+			return;
+		}
+
+		setIsSavingDateOfBirth(true);
+		try {
+			await kycService.saveDateOfBirth(dateOfBirth, confirmedDateOfBirth);
+			setHasKycDateOfBirth(true);
+			setIsComplianceDialogOpen(false);
+			setSelectedService("fiat-crypto");
+		} catch (error) {
+			const message = axios.isAxiosError(error)
+				? error.response?.data?.message
+				: undefined;
+			toast.error(message || "Could not save your date of birth. Please try again.");
+		} finally {
+			setIsSavingDateOfBirth(false);
+		}
+	};
 
 	const renderServiceFlow = () => {
 		switch (selectedService) {
 			case "crypto-crypto": return <CryptoSwapFlow />;
 			case "crypto-fiat": return <CryptoFiatFlow />;
-			case "fiat-crypto": 
-				return (
-					<div className="w-full max-w-md mx-auto fintech-card p-6 sm:p-8 text-center space-y-5">
-						<div className="w-14 h-14 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto">
-							<AlertCircle className="w-7 h-7" />
-						</div>
-						<div className="space-y-2">
-							<h3 className="text-xl font-bold text-foreground">
-								Onramp Offers Unavailable
-							</h3>
-							<p className="text-sm text-muted-foreground leading-relaxed">
-								Onramp offers are currently unavailable through the automated flow. You can process your onramp order directly with support via WhatsApp.
-							</p>
-						</div>
-
-						<div className="pt-2">
-							<a
-								href="https://wa.me/2349038958941?text=Hello%20Gidswap,%20I%20would%20like%20to%20buy%20crypto%20(onramp)."
-								target="_blank"
-								rel="noopener noreferrer"
-								className="w-full inline-flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-5 rounded-xl transition-colors shadow-sm"
-							>
-								<MessageSquare className="w-5 h-5" />
-								<span>Contact Support on WhatsApp</span>
-							</a>
-							<p className="text-xs text-muted-foreground mt-3">
-								WhatsApp Number: <span className="font-mono text-foreground font-semibold">09038958941</span>
-							</p>
-						</div>
-					</div>
-				);
+			case "fiat-crypto": return <FiatCryptoFlow />;
 			default: return null;
 		}
 	};
 
 	const renderServiceSelection = () => (
 		<div className='w-full max-w-5xl mx-auto'>
-      {/* Portfolio Overview */}
-      <div className="mb-10 p-6 sm:p-8 fintech-card flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+      {/* Portfolio / User Greeting Card */}
+      <div className="mb-6 sm:mb-10 p-4 sm:p-8 fintech-card grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:gap-4 overflow-hidden relative">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-[clamp(1.25rem,6vw,2.25rem)] md:text-5xl font-bold leading-tight tracking-tight text-foreground truncate">
               gm, {user?.fullName?.split(" ")[0] || "Trader"} 👋
-            </span>
+            </h1>
           </div>
-          <p className="text-base sm:text-lg text-muted-foreground mt-3 flex items-center gap-2 font-medium">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-1.5 sm:mt-2.5 font-medium line-clamp-2">
             {slang}
           </p>
         </div>
-        <div className="flex flex-col sm:items-end sm:flex opacity-25">
+        <div className="flex shrink-0 items-center justify-center opacity-30 dark:opacity-20">
            {/* Decorative day/night watermark icon */}
            <Icon
              icon={isDayTime ? "emojione-monotone:sunrise" : "fluent-mdl2:clear-night"}
-             className="w-24 h-24 text-foreground transition-all duration-500"
+             className="w-12 h-12 sm:w-20 sm:h-20 text-foreground transition-all duration-500"
            />
         </div>
       </div>
@@ -235,7 +251,8 @@ export default function Dashboard() {
 					return (
 						<button
 							key={service.id}
-							onClick={() => setSelectedService(service.id)}
+							onClick={() => handleServiceSelect(service.id)}
+							disabled={service.id === "fiat-crypto" && isOnrampCheckLoading}
 							className='group flex flex-col text-left p-6 fintech-card hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
 						>
               <div className={`p-3 rounded-xl ${service.bgColor} w-fit mb-5 transition-transform group-hover:scale-105`}>
@@ -255,9 +272,81 @@ export default function Dashboard() {
 	);
 
 	return (
-		<main className='flex-1 px-4 sm:px-6 md:px-8 py-8 min-h-screen bg-background'>
-			{selectedService ? (
-				<div className='max-w-2xl mx-auto w-full flex flex-col items-center'>
+		<>
+			<Dialog
+				open={isComplianceDialogOpen}
+				onOpenChange={setIsComplianceDialogOpen}
+			>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<ShieldCheck className="h-5 w-5 text-primary" />
+							Complete on-ramp requirements
+						</DialogTitle>
+						<DialogDescription>
+							Paycrest requires verified identity details to create an on-ramp order.
+						</DialogDescription>
+					</DialogHeader>
+					{kycStatus !== "verified" ? (
+						<div className="space-y-4">
+							<p className="text-sm text-muted-foreground">
+								Complete identity verification before buying crypto with NGN.
+							</p>
+							<Button
+								className="w-full"
+								onClick={() => {
+									setIsComplianceDialogOpen(false);
+									router.push("/dashboard/account");
+								}}
+							>
+								Complete KYC
+							</Button>
+						</div>
+					) : !hasKycDateOfBirth ? (
+						<form onSubmit={handleSaveDateOfBirth} className="space-y-4">
+							<div className="space-y-2">
+								<label htmlFor="onramp-date-of-birth" className="text-sm font-medium">
+									Date of birth
+								</label>
+								<Input
+									id="onramp-date-of-birth"
+									type="date"
+									required
+									value={dateOfBirth}
+									onChange={(event) => setDateOfBirth(event.target.value)}
+									disabled={isSavingDateOfBirth}
+								/>
+							</div>
+							<label className="flex items-start gap-2 text-sm text-muted-foreground">
+								<input
+									type="checkbox"
+									checked={confirmedDateOfBirth}
+									onChange={(event) => setConfirmedDateOfBirth(event.target.checked)}
+									disabled={isSavingDateOfBirth}
+									className="mt-1"
+								/>
+								<span>
+									I confirm this is my real date of birth and it matches my BVN/NIN record.
+								</span>
+							</label>
+							<p className="text-xs text-muted-foreground">
+								You must be at least 18. Paycrest may validate these details against your identity document. Contact support if a saved date needs correction.
+							</p>
+							<Button
+								type="submit"
+								className="w-full"
+								disabled={isSavingDateOfBirth || !dateOfBirth || !confirmedDateOfBirth}
+							>
+								<CalendarDays className="mr-2 h-4 w-4" />
+								{isSavingDateOfBirth ? "Saving..." : "Save and continue"}
+							</Button>
+						</form>
+					) : null}
+				</DialogContent>
+			</Dialog>
+			<main className='flex-1 px-4 sm:px-6 md:px-8 py-8 min-h-screen bg-background'>
+				{selectedService ? (
+					<div className='max-w-2xl mx-auto w-full flex flex-col items-center'>
 					{/* BACK BUTTON */}
 					<div className="w-full mb-6">
 						<button
@@ -274,9 +363,10 @@ export default function Dashboard() {
 						{renderServiceFlow()}
 					</div>
 				</div>
-			) : (
-				renderServiceSelection()
-			)}
-		</main>
+				) : (
+					renderServiceSelection()
+				)}
+			</main>
+		</>
 	);
 }

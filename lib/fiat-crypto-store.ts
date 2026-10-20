@@ -47,6 +47,7 @@ export interface FiatCryptoState {
 	isLoadingCurrencies: boolean;
 	isLoadingQuote: boolean;
 	isInitializingOrder: boolean;
+	initializationError: string | null;
 
 	// Transaction Result
 	paymentOrder: OnrampPaymentOrder | null;
@@ -61,7 +62,7 @@ export interface FiatCryptoState {
 	fetchCurrencies: () => Promise<void>;
 	fetchQuote: (network: string, tokenSymbol: string, amount: string, fiatCode: string) => Promise<void>;
 	
-	initializeOrder: (refundBankData: any, tfaToken: string) => Promise<boolean>;
+	initializeOrder: (refundBankData: any) => Promise<boolean>;
 	pollPaymentStatus: (orderId: string) => Promise<boolean>;
 	resetService: () => void;
 }
@@ -82,6 +83,7 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 	isLoadingCurrencies: false,
 	isLoadingQuote: false,
 	isInitializingOrder: false,
+	initializationError: null,
 
 	paymentOrder: null,
 
@@ -300,15 +302,15 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 		}
 	},
 
-	initializeOrder: async (bankData: any, tfaToken: string) => {
+	initializeOrder: async (bankData: any) => {
 		const { selectedToken, selectedCurrency, fiatAmount, destinationAddress } = get();
 		
 		if (!selectedToken || !selectedCurrency || !fiatAmount || !destinationAddress || !bankData) {
-			console.error("Missing required data for Onramp order initialization");
+			set({ initializationError: "Complete the order details before continuing." });
 			return false;
 		}
 		
-		set({ isInitializingOrder: true });
+		set({ isInitializingOrder: true, initializationError: null });
 		try {
 			const reference = `GS-OR-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
 			
@@ -333,7 +335,6 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 					}
 				},
 				reference,
-				tfaToken,
 			};
 
 			const authToken = Cookies.get("token");
@@ -358,15 +359,30 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 						validUntil: (txn.validUntil || "") as string,
 						isCompleted: false,
 						fiatAmount: fiatAmount, // Store the original NGN amount paid
-						providerAccount: txn.paycrestData?.providerAccount || response.data.paycrestResponse?.providerAccount
+						providerAccount:
+							txn.paycrestData?.providerAccount ||
+							response.data.paycrestResponse?.data?.providerAccount
 					} 
 				});
 				return true;
 			}
 
+			set({
+				initializationError:
+					response.data.message || "Could not initialize the on-ramp order.",
+			});
 			return false;
 		} catch (error) {
-			console.error("Initialize onramp error:", error);
+			const message = axios.isAxiosError(error)
+				? error.response?.data?.message
+				: error instanceof Error
+					? error.message
+					: undefined;
+			set({
+				initializationError:
+					message || "Could not initialize the on-ramp order. Please try again.",
+			});
+			console.error("Initialize onramp error:", message || error);
 			return false;
 		} finally {
 			set({ isInitializingOrder: false });
@@ -390,25 +406,23 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 			);
 
 			const resData = response.data;
-			if (resData.success || resData.status === "success") {
-				const data = resData.data || resData;
-				const currentOrder = get().paymentOrder;
+			const data = resData.data || resData;
+			if (typeof data.status !== "string") return false;
+			const currentOrder = get().paymentOrder;
+			if (!currentOrder) return false;
 
-				const updatedOrder = {
-					...currentOrder,
-					status: data.status,
-					txHash: data.txHash || data.transactionHash,
-					isCompleted:
-						data.isCompleted ||
-						["settled", "fulfilled", "validated"].includes(
-							data.status,
-						),
-				} as OnrampPaymentOrder;
+			const updatedOrder: OnrampPaymentOrder = {
+				...currentOrder,
+				status: data.status,
+				txHash: data.txHash || data.transactionHash,
+				isCompleted:
+					Boolean(data.isCompleted) ||
+					["settled", "fulfilled", "validated"].includes(data.status),
+				providerAccount: data.providerAccount || currentOrder?.providerAccount,
+			};
 
-				set({ paymentOrder: updatedOrder });
-				return updatedOrder.isCompleted;
-			}
-			return false;
+			set({ paymentOrder: updatedOrder });
+			return updatedOrder.isCompleted;
 		} catch (error) {
 			console.error("Poll status error:", error);
 			return false;
@@ -423,6 +437,7 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 			quote: null,
 			quoteError: null,
 			paymentOrder: null,
+			initializationError: null,
 		});
 	},
 }));

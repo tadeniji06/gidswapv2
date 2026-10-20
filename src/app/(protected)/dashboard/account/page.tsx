@@ -19,7 +19,6 @@ import { SavedAccountsSection } from "@/_components/settings/saved-accounts-sect
 import { affiliateService } from "@/lib/services/affiliate";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Cookies from "js-cookie";
 import {
 	User,
 	Mail,
@@ -92,20 +91,9 @@ export default function AccountPage() {
 		}
 	};
 
-	// Load user on mount & show avatar feature toast
+	// Load user on mount
 	useEffect(() => {
 		fetchUser();
-
-		// Notify user about the new avatar feature once a minute via cookies
-		const lastToast = Cookies.get("last_avatar_toast");
-		const now = Date.now();
-		if (!lastToast || now - Number(lastToast) >= 60 * 1000) {
-			toast("✨ New: Web3 Profile Avatars!", {
-				description: "Customize your account by choosing an avatar from your profile card.",
-				duration: 5000,
-			});
-			Cookies.set("last_avatar_toast", now.toString(), { expires: 7 });
-		}
 	}, [fetchUser]);
 
 	// Populate formData when user changes

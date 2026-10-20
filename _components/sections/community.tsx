@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { FaTelegramPlane, FaTiktok, FaWhatsapp } from "react-icons/fa";
-import { AiOutlineDiscord } from "react-icons/ai";
+// import { AiOutlineDiscord } from "react-icons/ai";
 import { BsTwitterX } from "react-icons/bs";
 import Link from "next/link";
 

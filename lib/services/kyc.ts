@@ -20,6 +20,7 @@ export interface KycStatus {
 	nin?: string;
 	firstName?: string;
 	lastName?: string;
+	hasDateOfBirth?: boolean;
 	failureReason?: string;
 }
 
@@ -31,6 +32,20 @@ export const kycService = {
 			withCredentials: true,
 		});
 		return response.data.kyc;
+	},
+
+	saveDateOfBirth: async (
+		dateOfBirth: string,
+		confirmedAccurate: boolean,
+	): Promise<void> => {
+		await axios.post(
+			`${API_URL}/api/kyc/date-of-birth`,
+			{ dateOfBirth, confirmedAccurate },
+			{
+				headers: getAuthHeaders(),
+				withCredentials: true,
+			},
+		);
 	},
 
 	// Verify Selfie with ID (BVN or NIN)

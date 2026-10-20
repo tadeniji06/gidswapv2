@@ -138,6 +138,11 @@ export function PendingPaymentCard({
 		if (!open) setSuccessAcknowledged(true);
 	};
 
+	const closeSuccessModal = () => {
+		setSuccessAcknowledged(true);
+		setShowSuccessModal(false);
+	};
+
 	const [isSharingImage, setIsSharingImage] = useState(false);
 	const receiptCardRef = useRef<HTMLDivElement>(null);
 

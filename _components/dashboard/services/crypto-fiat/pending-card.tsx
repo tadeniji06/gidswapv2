@@ -326,10 +326,7 @@ export function PendingPaymentCard({
 		initialData: paymentData,
 	});
 
-	// Read orderData to retrieve calculated fiat amount in Naira
-	const _orderRaw = Cookies.get("order-data");
-	const _order = _orderRaw ? JSON.parse(_orderRaw) : null;
-	const fiatAmountNaira = _order?.fiatAmount || _order?.receiveAmount || statusData?.fiatAmount;
+	const fiatAmountNaira = statusData?.fiatAmount ?? paymentData.fiatAmount;
 
 	const currentStatus = statusData?.status ?? paymentData.status;
 	const isCompleted =

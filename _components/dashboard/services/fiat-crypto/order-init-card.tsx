@@ -25,7 +25,7 @@ export function OrderInitializationCard({
     destinationAddress,
     quote,
     initializeOrder,
-    isInitializingOrder
+    isInitializingOrder,
   } = useFiatCryptoStore()
 
   const [bankData, setBankData] = useState<any>(null)
@@ -47,11 +47,12 @@ export function OrderInitializationCard({
       return
     }
     
-    const success = await initializeOrder(bankData, "")
+    const success = await initializeOrder(bankData)
     if (success) {
       onSuccess()
     } else {
-      throw new Error("Order failed")
+      const message = useFiatCryptoStore.getState().initializationError
+      if (message) toast.error(message)
     }
   }
 

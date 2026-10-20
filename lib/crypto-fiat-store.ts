@@ -25,6 +25,7 @@ export interface Quote {
 	total: number;
 	tokenSymbol: string;
 	currencyCode: string;
+	fee?: string;
 }
 
 export interface OrderRecipient {
@@ -58,6 +59,7 @@ export interface PaymentOrder {
 	transactionFee: string;
 	validUntil: string;
 	status: string;
+	fiatAmount?: string;
 }
 
 interface CryptoFiatState {
@@ -445,28 +447,46 @@ const useCryptoFiatStore = create<CryptoFiatState>((set, get) => ({
 				response.data;
 
 			if (success && paycrestResponse?.status === "success") {
-				const orderData = paycrestResponse.data;
+				const providerOrder = paycrestResponse.data;
+				const payoutAmount =
+					providerOrder?.amountReceived ??
+					providerOrder?.fiatAmount ??
+					providerOrder?.providerAccount?.amountToTransfer;
+				const fiatAmount =
+					payoutAmount == null ? undefined : String(payoutAmount);
 				const paymentOrder: PaymentOrder = {
-					id: orderData.id,
-					reference: orderData.reference || reference,
-					amount: orderData.amount || tokenAmount,
-					token: orderData.token || selectedToken.symbol,
+					id: transaction.orderId || providerOrder.id,
+					reference:
+						transaction.reference || providerOrder.reference || reference,
+					amount: String(transaction.amount || providerOrder.amount || tokenAmount),
+					token: transaction.currency || providerOrder.token || selectedToken.symbol,
 					// Map v2 nested providerAccount to flat interface
-					network: orderData.providerAccount?.network || transaction.network,
-					receiveAddress: orderData.providerAccount?.receiveAddress || transaction.receiveAddress,
-					senderFee: orderData.senderFee || "0",
-					transactionFee: orderData.transactionFee || "0",
-					validUntil: orderData.providerAccount?.validUntil || orderData.validUntil,
+					network: transaction.network || providerOrder.providerAccount?.network,
+					receiveAddress:
+						transaction.receiveAddress ||
+						providerOrder.providerAccount?.receiveAddress,
+					senderFee: providerOrder.senderFee || "0",
+					transactionFee: providerOrder.transactionFee || "0",
+					validUntil:
+						transaction.validUntil ||
+						providerOrder.providerAccount?.validUntil ||
+						providerOrder.validUntil,
 					status: transaction.status,
+					fiatAmount,
+				};
+
+				const transactionWithFiat = {
+					...transaction,
+					fiatAmount,
 				};
 
 				set({
-					orderData: transaction,
+					orderData: transactionWithFiat,
 					orderReference: reference,
 					paymentOrder,
 				});
 
-				Cookies.set("order-data", JSON.stringify(transaction), {
+				Cookies.set("order-data", JSON.stringify(transactionWithFiat), {
 					expires: 1 / 24,
 				});
 				Cookies.set("order-reference", reference, {
