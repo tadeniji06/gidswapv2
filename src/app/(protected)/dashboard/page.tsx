@@ -284,7 +284,7 @@ export default function Dashboard() {
 							Complete on-ramp requirements
 						</DialogTitle>
 						<DialogDescription>
-							Paycrest requires verified identity details to create an on-ramp order.
+							Compliance required details to create an on-ramp order.
 						</DialogDescription>
 					</DialogHeader>
 					{kycStatus !== "verified" ? (
