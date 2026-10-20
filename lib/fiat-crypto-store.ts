@@ -16,6 +16,7 @@ export interface OnrampPaymentOrder {
 	validUntil: string;
 	fiatAmount?: string;
 	txHash?: string;
+	failureReason?: string | null;
 	providerAccount?: {
 		institution: string;
 		accountIdentifier: string;
@@ -415,6 +416,7 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 				...currentOrder,
 				status: data.status,
 				txHash: data.txHash || data.transactionHash,
+				failureReason: data.failureReason || currentOrder.failureReason,
 				isCompleted:
 					Boolean(data.isCompleted) ||
 					["settled", "fulfilled", "validated"].includes(data.status),

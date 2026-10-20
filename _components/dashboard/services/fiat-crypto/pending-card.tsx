@@ -252,7 +252,8 @@ export function PendingPaymentCard({
 					border: "border-amber-200 dark:border-amber-500/20",
 					icon: <RefreshCw className='w-5 h-5' />,
 					text: "Payment Refunded",
-					sub: "Your naira payment was returned. No crypto was sent.",
+					sub: paymentOrder.failureReason ||
+						"Your naira payment was returned. No crypto was sent.",
 				};
 			case "failed":
 			case "expired":
@@ -263,7 +264,7 @@ export function PendingPaymentCard({
 					border: "border-red-200 dark:border-red-500/20",
 					icon: <XCircle className='w-5 h-5' />,
 					text: "Payment Failed",
-					sub: "Funds will be refunded if sent",
+					sub: paymentOrder.failureReason || "Funds will be refunded if sent",
 				};
 			default:
 				return {
@@ -400,7 +401,7 @@ export function PendingPaymentCard({
 							>
 								{statusUI.text}
 							</p>
-							<p className={`text-xs mt-0.5 opacity-80 ${statusUI.color}`}>
+							<p className={`text-xs mt-0.5 break-words opacity-80 ${statusUI.color}`}>
 								{statusUI.sub}
 							</p>
 						</div>
