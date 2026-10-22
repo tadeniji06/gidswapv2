@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowDown, ChevronDown, Loader2, Search, Info, ChevronRight } from "lucide-react"
+import { ArrowDown, ChevronDown, Loader2, Search, Info, ChevronRight, HelpCircle, Sparkles } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { useFiatCryptoStore } from "@/lib/fiat-crypto-store"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog"
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/src/components/ui/tooltip"
 
 const NETWORK_LABELS: Record<string, { short: string; color: string }> = {
   "bnb-smart-chain":  { short: "BNB",  color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-500/10" },
@@ -241,7 +242,37 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
         {/* You Receive (Crypto) */}
         <div className="bg-muted/30 p-4 rounded-xl border border-transparent focus-within:border-primary/40 focus-within:bg-background transition-colors">
           <div className="flex justify-between items-center mb-2">
-            <label className="text-muted-foreground text-sm font-medium">You Receive</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-muted-foreground text-sm font-medium">You Receive</label>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors cursor-pointer"
+                      title="Two-way input"
+                    >
+                      <Sparkles className="w-3 h-3 text-blue-500" />
+                      <span>Two-way</span>
+                      <HelpCircle className="w-3 h-3 opacity-70" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="start"
+                    className="max-w-[260px] p-2.5 text-xs bg-popover text-popover-foreground border border-border shadow-lg rounded-xl space-y-1"
+                  >
+                    <p className="font-semibold text-foreground flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                      Two-Way Auto Calculation
+                    </p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      You can type your desired crypto amount directly here! The required NGN amount will automatically be calculated for you.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <TokenSelector
               tokens={tokens}
               selectedToken={selectedToken}
