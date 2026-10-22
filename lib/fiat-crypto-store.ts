@@ -55,6 +55,7 @@ export interface FiatCryptoState {
 
 	// Actions
 	setFiatAmount: (amount: string) => void;
+	setTokenAmount: (amount: string) => void;
 	setDestinationAddress: (address: string) => void;
 	setSelectedToken: (token: Token | null) => void;
 	setSelectedCurrency: (currency: FiatCurrency | null) => void;
@@ -62,6 +63,7 @@ export interface FiatCryptoState {
 	fetchTokens: () => Promise<void>;
 	fetchCurrencies: () => Promise<void>;
 	fetchQuote: (network: string, tokenSymbol: string, amount: string, fiatCode: string) => Promise<void>;
+	fetchQuoteFromCrypto: (network: string, tokenSymbol: string, cryptoAmount: string, fiatCode: string) => Promise<void>;
 	
 	initializeOrder: (refundBankData: any) => Promise<boolean>;
 	pollPaymentStatus: (orderId: string) => Promise<boolean>;
@@ -92,7 +94,6 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 		set({ fiatAmount: amount });
 		const { selectedToken, selectedCurrency } = get();
 		if (selectedToken && selectedCurrency && amount && Number.parseFloat(amount) > 0) {
-			// Debounce manually or just trigger quote fetch
 			get().fetchQuote(
 				selectedToken.network,
 				selectedToken.symbol,
@@ -101,6 +102,21 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 			);
 		} else {
 			set({ quote: null, tokenAmount: "" });
+		}
+	},
+
+	setTokenAmount: (cryptoAmount) => {
+		set({ tokenAmount: cryptoAmount });
+		const { selectedToken, selectedCurrency } = get();
+		if (selectedToken && selectedCurrency && cryptoAmount && Number.parseFloat(cryptoAmount) > 0) {
+			get().fetchQuoteFromCrypto(
+				selectedToken.network,
+				selectedToken.symbol,
+				cryptoAmount,
+				selectedCurrency.code
+			);
+		} else {
+			set({ quote: null, fiatAmount: "" });
 		}
 	},
 
@@ -144,17 +160,17 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 
 			const tokensData = response.data.data || [];
 
-			// Allowed symbol + network pairs (sorted order)
+			// Allowed symbol + network pairs: USDC active first, USDT disabled
 			const allowedTokens = [
-				{ symbol: "USDT", network: "bnb-smart-chain" },
-				{ symbol: "USDC", network: "bnb-smart-chain" },
-				{ symbol: "USDT", network: "polygon" },
-				{ symbol: "USDC", network: "polygon" },
-				{ symbol: "USDT", network: "arbitrum-one" },
-				{ symbol: "USDT", network: "ethereum" },
-				{ symbol: "USDC", network: "ethereum" },
-				{ symbol: "USDT", network: "base" },
-				{ symbol: "USDC", network: "base" },
+				{ symbol: "USDC", network: "bnb-smart-chain", disabled: false },
+				{ symbol: "USDC", network: "polygon", disabled: false },
+				{ symbol: "USDC", network: "base", disabled: false },
+				{ symbol: "USDC", network: "ethereum", disabled: false },
+				{ symbol: "USDT", network: "bnb-smart-chain", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "polygon", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "arbitrum-one", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "ethereum", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "base", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
 			];
 
 			// Filter only allowed tokens
@@ -169,14 +185,20 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 
 			// Sort according to allowedTokens order
 			const sortedTokens = allowedTokens
-				.map((allowed) =>
-					filteredTokens.find(
+				.map((allowed) => {
+					const found = filteredTokens.find(
 						(token: { symbol: string; network: string }) =>
 							token.symbol.toUpperCase() === allowed.symbol &&
 							token.network.toLowerCase() ===
 								allowed.network.toLowerCase(),
-					),
-				)
+					);
+					if (!found) return null;
+					return {
+						...found,
+						disabled: allowed.disabled,
+						disabledReason: allowed.disabledReason,
+					};
+				})
 				.filter(Boolean);
 
 			const tokensWithLogos = sortedTokens.map((token: any) => ({
@@ -185,6 +207,8 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 				decimals: token.decimals,
 				baseCurrency: token.baseCurrency,
 				network: token.network,
+				disabled: Boolean(token.disabled),
+				disabledReason: token.disabledReason || undefined,
 				logo: `https://api.elbstream.com/logos/crypto/${token.symbol.toLowerCase()}`,
 			}));
 
@@ -298,6 +322,76 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 		} catch (error: any) {
 			const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rate. Please try another pair or amount.";
 			set({ quote: null, tokenAmount: "", quoteError: errorMessage });
+		} finally {
+			set({ isLoadingQuote: false });
+		}
+	},
+
+	fetchQuoteFromCrypto: async (network: string, tokenSymbol: string, cryptoAmount: string, fiatCode: string) => {
+		if (!cryptoAmount || isNaN(Number(cryptoAmount)) || Number(cryptoAmount) <= 0) {
+			set({ quoteError: null });
+			return;
+		}
+
+		set({ isLoadingQuote: true, quoteError: null });
+		try {
+			const authToken = Cookies.get("token");
+			const api_url = process.env.NEXT_PUBLIC_PROD_API || "";
+			const safeNetwork = network.toLowerCase().replace(/\s+/g, '-');
+			const quoteAmount = Math.max(1, Math.round(Number(cryptoAmount) * 100) / 100);
+
+			const axiosConfig = {
+				headers: { Authorization: `Bearer ${authToken}` },
+				validateStatus: (status: number) => status < 500
+			};
+
+			let response;
+			// Level 1: Matched crypto amount + Buy side
+			const url = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/${quoteAmount}/${fiatCode}?side=buy`;
+			response = await axios.get(url, axiosConfig);
+
+			if (response.status === 404 || !response.data?.data) {
+				// Level 2: Unit amount ($1) + Buy side
+				const unitUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}?side=buy`;
+				response = await axios.get(unitUrl, axiosConfig);
+
+				if (response.status === 404 || !response.data?.data) {
+					// Level 3: Unit amount ($1) WITHOUT Side
+					const simpleUrl = `${api_url}/api/payCrest/trade/tokenRates/${safeNetwork}/${tokenSymbol}/1/${fiatCode}`;
+					response = await axios.get(simpleUrl, axiosConfig);
+				}
+			}
+
+			if (response.status === 404 || !response.data?.data) {
+				throw new Error(response.data?.message || "No liquidity provider found for this pair.");
+			}
+
+			const payload = response.data.data;
+			let rate = 0;
+
+			if (payload && payload.buy) {
+				rate = Number.parseFloat(payload.buy.rate);
+			} else if (payload && payload.sell && !payload.buy) {
+				rate = Number.parseFloat(payload.sell.rate);
+			} else if (payload && payload.rate) {
+				rate = Number.parseFloat(payload.rate);
+			}
+
+			if (rate > 0) {
+				const calculatedFiat = Number.parseFloat(cryptoAmount) * rate;
+				const quoteData = {
+					rate,
+					total: Number.parseFloat(cryptoAmount),
+					tokenSymbol,
+					currencyCode: fiatCode,
+				};
+				set({ quote: quoteData, fiatAmount: calculatedFiat.toFixed(2), quoteError: null });
+			} else {
+				set({ quote: null, fiatAmount: "", quoteError: "Could not calculate valid rate" });
+			}
+		} catch (error: any) {
+			const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rate. Please try another pair or amount.";
+			set({ quote: null, fiatAmount: "", quoteError: errorMessage });
 		} finally {
 			set({ isLoadingQuote: false });
 		}

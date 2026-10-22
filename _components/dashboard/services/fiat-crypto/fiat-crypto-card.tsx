@@ -87,17 +87,42 @@ function TokenSelector({
           {filtered.length > 0 ? (
             filtered.map((t) => {
               const isSelected = selectedToken?.symbol === t.symbol && selectedToken?.network === t.network
+              const isDisabled = Boolean(t.disabled)
               return (
                 <button
                   key={`${t.symbol}-${t.network}`}
-                  onClick={() => { onSelect(t); setOpen(false); setSearch("") }}
-                  className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-muted/50 rounded-xl transition-colors text-left ${isSelected ? "bg-primary/5" : ""}`}
+                  disabled={isDisabled}
+                  onClick={() => {
+                    if (isDisabled) return
+                    onSelect(t)
+                    setOpen(false)
+                    setSearch("")
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left ${
+                    isDisabled
+                      ? "opacity-50 cursor-not-allowed bg-muted/10 hover:bg-muted/10"
+                      : isSelected
+                      ? "bg-primary/5 hover:bg-muted/50 cursor-pointer"
+                      : "hover:bg-muted/50 cursor-pointer"
+                  }`}
                 >
                   <img src={t.logo || "/placeholder.svg"} alt={t.symbol} className="w-8 h-8 rounded-full flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-foreground font-medium text-sm">{t.symbol}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-foreground font-medium text-sm">{t.symbol}</span>
+                      {isDisabled && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Unavailable
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-muted-foreground capitalize font-medium">{t.network.replace(/-/g, " ")}</span>
+                      {isDisabled && (
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 truncate">
+                          • Temporarily unavailable
+                        </span>
+                      )}
                     </div>
                   </div>
                   <NetworkBadge network={t.network} />
@@ -143,9 +168,12 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
   }, [])
 
   useEffect(() => {
-    if (!selectedToken && tokens.length > 0) setSelectedToken(tokens[0])
+    if (!selectedToken && tokens.length > 0) {
+      const firstAvailable = tokens.find((t) => !t.disabled) || tokens[0]
+      setSelectedToken(firstAvailable)
+    }
     if (!selectedCurrency && currencies.length > 0) setSelectedCurrency(currencies[0])
-  }, [tokens, currencies])
+  }, [tokens, currencies, selectedToken, selectedCurrency, setSelectedToken, setSelectedCurrency])
 
   const handleFiatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -154,7 +182,14 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
     }
   }
 
-  const isValid = Number(fiatAmount) >= 500 && Number(tokenAmount) > 0 && selectedToken
+  const handleCryptoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    if (/^\d*\.?\d{0,6}$/.test(val) || val === "") {
+      useFiatCryptoStore.getState().setTokenAmount(val)
+    }
+  }
+
+  const isValid = Number(fiatAmount) >= 500 && Number(tokenAmount) > 0 && selectedToken && !selectedToken.disabled
 
   return (
     <motion.div
@@ -168,7 +203,7 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
         {/* You Pay (Fiat) */}
         <div className="bg-muted/30 p-4 rounded-xl border border-transparent focus-within:border-primary/40 focus-within:bg-background transition-colors">
           <div className="flex justify-between items-center mb-2">
-            <label className="text-muted-foreground text-sm font-medium">You Pay</label>
+            <label className="text-muted-foreground text-sm font-medium">You Pay (NGN)</label>
             {isLoadingCurrencies ? (
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
             ) : (
@@ -204,7 +239,7 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
         </div>
 
         {/* You Receive (Crypto) */}
-        <div className="bg-muted/30 p-4 rounded-xl border border-transparent transition-colors">
+        <div className="bg-muted/30 p-4 rounded-xl border border-transparent focus-within:border-primary/40 focus-within:bg-background transition-colors">
           <div className="flex justify-between items-center mb-2">
             <label className="text-muted-foreground text-sm font-medium">You Receive</label>
             <TokenSelector
@@ -215,13 +250,12 @@ export function FiatCryptoCard({ onNext }: { onNext: () => void }) {
             />
           </div>
           <input
-            type="text"
-            readOnly
-            value={isLoadingQuote ? "" : (tokenAmount || "0.00")}
+            type="number"
+            inputMode="decimal"
+            value={tokenAmount}
+            onChange={handleCryptoChange}
             placeholder="0.00"
-            className={`w-full bg-transparent text-3xl font-semibold tracking-tight border-none outline-none overflow-hidden ${
-              isLoadingQuote ? "text-transparent" : "text-foreground"
-            }`}
+            className="w-full bg-transparent text-3xl font-semibold tracking-tight text-foreground placeholder:text-muted-foreground/50 border-none outline-none overflow-hidden"
           />
           <div className="h-5 flex items-center mt-1">
             {isLoadingQuote && (

@@ -9,6 +9,8 @@ export interface Token {
 	baseCurrency: string;
 	network: string;
 	logo: string;
+	disabled?: boolean;
+	disabledReason?: string;
 }
 
 export interface FiatCurrency {

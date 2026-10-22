@@ -326,7 +326,31 @@ export function PendingPaymentCard({
 		initialData: paymentData,
 	});
 
-	const fiatAmountNaira = statusData?.fiatAmount ?? paymentData.fiatAmount;
+	// Robust resolution of fiat amount: API status > initial order payload > saved order cookie > quote cookie
+	const getFallbackFiatAmount = () => {
+		try {
+			const _orderRaw = Cookies.get("order-data");
+			if (_orderRaw) {
+				const parsed = JSON.parse(_orderRaw);
+				if (parsed?.fiatAmount) return parsed.fiatAmount;
+				if (parsed?.receiveAmount) return parsed.receiveAmount;
+			}
+			const _quoteRaw = Cookies.get("crypto-fiat-quote");
+			if (_quoteRaw) {
+				const parsedQ = JSON.parse(_quoteRaw);
+				if (parsedQ?.total) {
+					const net = parsedQ.total - parsedQ.total * 0.01;
+					return net.toFixed(2);
+				}
+			}
+		} catch {}
+		return null;
+	};
+
+	const fiatAmountNaira =
+		statusData?.fiatAmount ??
+		paymentData.fiatAmount ??
+		getFallbackFiatAmount();
 
 	const currentStatus = statusData?.status ?? paymentData.status;
 	const isCompleted =
