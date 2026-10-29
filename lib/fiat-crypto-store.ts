@@ -160,17 +160,17 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 
 			const tokensData = response.data.data || [];
 
-			// Allowed symbol + network pairs
+			// Allowed symbol + network pairs: USDC active first, USDT disabled
 			const allowedTokens = [
-				{ symbol: "USDT", network: "bnb-smart-chain" },
-				{ symbol: "USDC", network: "bnb-smart-chain" },
-				{ symbol: "USDT", network: "polygon" },
-				{ symbol: "USDC", network: "polygon" },
-				{ symbol: "USDT", network: "arbitrum-one" },
-				{ symbol: "USDT", network: "ethereum" },
-				{ symbol: "USDC", network: "ethereum" },
-				{ symbol: "USDT", network: "base" },
-				{ symbol: "USDC", network: "base" },
+				{ symbol: "USDC", network: "bnb-smart-chain", disabled: false },
+				{ symbol: "USDC", network: "polygon", disabled: false },
+				{ symbol: "USDC", network: "base", disabled: false },
+				{ symbol: "USDC", network: "ethereum", disabled: false },
+				{ symbol: "USDT", network: "bnb-smart-chain", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "polygon", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "arbitrum-one", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "ethereum", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
+				{ symbol: "USDT", network: "base", disabled: true, disabledReason: "USDT is temporarily unavailable on on-ramp" },
 			];
 
 			// Filter only allowed tokens
@@ -185,14 +185,20 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 
 			// Sort according to allowedTokens order
 			const sortedTokens = allowedTokens
-				.map((allowed) =>
-					filteredTokens.find(
+				.map((allowed) => {
+					const found = filteredTokens.find(
 						(token: { symbol: string; network: string }) =>
 							token.symbol.toUpperCase() === allowed.symbol &&
 							token.network.toLowerCase() ===
 								allowed.network.toLowerCase(),
-					),
-				)
+					);
+					if (!found) return null;
+					return {
+						...found,
+						disabled: allowed.disabled,
+						disabledReason: allowed.disabledReason,
+					};
+				})
 				.filter(Boolean);
 
 			const tokensWithLogos = sortedTokens.map((token: any) => ({
@@ -201,7 +207,8 @@ export const useFiatCryptoStore = create<FiatCryptoState>((set, get) => ({
 				decimals: token.decimals,
 				baseCurrency: token.baseCurrency,
 				network: token.network,
-				disabled: false,
+				disabled: Boolean(token.disabled),
+				disabledReason: token.disabledReason || undefined,
 				logo: `https://api.elbstream.com/logos/crypto/${token.symbol.toLowerCase()}`,
 			}));
 
